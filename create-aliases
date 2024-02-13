@@ -1,0 +1,18 @@
+#!/bin/bash
+
+APP_FOLDER_PATH=`dirname $0`
+
+pushd "$APP_FOLDER_PATH" > /dev/null
+
+source ".env"
+
+# System aliases
+CMD=`./echo-add-folder-script './aliases'` && eval "$CMD"
+
+# User aliases
+[ -d "$ALIAS_GUN_ALIASES_FOLDER_PATH" ] && CMD=`./echo-add-folder-script "$ALIAS_GUN_ALIASES_FOLDER_PATH"` && eval "$CMD"
+
+# Default command alias
+alias :="source $ALIAS_GUN_APP_FOLDER_PATH/default"
+
+popd > /dev/null

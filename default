@@ -1,0 +1,39 @@
+#!/bin/bash
+
+APP_FOLDER_PATH=`dirname $0`
+source "$APP_FOLDER_PATH/.env"
+
+APP_FOLDER_NAME=`basename "$ALIAS_GUN_APP_FOLDER_PATH"`
+
+COLORED=''
+[[ $TERM =~ (color|ansi|xterm|rxvt) ]] && COLORED='true'
+
+CMD=''
+[ -n "$1" ] && CMD=`echo "$@" | tr " " "$ALIAS_GUN_SYMBOL"`
+CMD="$ALIAS_GUN_SYMBOL$CMD"
+#echo "cmd: $CMD"
+
+ALIAS_LIST=`alias | sed 's/^alias //' | grep "^$CMD" | grep -v "$APP_FOLDER_NAME/default"`
+#echo "alias_list: $ALIAS_LIST"
+
+EXISTS=`echo $ALIAS_LIST | grep "^$CMD="`
+#echo "exists: $EXISTS"
+
+[ -n "$EXISTS" ] && eval $CMD && return 1
+
+#echo "not exists"
+
+LIST=`echo "$ALIAS_LIST"`
+#echo "0: $LIST"
+
+LIST=`echo "$LIST" | sed 's/=.*//'`
+#echo "1: $LIST"
+LIST=`echo "$LIST" | grep -E -o "^$CMD$ALIAS_GUN_SYMBOL?[^$ALIAS_GUN_SYMBOL]*$ALIAS_GUN_SYMBOL?"`
+#echo "2: $LIST"
+LIST=`echo "$LIST" | sed "s/$ALIAS_GUN_SYMBOL$/\*/" | sed "s/^.*$ALIAS_GUN_SYMBOL/  /" | awk '{ printf "%-20s\n", $0 }' | sed 's/\*[ ]*$/&(...)/' | sed 's/\*//' | awk '{ printf "%-26s\n", $0 }'`
+#echo "3: $LIST"
+LIST=`echo "$LIST" | uniq | sort -t $'(' -k 2,2r -k 1,1n`
+
+[ -n "$COLORED" ] && LIST=`echo "$LIST" | awk '{gsub(/.*\(.*/,"\033[1;44m&\033[0m"); print}' | awk '{gsub(/^[^(]*$/,"\033[32;44m&\033[0m"); print}'`
+
+echo "$LIST"

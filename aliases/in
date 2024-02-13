@@ -1,0 +1,7 @@
+#!/bin/bash
+
+pp="$1"
+shift
+args="$@"
+
+(cd "$pp" && bash -c "$args")
