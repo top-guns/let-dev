@@ -1,0 +1,18 @@
+#!/bin/bash
+
+[ $# -eq 2 ] && input="$1" || input="-"
+
+read line
+echo "$line"
+grep $1 $input
+
+
+#while read line; do
+#  echo "reading: ${line}"
+#done < /dev/stdin
+
+# Can be used in zsh (MULTIOS option):
+# cat $input > >(head -n 1) > >(grep "$1")
+
+# In bash can be used (but with sorting error)
+# eza -lh | tee >( tail -n +2 ) | ( head -n 1 )

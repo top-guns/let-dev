@@ -1,0 +1,4 @@
+#! /bin/bash
+
+lstree="ls -R | grep ":$" | sed -e 's/:$//' -e 's/[^-][^\/]*\//--/g' -e 's/^/   /' -e 's/-/|/'"
+eval "$lstree"
