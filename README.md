@@ -13,7 +13,7 @@ mkdir ~/aliases
 
 echo '' >> ~/.bashrc
 echo '# Add alias-gun aliases' >> ~/.bashrc
-echo '[ -d ~/.alias-gun ] && source ~/.alias-gun/create-aliases' >> ~/.bashrc
+echo "[ -d '$HOME/.alias-gun' ] && source '$HOME/.alias-gun/create-aliases'" >> ~/.bashrc
 
 source ~/.alias-gun/create-aliases
 ```
