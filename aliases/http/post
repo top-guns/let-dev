@@ -1,4 +1,8 @@
 #! /bin/bash
 
-wget -q --post-data $2 -O - $1
+URL=$1
+[[ $URL == "echo" ]] && URL="https://echo.free.beeceptor.com"
+DATA=$2
+
+wget -q --post-data $DATA -O - $URL
 echo ""

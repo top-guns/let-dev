@@ -1,4 +1,7 @@
 #! /bin/bash
 
-wget -q -O - $1
+URL=$1
+[[ $URL == "echo" ]] && URL="https://echo.free.beeceptor.com"
+
+wget -q -O - $URL
 echo ""
