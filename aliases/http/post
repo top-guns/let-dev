@@ -1,0 +1,4 @@
+#! /bin/bash
+
+wget -q --post-data $2 -O - $1
+echo ""
