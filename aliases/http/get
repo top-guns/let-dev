@@ -1,5 +1,10 @@
 #! /bin/bash
 
+HELP="Usage: 
+    :http:get <url> - Send a GET request to the given URL
+    :http:get echo - Send a GET request to the echo server"
+[[ -z $1 ]] && echo $HELP && exit 1
+
 URL=$1
 [[ $URL == "echo" ]] && URL="https://echo.free.beeceptor.com"
 

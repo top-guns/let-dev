@@ -1,5 +1,11 @@
 #! /bin/bash
 
+HELP="Usage: 
+    :http:post <url> <data> - Send a POST request to the given URL with the given data
+    :http:post echo <data> - Send a POST request to the echo server with the given data"
+[[ -z $1 ]] && echo $HELP && exit 1
+[[ -z $2 ]] && echo $HELP && exit 1
+
 URL=$1
 [[ $URL == "echo" ]] && URL="https://echo.free.beeceptor.com"
 DATA=$2
