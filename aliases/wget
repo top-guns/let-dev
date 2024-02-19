@@ -1,0 +1,4 @@
+#! /bin/bash
+
+wget -q -O - $1
+echo ""
