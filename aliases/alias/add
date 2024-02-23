@@ -1,0 +1,23 @@
+#!/bin/bash
+
+script_name="$1"
+script_path="$HOME/aliases/$script_name"
+alias_name="$script_name"
+
+shift
+command="$@"
+
+[ -n "$command" ] && echo "Add alias ':$alias_name' for the command '$command'"
+[ -z "$command" ] && echo "Add alias ':$alias_name'"
+
+mkdir -p "$HOME/aliases"
+
+touch "$script_path"
+chmod +x $script_path
+alias ":$alias_name"="source $script_path"
+
+echo "#! /bin/bash" > "$script_path"
+echo "" >> "$script_path"
+[ -n "$command" ] && echo "$command" >> "$script_path"
+
+[ -z "$command" ] && mcedit "$script_path"
