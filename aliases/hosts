@@ -1,5 +1,0 @@
-#! /bin/bash
-
-echo "Edit /etc/hosts"
-
-sudo mcedit /etc/hosts

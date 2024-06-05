@@ -1,7 +1,27 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# set -euo pipefail
 
-pp="$1"
+# This script is used to run a command in a specific directory.
+
+if [[ "$1" = "--help" || "$#" -lt 2 ]]; then
+    echo "Run a command in a specific directory."
+    echo "Usage:"
+    echo "  :in <dir> <command> [args]"
+    echo "Example:"
+    echo "  :in /path/to/dir ls -l"
+    return 1
+fi
+
+TARGET_DIR="$1"
 shift
 args="$@"
 
-(cd "$pp" && bash -c "$args")
+if [[ ! -d "$TARGET_DIR" ]]; then
+    echo "Directory '$TARGET_DIR' does not exist."
+    return 1
+fi
+
+(
+    cd "$TARGET_DIR"
+    bash -c "$args"
+)

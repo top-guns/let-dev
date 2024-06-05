@@ -1,0 +1,183 @@
+#!/usr/bin/env bash
+#set -euo pipefail
+
+# Connect to the remote server via ssh and map remote ports to local ports
+
+PROC_TAG=':ssh:map:remote'
+
+print_help() {
+  echo "Connect to the remote server via ssh and map remote ports to the local ports"
+  echo ""
+  echo "Usage: $0 [host] [port1] [port2] ... [--stop] [--help]"
+  echo "  host: the host to connect to"
+  echo "  port1, port2, ...: the ports to map"
+  echo "  --stop: stop the mapping"
+  echo "  --help: print this help"
+  echo ""
+  echo "If no ports are provided, the script will list all active mappings for the given host"
+  echo "If no arguments are provided, the script will list all active mappings"
+  echo ""
+  echo "If port starts with '+', it will be added to the list of ports to map"
+  echo "If port starts with '-', it will be added to the list of ports to remove"
+  echo "If port not starts with '+' or '-', it will be added to the list of ports to map"
+}
+
+if [[ "$1" == "--help" ]]; then
+  print_help
+  return
+fi
+
+# Convert multiline string to an array
+multiline_to_arr() {
+  local str=$1
+  arr=()
+  if [[ -n $str ]]; then
+    while read -r line; do arr+=("$line"); done <<<"$str"
+  fi
+  echo "${arr[@]}"
+}
+
+# Check if element is in the array
+in_array() {
+  local elem=$1
+  shift
+  for e in "$@"; do
+    if [[ "$e" == "$elem" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+hosts=()
+
+if [[ "$#" > 0 && "${1[1]}${1[2]}" != "--" ]]; then
+  hosts=("$1")
+  shift # Remove the host from the list of arguments
+else
+  hosts_str=$(ps axww | grep "$PROC_TAG" | grep -v grep | grep -o -E "[^ ]+$" | sort | uniq)
+  if [[ -n $hosts_str ]]; then
+    while read -r line; do hosts+=("$line"); done <<<"$hosts_str"
+  fi
+fi
+
+if [ "$#" -eq 0 ]; then
+  if [ ${#hosts[@]} -eq 0 ]; then
+    echo "No active mappings found"
+    return
+  fi
+  echo "Active mappings"
+  for host in $hosts; do
+    echo "$host:"
+    # Check if the process with this host exists
+    if [ -z "$(ps axww | grep "$PROC_TAG" | grep -v grep | grep "$host")" ]; then
+      echo "  No active mappings found"
+      continue
+    fi
+    ps axww | grep "$PROC_TAG" | grep -v grep | grep "$host" | grep -o -E "\-L [0-9]+:localhost:[0-9]+" \
+      | awk -F" " '{print $2}' | sed 's/\(.*\):localhost:\(.*\)/  \2 -> local \1/'
+
+    ssh -fN -L 51515:localhost:51515 -L 51516:localhost:51516 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o "LogLevel=QUIET" -o "UserKnownHostsFile=/dev/null" -o "IdentitiesOnly=yes" -o "BatchMode=yes" -o "PasswordAuthentication=no" your_user@your_host #UniqueComment
+  done
+  return
+fi
+
+add_ports=()
+remove_ports=()
+
+# Process arguments
+for arg in "$@"; do
+  case $arg in
+    "--stop")
+      for host in "${hosts[@]}"; do
+        # Get the PIDs of the processes
+        ssh_processes=$(ps axww | grep "$PROC_TAG" | grep -v grep | grep "${host}" | awk '{print $1}')
+        if [[ -z $ssh_processes ]]; then
+          echo "No ssh processes found"
+          return
+        fi
+
+        # Read each PID separately
+        while IFS= read -r pid; do
+          kill "$pid"
+          echo "SSH process $pid terminated"
+        done <<< "$ssh_processes"
+      done
+
+      return
+      ;;
+    *)
+      # If the argument starts with '-' then add it to the list of ports to remove
+      # else add it to the list of ports to add
+      if [[ "$arg[1]" == "-" ]]; then
+        remove_ports+=(${arg:1})
+      else
+        if [[ "$arg[1]" == "+" ]]; then
+          add_ports+=(${arg:1})
+        else
+          add_ports+=($arg)
+        fi
+      fi
+      ;;
+  esac
+done
+
+if [[ "${hosts[@]}" == "" ]]; then
+  echo "No hosts provided"
+  return
+fi
+
+# echo "Host: ${hosts[@]}"
+# echo "Add ports: ${add_ports[@]}"
+# echo "Remove ports: ${remove_ports[@]}"
+
+for host in "${hosts[@]}"; do
+
+  # Find the SSH process for the given port and host
+  ssh_process=$(ps axww | grep "$PROC_TAG" | grep -v grep | grep "$host")
+
+  if [[ -n $ssh_process ]]; then
+    # Get all ports that are mapped by this process
+    mapped_ports_str="$(echo $ssh_process | grep -o -E "\-L [0-9]+:" | grep -o -E "[0-9]+")"
+    
+    # Convert the string into an array
+    mapped_ports=()
+    if [[ -n $mapped_ports_str ]]; then
+      while read -r line; do mapped_ports+=("$line"); done <<<"$mapped_ports_str"
+    fi
+
+    # Add the new port to the list of mapped ports
+    for m_port in "${mapped_ports[@]}"; do
+      # Skip ports that are in the list of ports to remove
+      in_array $m_port "${remove_ports[@]}" && continue
+      # Skip ports that are already in the list of ports to add
+      in_array $m_port "${add_ports[@]}" && continue
+
+      add_ports+=($m_port)
+    done
+    # echo "add_ports: ${add_ports[@]}"
+
+    # Get the PID of the process and terminate it
+    pid=$(echo $ssh_process | awk '{print $1}')
+    kill $pid
+    echo "Old ssh process is terminated (pid $pid)"
+  fi
+
+  if [[ ${#add_ports[@]} -eq 0 ]]; then
+    echo "No ports to map"
+    return
+  fi
+
+  cmd=("ssh" "-fN" "-o Tag=$PROC_TAG")
+  for port in "${add_ports[@]}"; do
+    cmd+=("-L" "${port}:localhost:${port}")
+  done
+  cmd+=("$host")
+
+  "${cmd[@]}"
+
+  ssh_process=$(ps axww | grep "$PROC_TAG" | grep -v grep | grep "$host")
+  pid=$(echo $ssh_process | awk '{print $1}')
+  echo "New ssh was started (pid $pid): ${cmd[@]}"
+
+done

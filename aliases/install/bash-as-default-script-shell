@@ -1,0 +1,21 @@
+#! /bin/bash
+
+if [[ "$1" == "install" || "$1" == "up" || "$1" == "do" || "$1" == "apply" || "$1" == "add" ]]; then
+  echo "Change the default script shell from sh to bash"
+  sudo dscl . -change /Users/root UserShell /bin/sh /bin/bash
+  return 0
+fi
+
+if [[ "$1" == "uninstall" || "$1" == "down" || "$1" == "undo" || "$1" == "revert" || "$1" == "remove" ]]; then
+  echo "Revert the default script shell from bash to sh"
+  sudo dscl . -change /Users/root UserShell /bin/bash /bin/sh
+  return 0
+fi
+
+if [[ -z "$1" || "$1" == "status" || "$1" == "state" || "$1" == "echo" || "$1" == "print" ]]; then
+  echo "Default script shell:"
+  dscl . -read /Users/root UserShell
+  return 0
+fi
+
+echo "Unknown script arguments"
