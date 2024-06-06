@@ -1,0 +1,139 @@
+#!/usr/bin/env bash
+#set -euo pipefail
+
+# Map local port to another local port with netcat
+
+multiline_to_array() {
+    local str=$1
+    local arr_name=$2
+    eval $arr_name'=()'
+    [[ -n $str ]] && while IFS= read -r line; do eval $arr_name'+=("$line")'; done <<<"$str"
+}
+
+print_array() {
+    local arr=("$@")
+    printf "%s\n" "${arr[@]}"
+}
+
+# Check if element is in the array
+in_array() {
+  local elem=$1
+  shift
+  for e in "$@"; do
+    if [[ "$e" == "$elem" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+PROC_TAG='nc -kl -w 10'
+PROC_CMD_START="$PROC_TAG%3\$s %1\$s | nc 127.0.0.1 %2\$s &"
+PROC_CMD_FIND="ps axww | grep '$PROC_TAG' | grep -v grep"
+
+print_help() {
+  echo "Map local port to another local port with netcat"
+  echo ""
+  echo "Usage: $0 <+from_port:to_port|-from_port> ... [--stop] [--help]"
+  echo "  +from_port:to_port: map from_port to to_port"
+  echo "  -from_port: remove mapping for from_port"
+  echo "  --stop: stop the mapping"
+  echo "  --help: print this help"
+  echo ""
+  echo "If no arguments are provided, the script will list all active mappings"
+  echo ""
+  echo "If port starts with '+', it will be added to the list of ports to map"
+  echo "If port starts with '-', it will be added to the list of ports to remove"
+  echo "If port not starts with '+' or '-', it will be added to the list of ports to map"
+}
+
+if [[ "$1" == "--help" ]]; then
+  print_help
+  return
+fi
+
+multiline_to_array "$(eval $PROC_CMD_FIND)" PROC_INSTANCES
+
+if [ "$#" -eq 0 ]; then
+  if [ ${#PROC_INSTANCES[@]} -eq 0 ]; then
+    echo "No active mappings found"
+    return
+  fi
+  echo "Active mappings"
+  print_array "${PROC_INSTANCES[@]}" | grep -o -E '10+\d+ \d+' | sed 's/^10*//' \
+    | sed 's/\([^ ]*\) \([^ ]*\)/  \2 -> \1/'
+  return
+fi
+
+add_ports_from=()
+add_ports_to=()
+remove_ports=()
+
+# Process arguments
+for arg in "$@"; do
+  case $arg in
+    "--stop")
+      # Get the PIDs of the processes
+      processes=$(print_array "${PROC_INSTANCES[@]}" | awk '{print $1}')
+      if [[ -z $processes ]]; then
+        echo "No mapping processes found"
+        return
+      fi
+
+      # Read each PID separately
+      while IFS= read -r pid; do
+        kill "$pid"
+        echo "Mapping process (pid $pid) is terminated"
+      done <<< "$processes"
+
+      return
+      ;;
+    *)
+      # If the argument starts with '-' then add it to the list of ports to remove
+      # else add it to the list of ports to add
+      if [[ "$arg[1]" == "-" ]]; then
+        remove_ports+=(${arg:1})
+      else
+        [[ "$arg[1]" == "+" ]] && arg=${arg:1}
+        add_ports_from+=($(echo $arg | awk -F':' '{print $1}'))
+        add_ports_to+=($(echo $arg | awk -F':' '{print $2}'))
+      fi
+      ;;
+  esac
+done
+
+# echo "add_ports_from: ${add_ports_from[@]}"
+# echo "add_ports_to: ${add_ports_to[@]}"
+# echo "remove_ports: ${remove_ports[@]}"
+# echo "${#add_ports_from[@]}"
+
+# Add ports
+for ((i=1; i<=${#add_ports_from[@]}; i++)); do
+  from_port=${add_ports_from[$i]}
+  to_port=${add_ports_to[$i]}
+  if in_array "$from_port" "${remove_ports[@]}"; then
+    echo "Port $from_port is in the list of ports to remove, skipping"
+    continue
+  fi
+  if in_array "$from_port" "$(print_array "${PROC_INSTANCES[@]}" | grep -o -E '\-l [0-9]+')" ; then
+    echo "Port $from_port is already mapped, skipping"
+    continue
+  fi
+
+  formatted_to_port=$(printf '%05d' $to_port)
+  cmd=$(printf "$PROC_CMD_START" "$from_port" "$to_port" "$formatted_to_port")
+  echo "Mapping $from_port -> $to_port: $cmd"
+  eval $cmd
+done
+
+# Remove ports
+for port in "${remove_ports[@]}"; do
+  echo "Removing mapping for port $port"
+  if ! in_array "$port" $(print_array "${PROC_INSTANCES[@]}" | awk -F' ' '{print $NF}') ; then
+    echo "Port $port is not mapped, skipping"
+    continue
+  fi
+  pid=$(print_array "${PROC_INSTANCES[@]}" | grep "$port" | awk '{print $1}')
+  kill "$pid"
+  echo "Mapping process (pid $pid) is terminated"
+done
