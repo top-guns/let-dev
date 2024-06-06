@@ -3,7 +3,33 @@
 
 # Connect to the remote server via ssh and map remote ports to local ports
 
-PROC_TAG=':ssh:map:remote'
+multiline_to_array() {
+    local str=$1
+    local arr_name=$2
+    eval $arr_name'=()'
+    [[ -n $str ]] && while IFS= read -r line; do eval $arr_name'+=("$line")'; done <<<"$str"
+}
+
+print_array() {
+    local arr=("$@")
+    printf "%s\n" "${arr[@]}"
+}
+
+# Check if element is in the array
+in_array() {
+  local elem=$1
+  shift
+  for e in "$@"; do
+    if [[ "$e" == "$elem" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+PROC_TAG='map:remote-to-local'
+PROC_CMD_START="ssh -fN -o Tag=$PROC_TAG"
+PROC_CMD_FIND="ps axww | grep "$PROC_TAG" | grep -v grep"
 
 print_help() {
   echo "Connect to the remote server via ssh and map remote ports to the local ports"
@@ -27,38 +53,14 @@ if [[ "$1" == "--help" ]]; then
   return
 fi
 
-# Convert multiline string to an array
-multiline_to_arr() {
-  local str=$1
-  arr=()
-  if [[ -n $str ]]; then
-    while read -r line; do arr+=("$line"); done <<<"$str"
-  fi
-  echo "${arr[@]}"
-}
-
-# Check if element is in the array
-in_array() {
-  local elem=$1
-  shift
-  for e in "$@"; do
-    if [[ "$e" == "$elem" ]]; then
-      return 0
-    fi
-  done
-  return 1
-}
+multiline_to_array "$(eval $PROC_CMD_FIND)" PROC_INSTANCES
 
 hosts=()
-
-if [[ "$#" > 0 && "${1[1]}${1[2]}" != "--" ]]; then
+if [[ "$#" > 0 && "${1[1]}" != "-" ]]; then
   hosts=("$1")
   shift # Remove the host from the list of arguments
 else
-  hosts_str=$(ps axww | grep "$PROC_TAG" | grep -v grep | grep -o -E "[^ ]+$" | sort | uniq)
-  if [[ -n $hosts_str ]]; then
-    while read -r line; do hosts+=("$line"); done <<<"$hosts_str"
-  fi
+  multiline_to_array "$(print_array "${PROC_INSTANCES[@]}" | grep -o -E '[^ ]+$' | sort | uniq)" hosts
 fi
 
 if [ "$#" -eq 0 ]; then
@@ -70,14 +72,12 @@ if [ "$#" -eq 0 ]; then
   for host in $hosts; do
     echo "$host:"
     # Check if the process with this host exists
-    if [ -z "$(ps axww | grep "$PROC_TAG" | grep -v grep | grep "$host")" ]; then
+    if [ -z "$(print_array "${PROC_INSTANCES[@]}" | grep "$host")" ]; then
       echo "  No active mappings found"
       continue
     fi
-    ps axww | grep "$PROC_TAG" | grep -v grep | grep "$host" | grep -o -E "\-L [0-9]+:localhost:[0-9]+" \
+    print_array "${PROC_INSTANCES[@]}" | grep "$host" | grep -o -E "\-L [0-9]+:localhost:[0-9]+" \
       | awk -F" " '{print $2}' | sed 's/\(.*\):localhost:\(.*\)/  \2 -> local \1/'
-
-    ssh -fN -L 51515:localhost:51515 -L 51516:localhost:51516 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o "LogLevel=QUIET" -o "UserKnownHostsFile=/dev/null" -o "IdentitiesOnly=yes" -o "BatchMode=yes" -o "PasswordAuthentication=no" your_user@your_host #UniqueComment
   done
   return
 fi
@@ -91,7 +91,7 @@ for arg in "$@"; do
     "--stop")
       for host in "${hosts[@]}"; do
         # Get the PIDs of the processes
-        ssh_processes=$(ps axww | grep "$PROC_TAG" | grep -v grep | grep "${host}" | awk '{print $1}')
+        ssh_processes=$(print_array "${PROC_INSTANCES[@]}" | grep "${host}" | awk '{print $1}')
         if [[ -z $ssh_processes ]]; then
           echo "No ssh processes found"
           return
@@ -134,7 +134,7 @@ fi
 for host in "${hosts[@]}"; do
 
   # Find the SSH process for the given port and host
-  ssh_process=$(ps axww | grep "$PROC_TAG" | grep -v grep | grep "$host")
+  ssh_process=$(print_array "${PROC_INSTANCES[@]}" | grep "$host")
 
   if [[ -n $ssh_process ]]; then
     # Get all ports that are mapped by this process
@@ -168,16 +168,16 @@ for host in "${hosts[@]}"; do
     return
   fi
 
-  cmd=("ssh" "-fN" "-o Tag=$PROC_TAG")
+  cmd="$PROC_CMD_START"
   for port in "${add_ports[@]}"; do
-    cmd+=("-L" "${port}:localhost:${port}")
+    cmd+=" -L ${port}:localhost:${port}"
   done
-  cmd+=("$host")
+  cmd+=" $host"
 
-  "${cmd[@]}"
+  eval "$cmd"
 
   ssh_process=$(ps axww | grep "$PROC_TAG" | grep -v grep | grep "$host")
   pid=$(echo $ssh_process | awk '{print $1}')
-  echo "New ssh was started (pid $pid): ${cmd[@]}"
+  echo "New ssh was started (pid $pid): $cmd"
 
 done
