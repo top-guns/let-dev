@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+
+# networksetup -setwebproxy 'Wi-fi' 127.0.0.1 3128 && ssh -L 3128:gitlab.itisinteresting.ru:13128 gitlab.itisinteresting.ru ; networksetup -setwebproxystate 'Wi-fi' off
+
+# Start/stop ssh as socks5 proxy
+
+multiline_to_array() {
+    local str=$1
+    local arr_name=$2
+    eval $arr_name'=()'
+    [[ -n $str ]] && while IFS= read -r line; do eval $arr_name'+=("$line")'; done <<<"$str"
+}
+
+print_array() {
+    local arr=("$@")
+    printf "%s\n" "${arr[@]}"
+}
+
+# Check if element is in the array
+in_array() {
+  local elem=$1
+  shift
+  for e in "$@"; do
+    if [[ "$e" == "$elem" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+PROC_TAG='ssh -fCqNfCqNfCqN -D'
+PROC_CMD_START="$PROC_TAG %1\$s %2\$s %3\$s"
+PROC_CMD_FIND="ps axww | grep '$PROC_TAG' | grep -v grep"
+PROC_CMD_PID="pgrep -f '$PROC_TAG'"
+
+print_help() {
+  echo "Start ssh as socks5 proxy"
+  echo ""
+  echo "Usage: $0 port user@host [user1@host1] ... [userN@hostN] [--stop] [--help]"
+  echo "  port - local port to use for the proxy"
+  echo "  user@host - user and host to connect to"
+  echo "  --stop: stop the mapping"
+  echo "  --help: print this help"
+  echo ""
+  echo "If no arguments are provided, the script will list all active proxies"
+  echo "If several user@host pairs are provided, ssh chaining will be used"
+}
+
+multiline_to_array "$(eval $PROC_CMD_FIND)" PROC_INSTANCES
+
+if [ "$#" -eq 1 ]; then
+  if [[ "$1" == "--stop" ]]; then
+    PIDS=$(print_array "${PROC_INSTANCES[@]}" | awk '{print $1}')
+    if [[ -z $PIDS ]]; then
+      echo "No proxy found"
+      return
+    fi
+
+    echo "Stop all proxies"
+
+    # Read each PID separately
+    while IFS= read -r pid; do
+      kill "$pid"
+      echo "  Proxy (pid $pid) is terminated"
+    done <<< "$PIDS"
+
+    return
+  fi
+
+  if [[ "$1" == "--help" ]]; then
+    print_help
+    return
+  fi
+
+  echo "No user@host specified"
+  return
+fi
+
+if [ "$#" -eq 0 ]; then
+  if [ ${#PROC_INSTANCES[@]} -eq 0 ]; then
+    echo "No proxy found"
+    return
+  fi
+  echo "Proxies:"
+  print_array "${PROC_INSTANCES[@]}" | sed 's/^.* \([0-9]*\) \([0-9]*\)/  \1 -> \2/' | sort -n
+  return
+fi
+
+port=$1
+shift
+
+if [[ "$1" == "--stop" ]]; then
+  echo "Stop port $port proxy"
+  return
+fi
+
+host=$1
+jumps=""
+shift
+
+# Process arguments
+for arg in "$@"; do
+  case $arg in
+    *)
+      [ -n "$jumps" ] && jumps="$jumps,$host" || jumps="-J "
+      host=$arg
+      ;;
+  esac
+done
+
+# Start new proxy
+cmd=$(printf "$PROC_CMD_START" "$port" "$jumps" "$host")
+eval $cmd
+process=$(ps axww | grep "$PROC_TAG" | grep -v grep | grep "$host" | grep "$port")
+pid=$(echo $process | awk '{print $1}')
+echo "New proxy $port -> $host process (pid $pid) is started: $cmd"
