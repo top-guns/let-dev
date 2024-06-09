@@ -17,7 +17,7 @@ if [ "$1" = "--help" ]; then
     echo "Usage:"
     echo "  :config:$CURRENT_COMMAND [TEXT_EDITOR]"
     echo "Arguments:"
-    echo "  TEXT_EDITOR: The text editor to open the hosts file, for example, vim, nano, mcedit, etc."
+    echo "  TEXT_EDITOR: The text editor to open file, for example, vim, nano, mcedit, etc."
     echo "Examples:"
     echo "  :config:$CURRENT_COMMAND"
     echo "  :config:$CURRENT_COMMAND mcedit"

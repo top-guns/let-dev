@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # set -euo pipefail
 
-# Open the bashrc file in the default text editor
+# Open ssh config file in the default text editor
 
-FILE_TO_OPEN="$HOME/.zshrc"
-FILE_TITLE="zsh configuration file"
+FILE_TO_OPEN="/etc/ssh/sshd_config"
+FILE_TITLE="ssh server configuration file"
 
 
 FILE_NAME=$(basename $FILE_TO_OPEN)
@@ -25,7 +25,7 @@ if [ "$1" = "--help" ]; then
 fi
 
 # Check if the file exists
-if [ ! -f "$FILE_TO_OPEN" ]; then
+if [ ! -f $FILE_TO_OPEN ]; then
   echo "The $FILE_TO_OPEN file cannot be found"
   return 1
 fi
