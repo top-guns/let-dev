@@ -1,0 +1,380 @@
+#!/usr/bin/env bash
+
+# networksetup -setwebproxy 'Wi-fi' 127.0.0.1 3128 && ssh -L 3128:gitlab.itisinteresting.ru:13128 gitlab.itisinteresting.ru ; networksetup -setwebproxystate 'Wi-fi' off
+
+# Start/stop http proxy with lightproxy
+
+multiline_to_array() {
+    local str=$1
+    local arr_name=$2
+    eval $arr_name'=()'
+    [[ -n "$str" ]] && while IFS= read -r line; do eval $arr_name'+=("$line")'; done <<<"$str"
+}
+
+print_array() {
+    local arr=("$@")
+    printf "%s\n" "${arr[@]}"
+}
+
+# Check if element is in the array
+in_array() {
+  local elem=$1
+  shift
+  for e in "$@"; do
+    if [ "$e" = "$elem" ]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+PROC_UTILITY="mitmproxy"
+PROC_TAG="$PROC_UTILITY --listen-port "
+PROC_CMD_START="$PROC_TAG%1\$s"
+
+PROC_CMD_FIND_ALL="ps axww | grep -v grep | grep '$PROC_TAG'"
+PROC_CMD_FIND_ONE="ps axww | grep -v grep | grep '$PROC_TAG%1\$s'"
+PROC_CMD_PID_ALL="pgrep -f '$PROC_TAG'"
+PROC_CMD_PID_ONE="pgrep -f '$PROC_TAG%1\$s'"
+
+PROC_CMD_NAME=$(basename "$0")
+PROC_CMD_NAME=":net:proxy:$PROC_CMD_NAME"
+PROC_CMD_DESC="Start/stop http proxy with $PROC_UTILITY"
+
+install_if_needed() {
+  local interactive=$1
+  local cmd_args="-y"
+  if [ -n "$interactive" ]; then
+    cmd_args=""
+  fi
+
+  if ! command -v $PROC_UTILITY &> /dev/null; then
+    echo "Install $PROC_UTILITY"
+    # Get OS name and install utility
+    if [ "$(uname)" = "Darwin" ]; then
+      echo "Mac OS detected"
+      echo "Install $PROC_UTILITY with Homebrew"
+      # Check if Homebrew is installed
+      if ! command -v brew &> /dev/null; then
+          echo "Homebrew not found. Do you want to install it? (y/n)"
+          read -r answer
+          if [ "$answer" != "y" ]; then
+              echo "You need to install Homebrew to install $PROC_UTILITY"
+              return 1
+          fi
+          echo "Installing Homebrew ..."
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      fi
+      brew install $PROC_UTILITY
+    elif [ -f /etc/os-release ]; then
+      . /etc/os-release
+      if [ "$ID" = "ubuntu" ] || [ "$ID" = "debian" ]; then
+        echo "Ubuntu/Debian detected"
+        sudo apt-get update $cmd_args
+        sudo apt-get install $cmd_args $PROC_UTILITY
+      elif [ "$ID" = "centos" ] || [ "$ID" = "fedora" ]; then
+        echo "CentOS/Fedora detected"
+        sudo yum install $cmd_args $PROC_UTILITY
+      else
+        echo "Unsupported OS $ID"
+        echo "You need to install $PROC_UTILITY manually"
+        return 1
+      fi
+    else
+      echo "Unsupported OS, no /etc/os-release found"
+      echo "You need to install $PROC_UTILITY manually"
+      return 1
+    fi
+fi
+}
+
+uninstall_if_needed() {
+  local interactive=$1
+  local cmd_args="-y"
+  if [ -n "$interactive" ]; then
+    cmd_args=""
+  fi
+
+  # if command -v $PROC_UTILITY &> /dev/null; then
+    echo "Uninstall $PROC_UTILITY"
+    # Get OS name and uninstall utility
+    if [ "$(uname)" = "Darwin" ]; then
+      echo "Mac OS detected"
+      echo "Uninstall $PROC_UTILITY with Homebrew"
+      # Check if Homebrew is installed
+      if ! command -v brew &> /dev/null; then
+        echo "Homebrew not found"
+        echo "You need to uninstall $PROC_UTILITY manually"
+        return 1
+      fi
+      brew uninstall $PROC_UTILITY
+    elif [ -f /etc/os-release ]; then
+      . /etc/os-release
+      if [ "$ID" = "ubuntu" ] || [ "$ID" = "debian" ]; then
+        echo "Ubuntu/Debian detected"
+        sudo apt-get remove $cmd_args $PROC_UTILITY
+      elif [ "$ID" = "centos" ] || [ "$ID" = "fedora" ]; then
+        echo "CentOS/Fedora detected"
+        sudo yum remove $cmd_args $PROC_UTILITY
+      else
+        echo "Unsupported OS $ID"
+        echo "You need to uninstall $PROC_UTILITY manually"
+        return 1
+      fi
+    else
+      echo "Unsupported OS, no /etc/os-release found"
+      echo "You need to uninstall $PROC_UTILITY manually"
+      return 1
+    fi
+  # fi
+}
+
+is_installed() {
+  if command -v $PROC_UTILITY &> /dev/null; then
+    echo true
+  else
+    echo false
+  fi
+}
+
+# Find processes by port
+find_processes() {
+  local port=$1
+  local processes=""
+  if [ -n "$port" ]; then
+    processes=$(eval $PROC_CMD_FIND_ONE $port)
+  else
+    processes=$(eval $PROC_CMD_FIND_ALL)
+  fi
+  echo "$processes"
+}
+
+# Find pids by port
+find_pids() {
+  local port=$1
+  local pids=""
+  if [ -n "$port" ]; then
+    pids=$(eval $PROC_CMD_PID_ONE $port)
+  else
+    pids=$(eval $PROC_CMD_PID_ALL)
+  fi
+  echo "$pids"
+}
+
+# Start new proxy
+start() {
+  local installed=$(is_installed)
+  if [ "$installed" = false ]; then
+    echo "Program '$PROC_UTILITY' is not installed. You need to install it first."
+    echo "You can install it with --install option"
+    return
+  fi
+  
+  local port=$1
+  if [ -z "$port" ]; then
+    echo "Port is required to start proxy"
+    return
+  fi
+
+  local cmd=$(printf "$PROC_CMD_START" "$port")
+  eval $cmd
+  pid=$(find_pids $port)
+  if [ -z "$pid" ]; then
+    echo "Failed to start proxy on port $port"
+    return
+  fi
+  echo "New http proxy on port $port is started (pid $pid): $cmd"
+}
+
+# Stop one or all processes by port
+stop() {
+  local ports=$1
+  local pids_str=$(find_pids $ports)
+  if [ -z "$pids_str" ]; then
+    echo "No proxies found"
+    return
+  fi
+
+  echo "Stop all proxies"
+  multiline_to_array "$pids_str" pids
+  for pid in "${pids[@]}"; do
+    kill "$pid"
+    echo "  Proxy (pid $pid) is terminated"
+  done
+}
+
+# List all existing proxies
+list() {
+  local processes=$(find_processes)
+  if [ -z "$processes" ]; then
+    echo "No proxies found"
+    return
+  fi
+
+  echo "Active proxies:"
+  print_array "$processes"
+}
+
+
+print_help() {
+  echo "$PROC_CMD_DESC"
+  echo "If no arguments are provided, command will list all existing proxies"
+  echo ""
+  echo "Usage:"
+  echo "  $PROC_CMD_NAME port [--start] [--stop] [--list] [--install] [--uninstall] [--check] [--interactive] [--help]"
+  echo ""
+  echo "Examples:"
+  echo "  List all existing proxies"
+  echo "    $PROC_CMD_NAME"
+  echo "  Start new http proxy on port 3128"
+  echo "    $PROC_CMD_NAME 3128 --start"
+  echo "  Stop http proxy on port 3128"
+  echo "    $PROC_CMD_NAME 3128 --stop"
+  echo "  Stop all existing proxies"
+  echo "    $PROC_CMD_NAME --stop"
+  echo "  Install $PROC_UTILITY"
+  echo "    $PROC_CMD_NAME --install"
+  echo "  Uninstall $PROC_UTILITY"
+  echo "    $PROC_CMD_NAME --uninstall"
+  echo ""
+  echo "Arguments:"
+  echo "  port - local port to use for the proxy"
+  echo ""
+  echo "Options:"
+  echo "  --start:  start the new proxy"
+  echo "  --stop:   stop the existing proxy"
+  echo "  --list:   list all existing proxies"
+  echo "  --install:    install $PROC_UTILITY if not installed"
+  echo "  --uninstall:  stop all proxies and uninstall $PROC_UTILITY if installed"
+  echo "  --check:      check if $PROC_UTILITY is installed and command is available"
+  echo "  --interactive:  start command in interactive mode"
+  echo "  --help:  print this help"
+}
+
+#------------------------------------------------------------------------------
+# Main
+
+port=""
+action=""
+interactive=false
+install=false
+list=false
+
+# Actions (only one action can be provided)
+ACTIONS=("--start" "--stop" "--uninstall" "--check" "--help")
+
+# Parse arguments
+if [ "$#" -lt 1 ]; then
+  list=true
+else
+  for arg in "$@"; do
+    if [[ -n "$action" && $(in_array "$arg" "${ACTIONS[@]}") ]]; then
+      echo "Only one action of ${ACTIONS[@]} can be provided but got '$arg' after '$action'"
+      return
+    fi
+
+    case $arg in
+      # Actions
+      "--start")
+        action="--start"
+        ;;
+      "--stop")
+        action="--stop"
+        ;;
+      "--uninstall")
+        action="--uninstall"
+        ;;
+      "--check")
+        action="--check"
+        ;;
+
+      # Options
+      "--list")
+        list=true
+        ;;
+      "--install")
+        install=true
+        ;;
+      
+      # Special arguments
+      "--interactive")
+        interactive=true
+        ;;
+      "--help")
+        print_help
+        return
+        ;;
+      *)
+        if [ -n "$port" ]; then
+          echo "Unknown argument $arg"
+          return
+        fi
+        if [[ -n "$port" && ! $port =~ ^[0-9]+$ ]]; then
+          echo "Port must be a number, but got '$arg'"
+          return
+        fi
+        port=$arg
+        ;;
+    esac
+  done
+fi
+
+# Perform action
+
+# Check arguments compatibility
+if [[ $action = "--uninstall" && $install = true ]]; then
+  echo "Cannot install and uninstall at the same time"
+  return
+fi
+
+# In interactive mode, ask for unprovided arguments
+if [ $interactive = true ]; then
+  if [ -z "$port" ]; then
+    if [ $action = "--start" ]; then
+      read -p "Enter proxy port to start: " port
+    elif [ $action = "--stop" ]; then
+      read -p "Enter proxy port to stop: " port
+    fi
+  fi
+fi
+
+if [[ $action = "--start" && -z "$port" ]]; then
+  echo "Port is required to start proxy"
+  return
+fi
+
+if [[ -n "$port" && ! ($action = "--start" || $action = "--stop") ]]; then
+  echo "Port is only required to start or stop proxy"
+  return
+fi
+
+# Install if need
+if [[ $install = true ]]; then
+  install_if_needed $interactive
+fi
+
+case $action in
+  "--start")
+    start $port
+    ;;
+  "--stop")
+    stop $port
+    ;;
+  "--uninstall")
+    stop
+    uninstall_if_needed $interactive
+    ;;
+  "--check")
+    echo "Installed: $(is_installed)"
+    ;;
+  "")
+    ;;
+  *)
+    echo "Unknown action $action"
+    ;;
+esac
+
+if [ $list = true ]; then
+  list
+fi
+

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+source ~/.alias-gun/create-aliases
