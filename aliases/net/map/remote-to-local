@@ -56,7 +56,8 @@ fi
 multiline_to_array "$(eval $PROC_CMD_FIND)" PROC_INSTANCES
 
 hosts=()
-if [[ "$#" > 0 && "${1[1]}" != "-" ]]; then
+arg1="$1"
+if [[ "$#" > 0 && "${arg1:0:1}" != "-" ]]; then
   hosts=("$1")
   shift # Remove the host from the list of arguments
 else
