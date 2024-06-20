@@ -1,18 +1,25 @@
 #!/bin/bash
 
+export LETDEV_PROFILE='bia'
+export LETDEV_APP_FOLDER_PATH=`echo "$HOME/letdev"`
+export LETDEV_ALIASES_FOLDER_PATH=`echo "$HOME/aliases"`
+export LETDEV_SYMBOL=':'
+
 [ -n "${BASH_SOURCE[0]}" ] && SCRIPT_PATH="${BASH_SOURCE[0]}" || SCRIPT_PATH="$0"
 APP_FOLDER_PATH=`dirname $SCRIPT_PATH`
-source "$APP_FOLDER_PATH/.env"
 
-pushd "$ALIAS_GUN_APP_FOLDER_PATH" > /dev/null
+pushd "$LETDEV_APP_FOLDER_PATH" > /dev/null
 
 # System aliases
 CMD=`./echo-add-folder-script './aliases'` && eval "$CMD"
 
 # User aliases
-[ -d "$ALIAS_GUN_ALIASES_FOLDER_PATH" ] && CMD=`./echo-add-folder-script "$ALIAS_GUN_ALIASES_FOLDER_PATH"` && eval "$CMD"
+[ -d "$LETDEV_ALIASES_FOLDER_PATH" ] && CMD=`./echo-add-folder-script "$LETDEV_ALIASES_FOLDER_PATH"` && eval "$CMD"
 
 # Default command alias
-alias :="source $ALIAS_GUN_APP_FOLDER_PATH/default"
+alias :="source $LETDEV_APP_FOLDER_PATH/default"
+
+
+export PATH="./.letdev/$LETDEV_PROFILE:$PATH"
 
 popd > /dev/null
