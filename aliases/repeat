@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+
+# Repeat or Loop command
+
+args="$@"
+if [ -z "$args" ]; then
+    args="./status"
+fi
+
+while true; do
+    printf "\033c\033[3J"
+    eval "$args"
+    sleep 1
+done

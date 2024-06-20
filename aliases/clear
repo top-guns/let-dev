@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+
+# Clear the terminal screen
+
+printf "\033c\033[3J"
+
