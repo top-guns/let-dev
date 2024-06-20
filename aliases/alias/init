@@ -1,0 +1,12 @@
+#!/bin/bash
+
+profile="$1"
+
+[ -z "$profile" ] && read -p "Enter profile name (default $LETDEV_PROFILE): " profile
+[ -z "$profile" ] && profile=$LETDEV_PROFILE
+
+script_dir="./.letdev/$profile"
+
+mkdir -p "$script_dir"
+
+echo "Let.dev initialized for profile $profile"

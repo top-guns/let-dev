@@ -1,14 +1,14 @@
 #!/bin/bash
 
-export LETDEV_PROFILE='bia'
-export LETDEV_APP_FOLDER_PATH=`echo "$HOME/letdev"`
-export LETDEV_ALIASES_FOLDER_PATH=`echo "$HOME/aliases"`
-export LETDEV_SYMBOL=':'
-
 [ -n "${BASH_SOURCE[0]}" ] && SCRIPT_PATH="${BASH_SOURCE[0]}" || SCRIPT_PATH="$0"
 APP_FOLDER_PATH=`dirname $SCRIPT_PATH`
 
 pushd "$LETDEV_APP_FOLDER_PATH" > /dev/null
+
+export LETDEV_PROFILE='bia'
+export LETDEV_APP_FOLDER_PATH=`echo "$HOME/letdev"`
+export LETDEV_ALIASES_FOLDER_PATH=`echo "$HOME/aliases"`
+export LETDEV_SYMBOL=':'
 
 # System aliases
 CMD=`./echo-add-folder-script './aliases'` && eval "$CMD"
