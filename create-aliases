@@ -2,7 +2,6 @@
 
 export LETDEV_SYMBOL=':'
 export LETDEV_PATH=`echo "$HOME/let-dev"`
-export LETDEV_PROFILE='bia'
 
 export LETDEV_USERS_PATH=`echo "$HOME/let-dev/profiles"`
 export LETDEV_PROJECT_PATH=`echo "./.let-dev"`
