@@ -13,9 +13,9 @@ fi
 read -p "Local or global alias? (l/g): " alias_type
 script_dir=""
 if [ "$alias_type" == "l" ]; then
-    script_dir="$HOME/aliases/$LETDEV_PROFILE"
+    script_dir="$LETDEV_HOME/profiles/$LETDEV_PROFILE"
 elif [ "$alias_type" == "g" ]; then
-    script_dir="./.letdev/$LETDEV_PROFILE"
+    script_dir="./.let-dev/$LETDEV_PROFILE"
 else
     echo "Invalid alias type"
     exit 1

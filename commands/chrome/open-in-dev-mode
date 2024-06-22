@@ -10,7 +10,7 @@ print_help() {
     echo "  :chrome:open-in-dev-mode [trusted_host] [trusted_host] ..."
     echo "Predefined mode settings:"
     echo "  - Web security is disabled"
-    echo "  - User data directory is set to /tmp/letdev_chrome_dev"
+    echo "  - User data directory is set to tmp/chrome_dev_profile"
     echo "Update: For Chrome 22+ you will be presented with an error message that says: "
     echo "You are using an unsupported command-line flag: --disable-web-security. Stability and security will suffer."
     echo "However you can just ignore that message while developing."
@@ -22,7 +22,7 @@ if [[ "$1" == "-h" || "$1" == "--help" ]]; then
 fi
 
 # Calculate the new profile path
-profile_dir="$HOME/tmp/letdev"
+profile_dir="$LETDEV_PATH/tmp"
 [ ! -d "$profile_dir" ] && mkdir -p "$profile_dir"
 profile_path="$profile_dir/chrome_dev_profile"
 
@@ -49,7 +49,7 @@ echo "Start Chrome in development mode"
 # Is it OSX
 if [[ "$OSTYPE" == "darwin"* ]]; then
     # Old version: 
-    # open -na "Google Chrome" --args --user-data-dir="/tmp/letdev_chrome_dev" --disable-web-security
+    # open -na "Google Chrome" --args --user-data-dir="/tmp/chrome_dev_profile" --disable-web-security
 
     # New version: 
     open -na Google\ Chrome \
@@ -60,7 +60,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
         $trusted_host_options
 elif [[ "$OSTYPE" == "linux-gnu" ]]; then
     # Old version: 
-    # google-chrome --user-data-dir="/tmp/letdev_chrome_dev" --disable-web-security
+    # google-chrome --user-data-dir="/tmp/chrome_dev_profile" --disable-web-security
 
     # New version:
     google-chrome -na \

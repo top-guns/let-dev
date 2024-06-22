@@ -5,7 +5,7 @@ profile="$1"
 [ -z "$profile" ] && read -p "Enter profile name (default $LETDEV_PROFILE): " profile
 [ -z "$profile" ] && profile=$LETDEV_PROFILE
 
-script_dir="./.letdev/$profile"
+script_dir="./.let-dev/$profile"
 
 mkdir -p "$script_dir"
 

@@ -5,7 +5,11 @@
 *.copy
 *.copy.*
 * copy
+tmp
+temp
 
-
+# Local settings
 .env
 profiles
+.let-dev
+.tools-version
