@@ -4,7 +4,7 @@ command engine for bush/zsh
 ## Installation
 
 ```bash
-(cd ~ && git clone git@github.com:let-dev/let-dev.git)
+(cd ~ && git clone git@github.com:top-guns/let-dev.git)
 ~/let-dev/install.sh
 source ~/let-dev/create-aliases
 ```
