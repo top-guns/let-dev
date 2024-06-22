@@ -1,16 +1,12 @@
 #!/bin/bash
 
-[ -n "${BASH_SOURCE[0]}" ] && SCRIPT_PATH="${BASH_SOURCE[0]}" || SCRIPT_PATH="$0"
-APP_FOLDER_PATH=`dirname $SCRIPT_PATH`
-source "$APP_FOLDER_PATH/.env"
-
 FOLDER_PATH=$1
-[ -z "$FOLDER_PATH" ] && echo "Please specify aliases folder path" && exit 1
+[ -z "$FOLDER_PATH" ] && echo "Please specify commands folder path" && exit 1
 
 FOLDER_FULL_PATH=`(cd $FOLDER_PATH && pwd)`
 
 CMD="cd $FOLDER_PATH && find . -type f -not -path '*/\.*' -exec bash -c 'echo \"alias \$(echo {} | sed \"s/\//$LETDEV_SYMBOL/g\")=\\\"source $FOLDER_FULL_PATH/{}\\\";\"' \\;"
 CMD=`eval "$CMD"`
-CMD=`echo "$CMD" | sed 's/\/\.\//\//g' | sed 's/^alias \./alias /'`
+CMD=`echo "$CMD" | sed 's/\/\.\//\//g' | sed 's/^alias \./alias /' | sed 's/^alias ::::/alias ::/'`
 
 echo "$CMD"

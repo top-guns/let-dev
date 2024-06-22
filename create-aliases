@@ -1,25 +1,31 @@
 #!/bin/bash
 
-[ -n "${BASH_SOURCE[0]}" ] && SCRIPT_PATH="${BASH_SOURCE[0]}" || SCRIPT_PATH="$0"
-APP_FOLDER_PATH=`dirname $SCRIPT_PATH`
-
-pushd "$LETDEV_APP_FOLDER_PATH" > /dev/null
-
-export LETDEV_PROFILE='bia'
-export LETDEV_APP_FOLDER_PATH=`echo "$HOME/letdev"`
-export LETDEV_ALIASES_FOLDER_PATH=`echo "$HOME/aliases"`
 export LETDEV_SYMBOL=':'
+export LETDEV_PATH=`echo "$HOME/letdev"`
+export LETDEV_PROFILE='bia'
 
-# System aliases
-CMD=`./echo-add-folder-script './aliases'` && eval "$CMD"
+export LETDEV_USERS_PATH=`echo "$HOME/letdev/profiles"`
+export LETDEV_PROJECT_PATH=`echo "./.letdev"`
 
-# User aliases
-[ -d "$LETDEV_ALIASES_FOLDER_PATH" ] && CMD=`./echo-add-folder-script "$LETDEV_ALIASES_FOLDER_PATH"` && eval "$CMD"
+pushd "$LETDEV_PATH" > /dev/null
+
+# System commands
+CMD=`./echo-add-folder-script './commands'`
+eval "$CMD"
+
+# Global user commands
+if [ -d "$LETDEV_USERS_PATH/$LETDEV_PROFILE" ]; then 
+    CMD=`./echo-add-folder-script "$LETDEV_USERS_PATH/$LETDEV_PROFILE"`
+    eval "$CMD"
+fi
+
+# Shell command alias
+alias $LETDEV_SYMBOL$LETDEV_SYMBOL="$LETDEV_PATH/shell/start.sh"
 
 # Default command alias
-alias :="source $LETDEV_APP_FOLDER_PATH/default"
+alias $LETDEV_SYMBOL="source $LETDEV_PATH/default"
 
-
-export PATH="./.letdev/$LETDEV_PROFILE:$PATH"
+# Project user commands
+export PATH="$LETDEV_PROJECT_PATH/$LETDEV_PROFILE:$PATH"
 
 popd > /dev/null
