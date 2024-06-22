@@ -1,2 +1,11 @@
-.env
+# Temporary files
 .DS_Store
+*.tmp
+*.tmp.*
+*.copy
+*.copy.*
+* copy
+
+
+.env
+profiles
