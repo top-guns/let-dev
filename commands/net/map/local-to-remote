@@ -28,7 +28,7 @@ in_array() {
 }
 
 PROC_TAG='map:local-to-remote'
-PROC_CMD_START="ssh -o Tag='$PROC_TAG'"
+PROC_CMD_START="ssh -fN -o Tag='$PROC_TAG'"
 PROC_CMD_FIND="ps axww | grep '$PROC_TAG' | grep -v grep"
 
 print_help() {
