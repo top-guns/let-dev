@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+#set -euo pipefail
+
+# Update git settings for the project with the GitHub account
+
+# Help
+if [ "$1" == "--help" ]; then
+    echo "Usage: set-project-github-account <github_account> <email> [project_dir]"
+    exit 0
+fi
+
+# Variables
+github_account=$1
+email=$2
+project_dir=$3
+
+# Check if the GitHub account is provided
+if [ -z "$github_account" ]; then
+    echo "GitHub account is required"
+    exit 1
+fi
+
+# Check if the email is provided
+if [ -z "$email" ]; then
+    echo "Email is required"
+    exit 1
+fi
+
+# Check if the project directory is provided or use the current directory
+[ -z "$project_dir" ] && project_dir="."
+
+# Check if the project directory exists
+if [ ! -d "$project_dir" ]; then
+    echo "Project directory does not exist: $project_dir"
+    exit 1
+fi
+
+# Update the git settings for the project
+if [ "$project_dir" != "." ]; then
+    cd "$project_dir"
+fi
+
+git config user.name "$github_account"
+git config user.email "$email"
+
+echo "Git settings updated for the project: $project_dir"
