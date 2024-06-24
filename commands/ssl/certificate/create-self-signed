@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+
+# Create a self-signed SSL certificate
+
+# Help
+if [ "$1" == "--help" ]; then
+  echo "Usage: create-self-signed <domain> <days> <output_dir>"
+  exit 0
+fi
+
+# Variables
+domain=$1
+days=$2
+output_dir=$3
+
+# Check if the domain is provided
+if [ -z "$domain" ]; then
+  echo "Domain is required"
+  exit 1
+fi
+
+# Check if the days is provided or use 10 years
+[ -z "$days" ] && days=3650
+
+# Check if the output directory is provided or use the current directory
+[ -z "$output_dir" ] && output_dir="."
+
+# Create the output directory if it does not exist
+[ ! -d "$output_dir" ] && mkdir -p "$output_dir"
+
+# Check if the domain is wildcard
+wildcard_domain=false
+if [[ "$domain" == *"*"* ]]; then
+  echo "Wildcard domain"
+  wildcard_domain=true
+fi
+
+# Generate the certificate
+openssl req -new -newkey rsa:2048 -days "$days" -nodes -x509 \
+  -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=$domain" \
+  -keyout "$output_dir/$domain.key" -out "$output_dir/$domain.crt"
+
+
+
+# # Generate the private key
+# openssl genrsa -out "$output_dir/$domain.key" 2048
