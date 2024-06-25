@@ -1,7 +1,11 @@
 #!/bin/bash
 
+# Get the absolute path of the current script
+[ -n "${BASH_SOURCE[0]}" ] && SCRIPT_PATH="${BASH_SOURCE[0]}" || SCRIPT_PATH="$0"
+SCRIPT_DIR=`dirname $SCRIPT_PATH`
+
 export LETDEV_SYMBOL=':'
-export LETDEV_PATH=`echo "$HOME/let-dev"`
+export LETDEV_PATH="$SCRIPT_DIR"
 
 export LETDEV_USERS_PATH=`echo "$HOME/let-dev/profiles"`
 export LETDEV_PROJECT_PATH=`echo "./.let-dev"`
