@@ -10,6 +10,22 @@ then
     return
 fi
 
+command=$1
+
+if [ "$command" == "help" ]; then
+    echo "Usage: :nginx:logs [access|errors|clear]"
+elif [ "$command" == "access" ]; then
+    sudo tail -f /var/log/nginx/access.log
+elif [ "$command" == "errors" ] || [ -z "$command" ] ; then
+    sudo tail -f /var/log/nginx/error.log
+elif [ "$command" == "clear" ]; then
+    sudo truncate -s 0 /var/log/nginx/access.log
+    sudo truncate -s 0 /var/log/nginx/error.log
+    echo "Logs cleared"
+else
+    echo "Invalid command"
+fi
+
 # Display nginx service journal
 # sudo journalctl -u nginx.service
-journalctl -xeu nginx.service
+# journalctl -xeu nginx.service
