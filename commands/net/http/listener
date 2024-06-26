@@ -1,0 +1,15 @@
+#! /bin/bash
+
+# This script start process which listen the specified port 
+# and echo the received data to the output
+
+port=$1
+
+if [ -z "$port" ] || [ "$port" = "--hep" ] ; then
+    echo "Usage: $0 <port>"
+    return
+fi
+
+nc -l -p $port -k -v | while read line; do
+    echo $line
+done

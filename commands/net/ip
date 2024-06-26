@@ -1,0 +1,5 @@
+#! /bin/bash
+
+# Print ip address of the machine
+echo "IP Address of the machine is: "
+ip addr show eth0 | grep inet | awk '{ print $2; }' | sed 's/\/.*$//'

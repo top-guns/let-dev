@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+
+# Open vim config file in the default text editor
+
+FILE_TO_OPEN="$HOME/.vimrc"
+FILE_TITLE="vim configuration file"
+
+touch $FILE_TO_OPEN
+
+FILE_NAME=$(basename $FILE_TO_OPEN)
+CURRENT_COMMAND=$(basename $0)
+
+if [ "$1" = "--help" ]; then
+    echo "Open $FILE_TITLE in the specified text editor"
+    echo "  use the default text editor if the text editor is not passed as an argument"
+    echo "  use vim if the default text editor is not set"
+    echo "Usage:"
+    echo "  :config:$CURRENT_COMMAND [TEXT_EDITOR]"
+    echo "Arguments:"
+    echo "  TEXT_EDITOR: The text editor to open file, for example, vim, nano, mcedit, etc."
+    echo "Examples:"
+    echo "  :config:$CURRENT_COMMAND"
+    echo "  :config:$CURRENT_COMMAND mcedit"
+    return 0
+fi
+
+# Check if the file exists
+if [ ! -f $FILE_TO_OPEN ]; then
+  echo "The $FILE_TO_OPEN file cannot be found"
+  return 1
+fi
+
+TEXT_EDITOR=$1
+
+# Check if the text editor is passed as an argument
+if [ -z $TEXT_EDITOR ]; then
+    # echo "The text editor is not passed as an argument, try to use the default text editor"
+    TEXT_EDITOR=$EDITOR
+fi
+
+# Check if the default text editor is set
+if [ -z $TEXT_EDITOR ]; then
+    echo "The default text editor is not set, use vim"
+    TEXT_EDITOR="vim"
+fi
+
+sudo $TEXT_EDITOR $FILE_TO_OPEN
