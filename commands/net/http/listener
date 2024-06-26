@@ -10,6 +10,18 @@ if [ -z "$port" ] || [ "$port" = "--hep" ] ; then
     return
 fi
 
-nc -l -p $port -k -v | while read line; do
-    echo $line
-done
+# Check nc version
+nc_version=$(nc -h 2>&1 | grep 'Ncat version')
+
+if [[ $nc_version ]]; then
+    # Ncat version
+    nc -l -p $port -k -v | while read line; do
+        echo $line
+    done
+else
+    # Traditional nc version
+    nc -l $port -k -v | while read line; do
+        echo $line
+    done
+fi
+
