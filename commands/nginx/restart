@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+
+# Restart nginx service
+
+# Check if nginx is installed
+if ! command -v nginx &> /dev/null
+then
+    echo "nginx is not installed"
+    return
+fi
+
+# Check if nginx is running
+if ! systemctl is-active --quiet nginx
+then
+    echo "nginx is not running, starting it"
+fi
+
+# Restart nginx
+sudo systemctl restart nginx
+echo "nginx restarted"

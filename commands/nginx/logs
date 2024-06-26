@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+
+# Display nginx service journal
+
+# Check if nginx is installed
+if ! command -v nginx &> /dev/null
+then
+    echo "nginx is not installed"
+    return
+fi
+
+# Display nginx service journal
+# sudo journalctl -u nginx.service
+journalctl -xeu nginx.service

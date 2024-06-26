@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+
+# Create backup of nginx.conf file
+
+# Check if nginx is installed
+if ! command -v nginx &> /dev/null
+then
+    echo "nginx is not installed"
+    return
+fi
+
+nginx_conf="/etc/nginx/nginx.conf"
+
+if [ ! -f "$nginx_conf" ]; then
+    echo "nginx.conf not found"
+    return
+fi
+
+backup_path=${1:-"/etc/nginx/nginx.conf.bak"}
+
+# if we get only the directory path, append the file name
+if [ -d "$backup_path" ]; then
+    backup_path="$backup_path/nginx.conf.bak"
+fi
+
+# If we get only the file name, append the /etc/nginx/ path
+if [ ! -d "$(dirname $backup_path)" ]; then
+    backup_path="/etc/nginx/$backup_path"
+fi
+
+# If the file already exists, ask for confirmation
+if [ -f "$backup_path" ]; then
+    read -p "File already exists. Do you want to overwrite it? (y/n): " overwrite
+    if [ "$overwrite" != "y" ]; then
+        echo "Backup not created"
+        return
+    fi
+fi
+
+sudo cp $nginx_conf $backup_path
+
+echo "Backup created at $backup_path"

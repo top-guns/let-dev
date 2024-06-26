@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+
+# Start nginx in service or as process
+
+# Check if nginx is installed
+if ! command -v nginx &> /dev/null
+then
+    echo "nginx is not installed"
+    return
+fi
+
+start_mode=$1 # service or process
+
+# If no start mode is provided, ask user
+if [ -z "$start_mode" ]
+then
+    read -p "Start nginx in service or process mode? [service/process]: " start_mode   
+fi
+
+if [ "$start_mode" != "service" ] && [ "$start_mode" != "process" ]
+then
+    echo "Invalid start mode. Use 'service' or 'process'"
+    return
+fi
+
+if [ "$start_mode" == "service" ]
+then
+    # Check if nginx is already running as service
+    if sudo systemctl is-active --quiet nginx
+    then
+        echo "nginx is already running as service"
+        return
+    fi
+
+    # Start nginx service
+    sudo systemctl start nginx
+    echo "nginx started as service"
+else
+    # Check if nginx is already running as process
+    if pgrep nginx
+    then
+        echo "nginx is already running as process"
+        return
+    fi
+
+    # Start nginx as process
+    # sudo nginx
+    nginx -g "daemon off;"
+    echo "nginx started as process"
+fi

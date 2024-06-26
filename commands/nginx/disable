@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+
+# Disable nginx service start on boot
+
+# Check if nginx is installed
+if ! command -v nginx &> /dev/null
+then
+    echo "nginx is not installed"
+    return
+fi
+
+# Check if nginx is running
+if systemctl is-active --quiet nginx
+then
+    echo "Stopping nginx service"
+    sudo systemctl stop nginx
+fi
+
+# Disable nginx service start on boot
+echo "Disabling nginx service start on boot"
+sudo systemctl disable nginx
+
+echo "nginx service start on boot disabled"

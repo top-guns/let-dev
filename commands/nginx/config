@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+
+# Open nginx.conf in preferred editor
+
+# Check if nginx is installed
+if ! command -v nginx &> /dev/null
+then
+    echo "nginx is not installed"
+    return
+fi
+
+editor=${EDITOR:-vim}
+nginx_conf="/etc/nginx/nginx.conf"
+
+if [ ! -f "$nginx_conf" ]; then
+    echo "nginx.conf not found"
+    return
+fi
+
+sudo $editor $nginx_conf
+
+# Reload nginx if it is running
+if sudo systemctl is-active --quiet nginx; then
+    echo "nginx is running, reloading"
+    sudo systemctl reload nginx
+fi
+
+echo "nginx configuration updated"

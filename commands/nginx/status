@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+
+# Print nginx service status: 
+# - installed or not
+# - running or not
+# - enabled or not
+
+# Check if nginx is installed
+if ! command -v nginx &> /dev/null
+then
+    echo "nginx is not installed"
+    return
+fi
+
+# Check if nginx is running
+if systemctl is-active --quiet nginx
+then
+    echo "nginx service is running"
+else
+    echo "nginx service is stopped"
+fi
+
+# Check if nginx is enabled
+if systemctl is-enabled --quiet nginx
+then
+    echo "nginx service is enabled"
+else
+    echo "nginx service is disabled"
+fi
+
+# Check if nginx process is running
+if pgrep -x "nginx" > /dev/null
+then
+    echo "nginx process is running"
+else
+    echo "nginx process is stopped"
+fi
+
+# Display full nginx service status
+sudo systemctl status nginx

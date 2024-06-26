@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+
+# Stop nginx service
+
+# Check if nginx is installed
+if ! command -v nginx &> /dev/null
+then
+    echo "nginx is not installed"
+    return
+fi
+
+# Check if nginx is running
+if ! systemctl is-active --quiet nginx
+then
+    echo "nginx is not running"
+    return
+fi
+
+# Stop nginx
+sudo systemctl stop nginx
+echo "nginx stopped"
+

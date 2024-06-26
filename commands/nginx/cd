@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+
+# Go to the nginx directory
+
+# Check if nginx is installed
+if ! command -v nginx &> /dev/null
+then
+    echo "nginx is not installed"
+    return
+fi
+
+# Check if the nginx directory exists
+if [ ! -d "/etc/nginx" ]
+then
+    echo "nginx directory does not exist"
+    return
+fi
+
+# Go to the nginx directory
+cd /etc/nginx
+
