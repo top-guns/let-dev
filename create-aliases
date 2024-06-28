@@ -7,10 +7,11 @@ SCRIPT_DIR=`dirname $SCRIPT_PATH`
 export LETDEV_SYMBOL=':'
 export LETDEV_PATH="$SCRIPT_DIR"
 
+cur_dir=`pwd`
+cd $LETDEV_PATH
+
 export LETDEV_USERS_PATH=`echo "$HOME/let-dev/profiles"`
 export LETDEV_PROJECT_PATH=`echo "./.let-dev"`
-
-pushd "$LETDEV_PATH" > /dev/null
 
 # System commands
 CMD=`./echo-add-folder-script './commands'`
@@ -31,4 +32,4 @@ alias $LETDEV_SYMBOL="source $LETDEV_PATH/default"
 # Project user commands
 export PATH="$LETDEV_PROJECT_PATH/$LETDEV_PROFILE:$PATH"
 
-popd > /dev/null
+cd $cur_dir
