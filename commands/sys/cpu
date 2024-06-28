@@ -1,0 +1,10 @@
+#!/bin/bash
+
+echo "CPU Information:"
+if [ -x "$(command -v lscpu)" ]; then
+  lscpu
+elif [ -x "$(command -v sysctl)" ]; then
+  sysctl -n machdep.cpu.brand_string
+else
+  echo "Cannot find CPU information"
+fi

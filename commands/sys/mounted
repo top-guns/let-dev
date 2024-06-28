@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# Display main system information
+
+echo "Mounted Filesystems:"
+mount | column -t

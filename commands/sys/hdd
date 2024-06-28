@@ -1,0 +1,9 @@
+#!/bin/bash
+
+echo "Hard Disk Information:"
+df -h
+echo ""
+
+echo "Filesystem Disk Space Usage:"
+df -h
+echo ""

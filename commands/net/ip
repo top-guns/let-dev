@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 # Print ip address of the machine
 echo "IP Address of the machine is: "

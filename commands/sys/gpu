@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# GPU memory usage monitoring
+
+# watch -n1 nvidia-smi
+nvidia-smi
