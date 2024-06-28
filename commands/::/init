@@ -9,4 +9,4 @@ script_dir="./.let-dev/$profile"
 
 mkdir -p "$script_dir"
 
-echo "Let.dev initialized for profile $profile"
+echo "let.dev initialized for profile $profile"

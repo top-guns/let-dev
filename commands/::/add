@@ -3,7 +3,7 @@
 command="$@"
 
 # Get name for the creating alias script
-read -p "Enter alias name: " alias_name
+read -p "Enter command name: " alias_name
 if [ -z "$alias_name" ]; then
     echo "Alias name is required"
     exit 1
