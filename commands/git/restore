@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+git_version=$(git --version | awk '{print $3}')
+
+if [[ $(echo "$git_version 2.23.0" | tr " " "\n" | sort -V | head -n 1) == "2.23.0" ]]; then
+    git restore $@
+else
+    git checkout -- $@
+fi
