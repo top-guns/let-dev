@@ -1,5 +1,34 @@
 #!/bin/bash
 
+# Check is the script run in interactive mode
+interactive_mode=false
+[ -t 0 ] && interactive_mode=true
+
+# Update project version
+check_updates=$interactive_mode
+[ "$1" = "--no-update" ] && check_updates=false
+if $check_updates; then
+    # Check if there are changes in the let-dev project
+    git fetch
+    changes_count=`git rev-list HEAD...FETCH_HEAD --count`
+    if [ $changes_count -gt 0 ]; then
+        # Ask the user if he wants to update the project
+        printf "There are $changes_count changes in the let-dev project. Do you want to update it? (Y/n) "
+        read REPLY
+        if [[ $REPLY =~ ^[Nn][Oo]?$ ]]; then
+            echo "Skip project update"
+        else
+            echo "Updating project..."
+            git pull
+            # Start the script again to provide using new version of this script
+            echo "Project updated, restarting..."
+            script_name=`basename $0`
+            "$LETDEV_PATH/$script_name" --no-update
+            return
+        fi
+    fi
+fi
+
 # Get the absolute path of the current script
 [ -n "${BASH_SOURCE[0]}" ] && SCRIPT_PATH="${BASH_SOURCE[0]}" || SCRIPT_PATH="$0"
 SCRIPT_DIR=`dirname $SCRIPT_PATH`
