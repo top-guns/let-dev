@@ -9,8 +9,8 @@ check_updates=$interactive_mode
 [ "$1" = "--no-update" ] && check_updates=false
 if $check_updates; then
     # Check if there are changes in the let-dev project
-    git fetch
-    changes_count=`git rev-list HEAD...FETCH_HEAD --count`
+    (cd $LETDEV_PATH && git fetch)
+    changes_count=`(cd $LETDEV_PATH && git rev-list HEAD...FETCH_HEAD --count)`
     if [ $changes_count -gt 0 ]; then
         # Ask the user if he wants to update the project
         printf "There are $changes_count changes in the let-dev project. Do you want to update it? (Y/n) "
@@ -19,7 +19,7 @@ if $check_updates; then
             echo "Skip project update"
         else
             echo "Updating project..."
-            git pull
+            (cd $LETDEV_PATH && git pull)
             # Start the script again to provide using new version of this script
             echo "Project updated, restarting..."
             script_name=`basename $0`
