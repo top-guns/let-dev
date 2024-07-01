@@ -5,8 +5,8 @@ FOLDER_PATH=$1
 
 FOLDER_FULL_PATH=`(cd $FOLDER_PATH && pwd)`
 
-CMD="cd $FOLDER_PATH && find . \\( -type f -o -type l \\) -not -path '*/\.*' -exec bash -c 'echo \"alias \$(echo {} | sed \"s/\//$LETDEV_SYMBOL/g\")=\\\"source $FOLDER_FULL_PATH/{}\\\";\"' \\;"
+CMD="cd $FOLDER_PATH && find . \\( -type f -o -type l \\) -not -path '*/\.*' -exec bash -c 'echo \"alias \$(echo {} | sed \"s/^\.\//$LETDEV_SYMBOL/g\")=\\\"source $FOLDER_FULL_PATH/{}\\\";\"' \\;"
 CMD=`eval "$CMD"`
-CMD=`echo "$CMD" | sed 's/\/\.\//\//g' | sed 's/^alias \./alias /' | sed 's/^alias ::::/alias ::/'`
+CMD=`echo "$CMD" | sed 's/^alias :::\//alias ::/'`
 
 echo "$CMD"

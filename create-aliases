@@ -53,10 +53,10 @@ if [ -d "$LETDEV_USERS_PATH/$LETDEV_PROFILE" ]; then
 fi
 
 # Shell command alias
-alias $LETDEV_SYMBOL$LETDEV_SYMBOL="$LETDEV_PATH/shell/start.sh"
+alias "$LETDEV_SYMBOL$LETDEV_SYMBOL"="$LETDEV_PATH/shell/start.sh"
 
 # Default command alias
-alias $LETDEV_SYMBOL="source $LETDEV_PATH/default"
+alias "$LETDEV_SYMBOL"="source $LETDEV_PATH/default"
 
 # Project user commands
 export PATH="$LETDEV_PROJECT_PATH/$LETDEV_PROFILE:$PATH"
