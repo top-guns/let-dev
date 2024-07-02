@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cd commands
+exit 0

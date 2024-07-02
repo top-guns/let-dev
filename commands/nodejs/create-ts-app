@@ -5,7 +5,7 @@
 
 # Load aliases to make them available in the current shell
 # shopt -s expand_aliases
-# source $LETDEV_PATH/create-aliases
+# source $LETDEV_HOME/create-aliases
 
 # Variables
 dir=$1

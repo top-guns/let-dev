@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 #llsfn () { 
 #  while test $# -gt 0; do perl -s -e '@fields = stat "$f"; printf "%04o\t", $fields[2] & 07777' -- -f=$1; ls -ld $1; shift; done; unset -f llsf; 

@@ -22,7 +22,7 @@ if [[ "$1" == "-h" || "$1" == "--help" ]]; then
 fi
 
 # Calculate the new profile path
-profile_dir="$LETDEV_PATH/tmp"
+profile_dir="$LETDEV_HOME/tmp"
 [ ! -d "$profile_dir" ] && mkdir -p "$profile_dir"
 profile_path="$profile_dir/chrome_dev_profile"
 

@@ -7,13 +7,13 @@ location="$2"
 [ -z "$location" ] && location="$PWD"
 
 script_name="$alias_name"
-script_path="$LETDEV_PATH/profiles/$LETDEV_PROFILE/cd/$script_name"
+script_path="$LETDEV_HOME/profiles/$LETDEV_PROFILE/cd/$script_name"
 
 echo "Add alias ':cd:$alias_name' which will change directory to '$location'"
 
 [ -f "$script_path" ] && echo "Alias with the name ':cd:$alias_name' already exists" && return
 
-mkdir -p "$LETDEV_PATH/profiles/$LETDEV_PROFILE/cd"
+mkdir -p "$LETDEV_HOME/profiles/$LETDEV_PROFILE/cd"
 
 touch "$script_path"
 chmod +x $script_path

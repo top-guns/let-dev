@@ -3,7 +3,7 @@
 _letdev_complete() {
     local cur prev words cword
     _init_completion || return
-    local cmds=$($LETDEV_PATH/default --list)
+    local cmds=$($LETDEV_HOME/list-commands.sh --list)
     COMPREPLY=( $(compgen -W "$(echo "$cmds" | fzf --reverse --inline-info --tac)" -- "$cur") )
 }
 
@@ -13,7 +13,7 @@ _letdev_tab_complete() {
         local cur_word_index=$(IFS=" "; set -f; set -- $READLINE_LINE; echo $#)
         local cur=${words[cur_word_index-1]}
         local prev=${words[cur_word_index-2]}
-        local cmds=$($LETDEV_PATH/default --list)
+        local cmds=$($LETDEV_HOME/list-commands.sh --list)
         local selected=$(echo "$cmds" | fzf --reverse --inline-info --tac --query="$cur")
         if [[ -n $selected ]]; then
             local cur_length=${#cur}
