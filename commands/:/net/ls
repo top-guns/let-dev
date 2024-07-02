@@ -2,25 +2,29 @@
 
 # List all listening ports
 
-# Help
-if [ "$1" == "--help" ]; then
-    echo "Usage: $0 [lsof|netstat|ss]"
-    exit 0
-fi
+command() {
+    # Help
+    if [ "$1" == "--help" ]; then
+        echo "Usage: $0 [lsof|netstat|ss]"
+        return
+    fi
 
-method=$1
+    method=$1
 
-if [[ -z "$method" || "$method" == "lsof" ]]; then
-    sudo lsof -P -iTCP -sTCP:LISTEN
-    return
-elif [ "$method" == "netstat" ]; then
-    netstat -tuln
-    exit 0
-elif [ "$method" == "ss" ]; then
-    ss -tuln
-    return
-else
-    echo "Invalid method"
-    echo "Usage: $0 [lsof|netstat|ss]"
-    return
-fi
+    if [[ -z "$method" || "$method" == "lsof" ]]; then
+        sudo lsof -P -iTCP -sTCP:LISTEN
+        return
+    elif [ "$method" == "netstat" ]; then
+        netstat -tuln
+        return
+    elif [ "$method" == "ss" ]; then
+        ss -tuln
+        return
+    else
+        echo "Invalid method"
+        echo "Usage: $0 [lsof|netstat|ss]"
+        return
+    fi
+}
+
+command $@
