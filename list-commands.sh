@@ -1,41 +1,23 @@
 #!/bin/bash
 
 list_commands() {
-    local LIST_MODE=false
-    if [ "$1" = "--list" ]; then
-        LIST_MODE=true
-        shift
-    fi
+    local filter=`echo "$@"`
 
-    local COLORED=''
-    [[ $TERM =~ (color|ansi|xterm|rxvt) && $LIST_MODE = false ]] && COLORED='true'
+    # Replace spaces with /
+    filter=`echo "$filter" | tr " " "/"`
 
-    local CMD=''
-    [ -n "$1" ] && CMD=`echo "$@" | tr " " "/"`
+    # Remove the first symbol if it is a colon
+    # filter=`echo "$filter" | sed "s/^:[ ]*//"`
 
-    CMD="$LETDEV_SYMBOL$CMD"
-    # echo "cmd: $CMD"
+    local cur_dir=`pwd`
+    cd "$LETDEV_HOME/commands/:"
+    local COMMAND_LIST=$(find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print | sed 's|^./|: |')
+    cd $cur_dir
 
-    pushd "$LETDEV_HOME/commands" > /dev/null
-    COMMAND_LIST=$(find . -type d -print -o -type f -print -o -type l -print)
-    popd > /dev/null
+    local result=`echo "$COMMAND_LIST"`
+    [ -n "$filter" ] && result=`echo "$result" | grep "$filter"`
 
-    # Fix command start symbols
-    COMMAND_LIST=`echo "$COMMAND_LIST" | sed 's/^\.//' | sed "s/^\//$LETDEV_SYMBOL/" | sed "s/^$LETDEV_SYMBOL$LETDEV_SYMBOL$LETDEV_SYMBOL/$LETDEV_SYMBOL$LETDEV_SYMBOL/"`
-
-    # Remove hidden files and folders and empty commands
-    COMMAND_LIST=`echo "$COMMAND_LIST" | grep -ve "^$LETDEV_SYMBOL\." | grep -ve '/\.' | grep -v "^[[:space:]]*$"`
-
-    LIST=`echo "$COMMAND_LIST" | grep "$CMD"`
-
-    if [ -n "$COLORED" ]; then
-        LIST=`echo "$LIST" | sed "s/$LETDEV_SYMBOL$/\*/" | sed "s/^.*$LETDEV_SYMBOL/  /" | awk '{ printf "%-20s\n", $0 }' | sed 's/\*[ ]*$/&(...)/' | sed 's/\*//' | awk '{ printf "%-26s\n", $0 }'`
-        #echo "3: $LIST"
-        LIST=`echo "$LIST" | uniq | sort -t $'(' -k 2,2r -k 1,1n`
-        LIST=`echo "$LIST" | awk '{gsub(/.*\(.*/,"\033[1;44m&\033[0m"); print}' | awk '{gsub(/^[^(]*$/,"\033[32;44m&\033[0m"); print}'`
-    fi
-
-    echo "$LIST"
+    echo "$result"
 }
 
 list_commands $@

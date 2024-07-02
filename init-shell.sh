@@ -4,8 +4,6 @@ init_shell() {
     # Get the absolute path of the current script
     local SCRIPT_PATH=''
     [ -n "${BASH_SOURCE[0]}" ] && SCRIPT_PATH="${BASH_SOURCE[0]}" || SCRIPT_PATH="$0"
-    local SCRIPT_DIR=`dirname $SCRIPT_PATH`
-    local SCRIPT_NAME=`basename $SCRIPT_PATH`
 
     # Check is the script run in interactive mode
     local interactive_mode=false
@@ -16,15 +14,6 @@ init_shell() {
     check_updates=false
     [ "$1" = "--no-update" ] && check_updates=false
     [ "$1" = "--update" ] && check_updates=true
-
-
-    # Set the global variables
-    export LETDEV_SYMBOL=':'
-    # export LETDEV_HOME="$SCRIPT_DIR"
-    export LETDEV_COMMANDS_PATH=`echo "$HOME/let-dev/commands"`
-    export LETDEV_USERS_PATH=`echo "$HOME/let-dev/profiles"`
-    export LETDEV_PROJECT_PATH=`echo "./.let-dev"`
-
 
     # Update project version
     if $check_updates; then
@@ -50,6 +39,13 @@ init_shell() {
     fi
 
 
+    # Set the global variables
+    export LETDEV_SYMBOL=':'
+    # export LETDEV_HOME=`dirname $SCRIPT_PATH`
+    export LETDEV_COMMANDS_PATH=`echo "$HOME/let-dev/commands"`
+    export LETDEV_USERS_PATH=`echo "$HOME/let-dev/profiles"`
+    export LETDEV_PROJECT_PATH=`echo "./.let-dev"`
+
     # Default command alias
     alias "$LETDEV_SYMBOL"="$LETDEV_HOME/default.sh"
 
@@ -57,7 +53,7 @@ init_shell() {
     alias "$LETDEV_SYMBOL$LETDEV_SYMBOL"="$LETDEV_HOME/shell/start.sh"
 
     # Add commands to path
-    export PATH="$LETDEV_PROJECT_PATH/$LETDEV_PROFILE:$LETDEV_USERS_PATH/$LETDEV_PROFILE:$LETDEV_COMMANDS_PATH:$PATH"
+    export PATH="$LETDEV_PROJECT_PATH/$LETDEV_PROFILE/commands:$LETDEV_USERS_PATH/$LETDEV_PROFILE/commands:$LETDEV_HOME/commands:$PATH"
 
     # Auto-completion
     source $LETDEV_HOME/init-completion.sh

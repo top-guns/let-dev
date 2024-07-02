@@ -7,15 +7,15 @@ default_command() {
         return
     fi
 
-    local CMD=`echo "$@" | tr " " "/"`
-    CMD="$LETDEV_HOME/commands/$CMD"
+    local cmd=`echo "$@" | tr " " "/" | sed "s|^$LETDEV_SYMBOL/||"`
+    cmd=`echo "$LETDEV_HOME/commands/:/$cmd"`
 
-    if [ ! -f "$CMD" ]; then
-        echo "Command '$CMD' not found"
+    if [ ! -f "$cmd" ]; then
+        echo "Command '$cmd' not found"
         return
     fi
 
-    eval $CMD
+    eval $cmd
 }
 
 default_command $@
