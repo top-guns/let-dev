@@ -26,6 +26,22 @@ cut_str() {
     fi
 }
 
+# 1719021291N-5271
+generate_id() {
+  echo "$(date +%s%N)-$RANDOM"
+}
+
+# df9a19d0
+generate_short_uid() {
+  date | sha1sum | cut -c 1-8
+}
+
+# 2CFD635E-C8C4-4121-AF78-4E5C5DA82E45
+generate_uuid() {
+  echo "$(uuidgen)"
+}
+
+
 # Признаки колонок
 # - колонки не содержат пробелов, и разделены произвольным числом пробелов и табуляций
 # - последняя колонка может содержать пробелы
@@ -43,4 +59,28 @@ parse_grid_output_to_array() {
             echo "$element"
         done
     done <<< "$input"
+}
+
+multiline_to_array() {
+    local str=$1
+    local arr_name=$2
+    eval $arr_name'=()'
+    [[ -n "$str" ]] && while IFS= read -r line; do eval $arr_name'+=("$line")'; done <<<"$str"
+}
+
+print_array() {
+    local arr=("$@")
+    printf "%s\n" "${arr[@]}"
+}
+
+# Check if element is in the array
+in_array() {
+  local elem=$1
+  shift
+  for e in "$@"; do
+    if [ "$e" = "$elem" ]; then
+      return 0
+    fi
+  done
+  return 1
 }
