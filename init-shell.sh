@@ -1,6 +1,8 @@
 #!/bin/bash
 
 init_shell() {
+    local shell_name=$1
+
     # Get the absolute path of the current script
     local SCRIPT_PATH=''
     [ -n "${BASH_SOURCE[0]}" ] && SCRIPT_PATH="${BASH_SOURCE[0]}" || SCRIPT_PATH="$0"
@@ -50,16 +52,25 @@ init_shell() {
     alias "$LETDEV_SYMBOL"="$LETDEV_HOME/default.sh"
 
     # Shell command alias
-    alias "$LETDEV_SYMBOL$LETDEV_SYMBOL"="$LETDEV_HOME/shell/start.sh"
+    # alias "$LETDEV_SYMBOL$LETDEV_SYMBOL"="$LETDEV_HOME/shell/start.sh"
 
     # Add commands to path
-    export PATH="$LETDEV_PROJECT_PATH/$LETDEV_PROFILE/commands:$LETDEV_USERS_PATH/$LETDEV_PROFILE/commands:$LETDEV_HOME/commands:$PATH"
+    # export PATH="$LETDEV_PROJECT_PATH/$LETDEV_PROFILE/commands:$LETDEV_USERS_PATH/$LETDEV_PROFILE/commands:$LETDEV_HOME/commands:$PATH"
 
     # Auto-completion
-    source $LETDEV_HOME/init-completion.sh
+    if [ "$shell_name" = "bash" ]; then
+        source $LETDEV_HOME/init-completion-bash.sh
+    fi
 }
 
 cur_dir=`pwd`
 cd $LETDEV_HOME
-init_shell
+
+shell_name=$1
+if [ -z "$shell_name" ]; then
+    shell_name=`basename $SHELL`
+fi
+
+init_shell $shell_name
+
 cd $cur_dir

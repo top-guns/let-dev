@@ -11,7 +11,7 @@ list_commands() {
 
     local cur_dir=`pwd`
     cd "$LETDEV_HOME/commands/:"
-    local COMMAND_LIST=$(find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print | sed 's|^./|: |')
+    local COMMAND_LIST=$(find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print | sed 's|^./|:|')
     cd $cur_dir
 
     local result=`echo "$COMMAND_LIST"`

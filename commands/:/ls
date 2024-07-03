@@ -13,4 +13,4 @@ function lls {
   ls -AHhl --color=always $LLS_PATH | awk "{ k=0; n=n+1; for(i=0;i<=8;i++) k+=((substr(\$1,i+2,1)~/[rwx]/)*2^(8-i)); if(n==2) printf(\"$HEADER\\n\"); if(k) printf(\"%0o \",k); print }"
 }
 
-lls
+lls $1

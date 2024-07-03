@@ -1,20 +1,34 @@
 #!/bin/bash
 
 default_command() {
-    # Return if no arguments passed
     if [ "$#" -eq 0 ]; then
-        echo "No command passed"
+        $LETDEV_HOME/shell/start.sh
         return
     fi
 
-    local cmd=`echo "$@" | tr " " "/" | sed "s|^$LETDEV_SYMBOL/||"`
-    cmd=`echo "$LETDEV_HOME/commands/:/$cmd"`
+    local cmd=`echo "$@"`
+    # echo "cmd: $cmd"
+    
+    # # Remove ': ' from the beginning of the command
+    # cmd=`echo "$cmd" | sed "s|^$LETDEV_SYMBOL[ ]*||"`
 
-    if [ ! -f "$cmd" ]; then
-        echo "Command '$cmd' not found"
-        return
+    # Replace spaces with /
+    # cmd=`echo "$cmd" | tr " " "/"`
+    # echo "cmd: $cmd"
+
+    # If the first symbol is a colon, then add the home directory to the command
+    if [ "${cmd:0:1}" == "$LETDEV_SYMBOL" ]; then
+        # Remove the first symbol
+        cmd=`echo "$cmd" | sed "s/^$LETDEV_SYMBOL[ ]*//"`
+        cmd=`echo "$LETDEV_HOME/commands/:/$cmd"`
     fi
 
+    # if [ ! -f "$cmd" ]; then
+    #     echo "Command '$cmd' not found"
+    #     return
+    # fi
+
+    echo "Run command: $cmd"
     eval $cmd
 }
 
