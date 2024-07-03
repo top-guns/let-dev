@@ -1,9 +1,5 @@
-install() {
-    # Get the default shell name (bash, zsh, etc.)
+get_shell_config_file() {
     local shell_name=$1
-    local auto_update=$2
-
-    echo "$shell_name integration ..."
 
     rc_file=""
     if [ "$shell_name" == "bash" ]; then
@@ -14,6 +10,18 @@ install() {
         echo "Unsupported shell: $shell_name"
         return
     fi
+
+    echo $rc_file
+}
+
+install() {
+    # Get the default shell name (bash, zsh, etc.)
+    local shell_name=$1
+    local auto_update=$2
+
+    echo "$shell_name integration ..."
+
+    local rc_file=$(get_shell_config_file $shell_name)
 
     echo '' >> $rc_file
     echo '# Add let-dev aliases. Should be the last lines!!!' >> $rc_file
@@ -27,15 +35,7 @@ install() {
 reload_shell() {
     local shell_name=$1
 
-    rc_file=""
-    if [ "$shell_name" == "bash" ]; then
-        rc_file="$HOME/.bashrc"
-    elif [ "$shell_name" == "zsh" ]; then
-        rc_file="$HOME/.zshrc"
-    else
-        echo "Unsupported shell: $shell_name"
-        return
-    fi
+    local rc_file=$(get_shell_config_file $shell_name)
 
     echo "reload $shell_name to apply changes ..."
     source $rc_file
@@ -54,11 +54,22 @@ shell_name=$1
 [ -z "$shell_name" ] && read -p "Enter the shell name (bash, zsh, etc.): " shell_name
 
 auto_update=""
-[ -z "$auto_update" ] && read -p "Do you want to auto-update let-dev? (y/n): " auto_update
-if [[ "$auto_update" =~ ^[Nn][Oo]?$ ]]; then
+[ -z "$auto_update" ] && read -p "Do you want to auto-update let-dev? (y/n): " response
+if [[ "$response" =~ ^[Nn][Oo]?$ ]]; then
     auto_update="--no-update"
 else
     auto_update="--update"
+fi
+
+# Offer to install fzf if it is not installed
+if command -v fzf &> /dev/null; then
+    echo "fzf is already installed"
+else
+    echo "fzf is not installed"
+    read -p "Do you want to install fzf? (y/n): " response
+    if [[ "$response" =~ ^[Yy][Ee]?[Ss]?$ ]]; then
+        install_fzf $shell_name
+    fi
 fi
 
 LETDEV_HOME=`dirname $SCRIPT_PATH`
@@ -74,6 +85,13 @@ else
 
     install $shell_name $auto_update
     reload_shell $shell_name
+
+    echo ""
+
+    echo "Install let-dev auto-completion"
+    source $LETDEV_HOME/commands/:/install/fzf-completion-in-bash $shell_name
+    echo "Installation of let-dev auto-completion has been completed."
+    echo ""
 
     echo "Installation of let-dev has been completed."
     echo "Use : to run let-dev commands."

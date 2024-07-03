@@ -2,111 +2,173 @@
 
 # https://github.com/lincheney/fzf-tab-completion
 
-echo "Install fzf completion in bash:"
+# --------------------------------------------------------------------------------------------
+# fzf functions
 
-# Check if .bashrc exists
-if [[ ! -f ~/.bashrc ]]; then
-  echo "No .bashrc file found"
-  return
-fi
+install_fzf_from_git() {
+    local target_dir="$HOME/.fzf"
+    
+    echo "Install fzf to the $target_dir directory ..."
+    git clone --depth 1 https://github.com/junegunn/fzf.git "$target_dir"
+    "$target_dir"/install --no-key-bindings --no-completion --no-update-rc --bin
+    echo "successfully"
 
-# If is it MacOS
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  # Check if Homebrew is installed
-  if [[ ! -x "$(command -v brew)" ]]; then
-    echo "Homebrew is not installed"
-    echo "Please install Homebrew first"
+    # Update the PATH variable
+    echo "Update the PATH variable in the ~/.bashrc file ..."
+    echo '' >> "$HOME/.bashrc"
+    echo '# Add fzf to the PATH' >> "$HOME/.bashrc"
+    echo "[[ ! \"\$PATH\" == *$HOME/.fzf/bin* ]] && PATH=\"\${PATH:+\${PATH}:}$HOME/.fzf/bin\"" >> "$HOME/.bashrc"
+    echo "successfully"
+}
+
+# --------------------------------------------------------------------------------------------
+# bash-completion functions
+
+bash_completion_installed=false
+ensure_bash_completion_v2_is_installed() {
+  local get_version_cmd=''
+  local check_version_cmd=''
+  local install_cmd=''
+  local config_path=''
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    get_version_cmd='$(brew list --formula | grep bash-completion@2)'
+    check_version_cmd='$(get_version_cmd) == bash-completion@2'
+    install_cmd='brew install bash-completion@2'
+    config_path="$(brew --prefix)/etc/profile.d/bash_completion.sh"
+  elif [ "$OSTYPE" == "linux-gnu" ] && [ -x "$(command -v apt-get)" ]; then
+    get_version_cmd='dpkg -l | grep bash-completion'
+    check_version_cmd='$(get_version_cmd) == bash-completion'
+    install_cmd='sudo apt-get install bash-completion'
+    config_path='/etc/bash_completion'
+  else
+    echo "Unsupported OS"
     return
   fi
 
   # Install bash-completion if not exists
-  if [[ -z "$(brew list --formula | grep bash-completion)" ]]; then
-    echo "  · install bash-completion"
-    brew install bash-completion@2
+  local version=$(eval $get_version_cmd)
+  if [[ -z "$version" ]]; then
+    echo "  - install bash-completion"
+    eval $install_cmd
     echo "    ok"
   else
-    echo "  · bash-completion is already installed"
-  fi 
+    echo "  + bash-completion is already installed"
+  fi
 
   # Check the bash-complete version - it should be bash-completion@2
-  if [[ "$(brew list --formula | grep bash-completion)" != "bash-completion@2" ]]; then
-    echo "Your bash-completion version is not bash-completion@2"
-    echo "Please uninstall the current bash-completion and install bash-completion@2"
+  if [[ ! $check_version_cmd ]]; then
+    echo "Your bash-completion version is not v2"
+    echo "Please uninstall the current bash-completion and install the lase version before continue"
     return
   fi
 
   # If .bashrc does not contain the bash-completion configuration - add it
-  if [[ -z "$(grep 'etc/profile.d/bash_completion.sh' ~/.bashrc)" ]]; then
-    echo "  · add bash-completion configuration to .bashrc"
-    echo "[[ -r \"$(brew --prefix)/etc/profile.d/bash_completion.sh\" ]] && . \"$(brew --prefix)/etc/profile.d/bash_completion.sh\"" >> ~/.bashrc
+  if [[ -z "$(grep 'bash_completion' ~/.bashrc)" ]]; then
+    echo "  - add bash-completion configuration to .bashrc"
+    echo "[[ -r '$config_path' ]] && . '$config_path'" >> ~/.bashrc
     echo "    ok"
   else
-    echo "  · bash-completion configuration is already exists in .bashrc"
+    echo "  + bash-completion configuration is already exists in .bashrc"
+  fi
+
+  bash_completion_installed=true
+}
+
+
+# --------------------------------------------------------------------------------------------
+# Main
+
+setup_fzf_completion_in_bash() {
+  # Check if .bashrc exists
+  if [[ ! -f ~/.bashrc ]]; then
+    echo "No .bashrc file found"
+    return
+  fi
+
+  # Specific to MacOS
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    # Check if Homebrew is installed
+    if [[ ! -x "$(command -v brew)" ]]; then
+      echo "Homebrew is not installed"
+      echo "Please install Homebrew first"
+      return
+    fi 
+
+    # Install prerequisites if not exists
+
+    if [[ -x "$(command -v gawk)" && -x "$(command -v grep)" && -x "$(command -v gsed)" ]]; then
+      echo "  + gawk, grep, gsed are already installed"
+    else
+      echo "  - install gawk, grep, gnu-sed"
+      brew install gawk grep gnu-sed
+      echo "    ok"
+    fi
+
+    if [[ -n $(brew list --formula | grep coreutils) ]]; then
+      echo "  + coreutils is already installed"
+    else
+      echo "  - install coreutils"
+      brew install coreutils
+      echo "    ok"
+    fi
+  fi # End of MacOS specific
+
+
+  # Install bash-completion v2 if not exists
+  ensure_bash_completion_v2_is_installed
+  if [[ "$bash_completion_installed" == false ]]; then
+    return
   fi
 
   # Install fzf if not exists
   if [[ -x "$(command -v fzf)" ]]; then
-    echo "  · fzf is already installed"
+    echo "  + fzf is already installed"
   else
-    echo "  · install fzf"
-    brew install fzf
+    echo "  - install fzf"
+    install_fzf_from_git
     echo "    ok"
   fi
 
-  # Install prerequisites if not exists
-
-  if [[ -x "$(command -v gawk)" && -x "$(command -v grep)" && -x "$(command -v gsed)" ]]; then
-    echo "  · gawk, grep, gsed are already installed"
+  # Install fzf-tab-completion if not exists
+  if [[ -d ~/.fzf-tab-completion ]]; then
+    echo "  + fzf-tab-completion is already installed"
   else
-    echo "  · install gawk, grep, gnu-sed"
-    brew install gawk grep gnu-sed
+    echo "  - install fzf-tab-completion"
+    git clone git@github.com:lincheney/fzf-tab-completion.git ~/.fzf-tab-completion
     echo "    ok"
   fi
 
-  if [[ -n $(brew list --formula | grep coreutils) ]]; then
-    echo "  · coreutils is already installed"
-  else
-    echo "  · install coreutils"
-    brew install coreutils
+  # Add fzf-tab-completion configuration to ~/.bashrc if not exists
+  if [[ -z "$(grep 'source ~/.fzf-tab-completion/bash/fzf-bash-completion.sh' ~/.bashrc)" ]]; then
+    echo "  - add fzf complete configuration to .bashrc"
+    echo "source ~/.fzf-tab-completion/bash/fzf-bash-completion.sh" >> ~/.bashrc
     echo "    ok"
+  else
+    echo "  + fzf complete configuration is already exists in .bashrc"
   fi
-fi
 
-# Install fzf-tab-completion if not exists
-if [[ -d ~/.fzf-tab-completion ]]; then
-  echo "  · fzf-tab-completion is already installed"
-else
-  echo "  · install fzf-tab-completion"
-  git clone git@github.com:lincheney/fzf-tab-completion.git ~/.fzf-tab-completion
-  echo "    ok"
-fi
+  # Add tab binding configuration to ~/.bashrc if not exists
+  if [[ -z "$(grep "fzf_bash_completion" ~/.bashrc)" ]]; then
+    echo "  - add tab binding configuration to .bashrc"
+    echo "bind -x '\"\\t\": fzf_bash_completion'" >> ~/.bashrc
+    echo "    ok"
+  else
+    echo "  + tab binding configuration is already exists in .bashrc"
+  fi
 
-# Add fzf complete configuration to ~/.bashrc if not exists
-if [[ -z "$(grep 'source ~/.fzf-tab-completion/bash/fzf-bash-completion.sh' ~/.bashrc)" ]]; then
-  echo "  · add fzf complete configuration to .bashrc"
-  echo "source ~/.fzf-tab-completion/bash/fzf-bash-completion.sh" >> ~/.bashrc
-  echo "    ok"
-else
-  echo "  · fzf complete configuration is already exists in .bashrc"
-fi
+  # Add command history search configuration to ~/.bashrc if not exists
+  if [[ -z "$(grep 'eval "$(fzf --bash)"' ~/.bashrc)" ]]; then
+    echo "  - add command history search configuration to .bashrc"
+    echo "eval \"\$(fzf --bash)\"" >> ~/.bashrc
+    echo "    ok"
+  else
+    echo "  + command history search configuration is already exists in .bashrc"
+  fi
+}
 
-# Add tab binding configuration to ~/.bashrc if not exists
-if [[ -z "$(grep "fzf_bash_completion" ~/.bashrc)" ]]; then
-  echo "  · add tab binding configuration to .bashrc"
-  echo "bind -x '\"\\t\": fzf_bash_completion'" >> ~/.bashrc
-  echo "    ok"
-else
-  echo "  · tab binding configuration is already exists in .bashrc"
-fi
-
-# Add command history search configuration to ~/.bashrc if not exists
-if [[ -z "$(grep 'eval "$(fzf --bash)"' ~/.bashrc)" ]]; then
-  echo "  · add command history search configuration to .bashrc"
-  echo "eval \"\$(fzf --bash)\"" >> ~/.bashrc
-  echo "    ok"
-else
-  echo "  · command history search configuration is already exists in .bashrc"
-fi
+echo "Setup fzf completion in bash:"
+setup_fzf_completion_in_bash
+echo "successfully installed"
 
 # Add default fzf completion params to ~/.bashrc if not exists
 # if [[ -z "$(grep 'FZF_DEFAULT_COMMAND' ~/.bashrc)" || -z "$(grep 'FZF_DEFAULT_OPTS' ~/.bashrc)" ]]; then
@@ -118,4 +180,4 @@ fi
 #   echo "  · fzf default completion params is already exists in .bashrc"
 # fi
 
-echo "successfully installed"
+
