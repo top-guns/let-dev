@@ -2,6 +2,7 @@
 
 init_shell() {
     local shell_name=$1
+    shift
 
     # Get the absolute path of the current script
     local SCRIPT_PATH=''
@@ -13,7 +14,6 @@ init_shell() {
 
     # Check if the user wants to update the project
     local check_updates=$interactive_mode
-    check_updates=false
     [ "$1" = "--no-update" ] && check_updates=false
     [ "$1" = "--update" ] && check_updates=true
 
@@ -66,11 +66,15 @@ init_shell() {
 cur_dir=`pwd`
 cd $LETDEV_HOME
 
-shell_name=$1
-if [ -z "$shell_name" ]; then
+shell_name=""
+# If there is no arguments, or the first argument is starts with '-', then use the current shell
+if [ $# -eq 0 ] || [[ $1 == -* ]]; then
     shell_name=`basename $SHELL`
+else 
+    shell_name=$1
+    shift
 fi
 
-init_shell $shell_name
+init_shell $shell_name $@
 
 cd $cur_dir

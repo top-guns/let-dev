@@ -1,8 +1,7 @@
-#!/bin/bash
-
 install() {
     # Get the default shell name (bash, zsh, etc.)
     local shell_name=$1
+    local auto_update=$2
 
     echo "$shell_name integration ..."
 
@@ -20,7 +19,7 @@ install() {
     echo '# Add let-dev aliases. Should be the last lines!!!' >> $rc_file
     echo "export LETDEV_HOME='$LETDEV_HOME'" >> $rc_file
     echo "export LETDEV_PROFILE='$LETDEV_PROFILE'" >> $rc_file
-    echo "[ -d \"\$LETDEV_HOME\" ] && source \"\$LETDEV_HOME/init-shell.sh\" $shell_name" >> $rc_file
+    echo "[ -d \"\$LETDEV_HOME\" ] && source \"\$LETDEV_HOME/init-shell.sh\" $shell_name $auto_update" >> $rc_file
 
     echo "successfully"
 }
@@ -54,6 +53,14 @@ shell_name=$1
 # If the shell name is not passed, then ask the user to enter the shell name
 [ -z "$shell_name" ] && read -p "Enter the shell name (bash, zsh, etc.): " shell_name
 
+auto_update=""
+[ -z "$auto_update" ] && read -p "Do you want to auto-update let-dev? (y/n): " auto_update
+if [[ "$auto_update" =~ ^[Nn][Oo]?$ ]]; then
+    auto_update="--no-update"
+else
+    auto_update="--update"
+fi
+
 LETDEV_HOME=`dirname $SCRIPT_PATH`
 
 # Get the user profile name
@@ -65,7 +72,7 @@ if [ -z "$LETDEV_PROFILE" ]; then
 else
     echo "Install let-dev"
 
-    install $shell_name
+    install $shell_name $auto_update
     reload_shell $shell_name
 
     echo "Installation of let-dev has been completed."
