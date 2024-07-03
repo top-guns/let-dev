@@ -142,14 +142,15 @@ console.log("Hello, World!");
 
 # Create the .gitignore file
 echo "# Temporary files
-.DS_Store
 tmp
 temp
 *.tmp
 *.tmp.*
-*.copy
-*.copy.*
-* copy
+*.log
+*.log.*
+*.log-*
+* copy*
+.DS_Store
 
 # Local settings
 .env
