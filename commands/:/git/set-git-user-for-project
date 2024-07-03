@@ -5,7 +5,7 @@
 
 # Help
 if [ "$1" == "--help" ]; then
-    echo "Usage: set-project-github-account <github_account> <email> [project_dir]"
+    echo "Usage: $0 <github_account> <email> [project_dir]"
     exit 0
 fi
 
