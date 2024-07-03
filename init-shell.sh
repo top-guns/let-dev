@@ -60,6 +60,8 @@ init_shell() {
     # Auto-completion
     if [ "$shell_name" = "bash" ]; then
         source $LETDEV_HOME/init-completion-bash.sh
+    elif [ "$shell_name" = "zsh" ]; then
+        source $LETDEV_HOME/init-completion-zsh.sh
     fi
 }
 
