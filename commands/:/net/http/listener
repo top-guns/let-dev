@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 # This script start process which listen the specified port 
 # and echo the received data to the output

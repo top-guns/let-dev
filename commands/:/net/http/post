@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 HELP="Usage: 
     :http:post <url> <data> - Send a POST request to the given URL with the given data

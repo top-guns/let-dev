@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 HELP="Usage: 
     :http:get <url> - Send a GET request to the given URL

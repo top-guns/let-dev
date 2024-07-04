@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 HELP="Usage: 
     :http:put <url> <data> - Send a PUT request to the given URL with the given data
