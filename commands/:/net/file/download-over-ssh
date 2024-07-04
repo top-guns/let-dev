@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# This script downloads a file or folder from the specified server over SSH
+
+do_command() {
+    local HELP="Download the specified file or folder from the specified server over SSH
+Usage: 
+    : :/net/file/download-over-ssh <user@host> <remote_path> <local_path>
+Options:
+    --exclude=pattern    exclude files matching the pattern"
+
+    if [ $# -lt 3 ] || [ "$1" = "--help" ]; then
+        echo "$HELP"
+        return
+    fi
+
+    local host=$1
+    shift
+    local remote_path=$1
+    shift
+    local local_path=$1
+    shift
+
+    echo "Downloading $remote_path from $host to $local_path"
+    # scp -r $host:$remote_path $local_path
+    rsync -avz -e ssh $host:$remote_path $local_path $@
+    echo "Download completed"
+}
+
+do_command $@

@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# This script uploads file or folder to the specified server over SSH
+
+do_command() {
+    local HELP="Download the specified file or folder from the specified server over SSH
+Usage: 
+    : :/net/file/upload-over-ssh <user@host> <local_path> <remote_path>
+Options:
+    --exclude=pattern    exclude files matching the pattern"
+
+    if [ $# -lt 3 ] || [ "$1" = "--help" ]; then
+        echo "$HELP"
+        return
+    fi
+
+    local host=$1
+    shift
+    local local_path=$1
+    shift
+    local remote_path=$1
+    shift
+
+    echo "Uploading $local_path to $host at $remote_path"
+    # scp -r $local_path $host:$remote_path
+    rsync -avz -e ssh $local_path $host:$remote_path $@
+    echo "Upload completed"
+}
+
+do_command $@
