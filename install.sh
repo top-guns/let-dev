@@ -61,16 +61,6 @@ else
     auto_update="--update"
 fi
 
-# Offer to install fzf if it is not installed
-if command -v fzf &> /dev/null; then
-    echo "fzf is already installed"
-else
-    echo "fzf is not installed"
-    read -p "Do you want to install fzf? (y/n): " response
-    if [[ "$response" =~ ^[Yy][Ee]?[Ss]?$ ]]; then
-        install_fzf $shell_name
-    fi
-fi
 
 LETDEV_HOME=`dirname $SCRIPT_PATH`
 
