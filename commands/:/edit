@@ -1,0 +1,81 @@
+#!/bin/bash
+
+# Edit a file
+
+_confirm() {
+    read -p "$1 (y/n) " -n 1 -r
+    echo    # (optional) move to a new line
+    if [[ $REPLY =~ ^[Yy]$ ]]
+    then
+        return 0
+    else
+        return 1
+    fi
+}
+
+_select_editor() {
+  local prompt="$1"
+
+  local editors=()
+  command -v "vim" &>/dev/null && editors+=("vim")
+  command -v "nano" &>/dev/null && editors+=("nano")
+  command -v "mcedit" &>/dev/null && editors+=("mcedit")
+  command -v "code" &>/dev/null && editors+=("code")
+  command -v "subl" &>/dev/null && editors+=("subl")
+  command -v "atom" &>/dev/null && editors+=("atom")
+
+  # If fzf is installed, use it to select the editor
+  if command -v "fzf" &>/dev/null; then
+    # echo "${editors[@]}" | tr ' ' '\n' | fzf --prompt="$prompt" #--preview="echo {}" --preview-window=up:1:wrap
+    echo "${editors[@]}" | tr ' ' '\n' | fzf --height 30% --reverse --prompt="$prompt"
+    return
+  fi
+
+  # If fzf is not installed, use the default select
+  echo "$prompt"
+  select editor in "${editors[@]}"; do
+    if [[ " ${editors[@]} " =~ " ${editor} " ]]; then
+      echo $editor
+      break
+    fi
+  done
+}
+
+_do_command() {
+  # Show help on --help
+  if [[ "$#" -eq 0 || "$1" == "--help" ]]; then
+    echo "View the contents of a file"
+    echo "Usage:"
+    echo "  : :view <file>"
+    return
+  fi
+
+  # local cmd="$EDITOR"
+  local cmd=""
+  local file="$1"
+
+  if ! command -v "$cmd" &>/dev/null; then
+    # Ask for the editor to use
+    if [ -z "$cmd" ]; then
+      echo "Default editor is not specified, please select an editor to use"
+    else
+      echo "Default editor ('$cmd') not found, please select an editor to use"
+    fi
+
+    cmd=$(_select_editor "Select an editor to use:")
+  fi
+
+  # If the file does not exist, ask for user to creating a new file
+  if [[ ! -f "$file" ]]; then
+    echo "File '$file' not found, creating a new file"
+    if _confirm "Do you want to create a new file '$file'?"; then
+        touch $file
+    else
+        return
+    fi
+  fi
+
+  $cmd $file
+}
+
+_do_command $@

@@ -1,0 +1,37 @@
+#! /bin/bash
+
+# Install bat to your system
+
+  _do_command() {
+  # Check the operating system
+  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # Check if bat is installed
+    if ! command -v bat &> /dev/null; then
+      # Install bat using the package manager
+      sudo apt install bat
+      echo "Bat installed successfully"
+    else
+      echo "Bat is already installed"
+    fi
+  elif [[ "$OSTYPE" == "darwin"* ]]; then
+    # Check if brew is installed
+    if ! command -v brew &> /dev/null; then
+      echo "Homebrew is not installed. Please install Homebrew before running this script."
+      return
+    fi
+
+    # Check if bat is installed
+    if ! command -v bat &> /dev/null; then
+      # Install bat using the package manager
+      brew install bat
+      echo "Bat installed successfully"
+    else
+      echo "Bat is already installed"
+    fi
+  else
+    echo "Unsupported operating system"
+    return
+  fi
+}
+
+_do_command $@

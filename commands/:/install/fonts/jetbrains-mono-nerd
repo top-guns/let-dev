@@ -1,0 +1,37 @@
+#! /bin/bash
+
+# Install jetbrains mono nerd font to your system
+
+_do_command() {
+  # Check the operating system
+  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/JetBrains/JetBrainsMono/master/install_manual.sh)"
+    echo "JetBrains Mono Nerd font installed successfully"
+  elif [[ "$OSTYPE" == "darwin"* ]]; then
+    # Check if brew is installed
+    if ! command -v brew &> /dev/null; then
+      echo "Homebrew is not installed. Please install Homebrew before running this script."
+      return
+    fi
+
+    # Tap the font cask to make the Jetbrains Mono font available
+    brew tap homebrew/cask-fonts
+    # Install it using the font-jetbrains-mono cask
+    brew install --cask font-jetbrains-mono
+
+    echo "JetBrains Mono Nerd font installed successfully"
+  else
+    echo "Unsupported operating system"
+    return
+  fi
+}
+
+_do_command $@
+
+echo ""
+echo "To use it in your terminal, set the font to JetBrains Mono Nerd in your terminal settings"
+echo ""
+echo "To use it in VS Code, add this to the root element of your settings.json:"
+echo "    \"editor.fontFamily\": \"JetBrains Mono\","
+echo "    \"editor.fontLigatures\": true"
+
