@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+
+# Open pry config file in the default text editor
+
+FILE_TO_OPEN="$HOME/.pryrc"
+FILE_TITLE="pry configuration file"
+
+source ./.edit_config.sh
+_edit_config "$FILE_TO_OPEN" "$FILE_TITLE"

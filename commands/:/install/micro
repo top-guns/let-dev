@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Install micro to your system
+
+  _do_command() {
+  # Check the operating system
+  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # Check if micro is installed
+    if ! command -v micro &> /dev/null; then
+      # Install micro using the package manager
+      sudo apt install micro
+      echo "Micro installed successfully"
+    else
+      echo "Micro is already installed"
+    fi
+  elif [[ "$OSTYPE" == "darwin"* ]]; then
+    # Check if brew is installed
+    if ! command -v brew &> /dev/null; then
+      echo "Homebrew is not installed. Please install Homebrew before running this script."
+      return
+    fi
+
+    # Check if micro is installed
+    if ! command -v micro &> /dev/null; then
+      # Install micro using the package manager
+      brew install micro
+      echo "Micro installed successfully"
+    else
+      echo "Micro is already installed"
+    fi
+  else
+    echo "Unsupported operating system"
+    return
+  fi
+}
+
+_do_command $@

@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 if [[ "$1" == "install" || "$1" == "up" || "$1" == "do" || "$1" == "apply" || "$1" == "add" ]]; then
   echo "Change the default script shell from sh to bash"

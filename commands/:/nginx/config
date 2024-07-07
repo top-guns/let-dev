@@ -10,7 +10,6 @@ then
     return
 fi
 
-editor=${EDITOR:-vim}
 nginx_conf="/etc/nginx/nginx.conf"
 
 if [ ! -f "$nginx_conf" ]; then
@@ -18,7 +17,7 @@ if [ ! -f "$nginx_conf" ]; then
     return
 fi
 
-sudo $editor $nginx_conf
+sudo : :edit $nginx_conf
 
 # Reload nginx if it is running
 if sudo systemctl is-active --quiet nginx; then

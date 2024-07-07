@@ -17,12 +17,23 @@ _select_editor() {
   local prompt="$1"
 
   local editors=()
-  command -v "vim" &>/dev/null && editors+=("vim")
+  command -v "micro" &>/dev/null && editors+=("micro")
   command -v "nano" &>/dev/null && editors+=("nano")
   command -v "mcedit" &>/dev/null && editors+=("mcedit")
   command -v "code" &>/dev/null && editors+=("code")
+  command -v "vim" &>/dev/null && editors+=("vim")
   command -v "subl" &>/dev/null && editors+=("subl")
   command -v "atom" &>/dev/null && editors+=("atom")
+  command -v "gedit" &>/dev/null && editors+=("gedit")
+  command -v "kate" &>/dev/null && editors+=("kate")
+  command -v "mousepad" &>/dev/null && editors+=("mousepad")
+  command -v "pluma" &>/dev/null && editors+=("pluma")
+  command -v "geany" &>/dev/null && editors+=("geany")
+  command -v "bluefish" &>/dev/null && editors+=("bluefish")
+  command -v "leafpad" &>/dev/null && editors+=("leafpad")
+  command -v "juffed" &>/dev/null && editors+=("juffed")
+  command -v "jedit" &>/dev/null && editors+=("jedit")
+  command -v "kwrite" &>/dev/null && editors+=("kwrite")
 
   # If fzf is installed, use it to select the editor
   if command -v "fzf" &>/dev/null; then
@@ -41,25 +52,68 @@ _select_editor() {
   done
 }
 
+_install() {
+  # Check the operating system
+  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # Check if micro is installed
+    if ! command -v micro &> /dev/null; then
+      # Install micro using the package manager
+      sudo apt install micro
+      echo "Micro installed successfully"
+    else
+      echo "Micro is already installed"
+    fi
+  elif [[ "$OSTYPE" == "darwin"* ]]; then
+    # Check if brew is installed
+    if ! command -v brew &> /dev/null; then
+      echo "Homebrew is not installed. Please install Homebrew before running this script."
+      return
+    fi
+
+    # Check if micro is installed
+    if ! command -v micro &> /dev/null; then
+      # Install micro using the package manager
+      brew install micro
+      echo "Micro installed successfully"
+    else
+      echo "Micro is already installed"
+    fi
+  else
+    echo "Unsupported operating system"
+    return
+  fi
+}
+
 _do_command() {
   # Show help on --help
   if [[ "$#" -eq 0 || "$1" == "--help" ]]; then
-    echo "View the contents of a file"
+    echo "Edit the contents of a file"
     echo "Usage:"
-    echo "  : :view <file>"
+    echo "  : :edit <file>"
     return
   fi
 
-  # local cmd="$EDITOR"
-  local cmd=""
+  if [[ "$1" == "--install" ]]; then
+    _install
+    return
+  fi
+
+  local cmd="$EDITOR"
+  # local cmd=""
   local file="$1"
 
   if ! command -v "$cmd" &>/dev/null; then
     # Ask for the editor to use
     if [ -z "$cmd" ]; then
-      echo "Default editor is not specified, please select an editor to use"
+      echo "Default editor is not specified (\$EDITOR environment variable is not set)"
     else
-      echo "Default editor ('$cmd') not found, please select an editor to use"
+      echo "Default editor ('$cmd' from the \$EDITOR environment variable) was not found"
+    fi
+
+    # Check if micro is installed
+    echo "If you don't have a preferred editor, we recommend using Micro. It has color syntax highlighting, mouse support and familiar keyboard shortcuts."
+    if ! command -v micro &> /dev/null; then
+      echo "Micro is not installed. You can use ': :edit --install' command to install it."
     fi
 
     cmd=$(_select_editor "Select an editor to use:")
