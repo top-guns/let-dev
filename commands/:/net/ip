@@ -1,5 +1,26 @@
 #!/bin/bash
 
 # Print ip address of the machine
-echo "IP Address of the machine is: "
-ip addr show eth0 | grep inet | awk '{ print $2; }' | sed 's/\/.*$//'
+
+# ip addr show eth0 | grep inet | awk '{ print $2; }' | sed 's/\/.*$//'
+
+_do_command() {
+    OS="$(uname)"
+
+    if [ "$OS" == "Linux" ]; then
+        IP_ADDRESS=$(hostname -I | awk '{print $1}')
+    elif [ "$OS" == "Darwin" ]; then
+        IP_ADDRESS=$(ifconfig | grep 'inet ' | grep -v '127.0.0.1' | awk '{print $2}' | head -n 1)
+    else
+        echo "Операционная система не поддерживается."
+        exit 1
+    fi
+
+    IP_ADDRESS_EXTERNAL=$(curl -s ifconfig.me)
+
+    echo "Current machine IP"
+    echo "internal: $IP_ADDRESS"
+    echo "external: $IP_ADDRESS_EXTERNAL"
+}
+
+_do_command
