@@ -57,12 +57,41 @@ init_shell() {
     # Add commands to path
     # export PATH="$LETDEV_PROJECT_PATH/$LETDEV_PROFILE/commands:$LETDEV_USERS_PATH/$LETDEV_PROFILE/commands:$LETDEV_HOME/commands:$PATH"
 
+    # Param value reader alias
+    alias "${LETDEV_SYMBOL}?"=":ask"
+    alias "${LETDEV_SYMBOL}u"=":ask"
+    alias "${LETDEV_SYMBOL}user"=":ask"
+
+     # File value reader alias
+    alias "${LETDEV_SYMBOL}f"=":load"
+    alias "${LETDEV_SYMBOL}file"=":load"
+
+
     # Auto-completion
     if [ "$shell_name" = "bash" ]; then
         source $LETDEV_HOME/init-completion-bash.sh
     elif [ "$shell_name" = "zsh" ]; then
         source $LETDEV_HOME/init-completion-zsh.sh
     fi
+}
+
+:ask() {
+    local param_name=${1:-'parameter'}
+    local param
+    if [[ -n $ZSH_VERSION ]]; then
+        read "?Enter $param_name: " param
+    elif [[ -n $BASH_VERSION ]]; then
+        read -p "Enter $param_name: " param
+    else
+        echo "Error: Unsupported shell"
+        return
+    fi
+    echo "$(eval echo $param)"
+}
+
+:load() {
+    local file_name=$1
+    cat "$(eval echo $file_name)"
 }
 
 cur_dir=`pwd`
