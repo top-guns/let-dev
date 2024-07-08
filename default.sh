@@ -1,5 +1,12 @@
 #!/bin/bash
 
+function preprocess_command {
+    # Здесь вы можете анализировать и изменять команду
+    # Например, заменить все вхождения 'foo' на 'bar'
+    echo "preprocess_command: '$READLINE_LINE'"
+    READLINE_LINE=${READLINE_LINE//foo/bar}
+}
+
 default_command() {
     if [ "$#" -eq 0 ]; then
         $LETDEV_HOME/shell/start.sh
