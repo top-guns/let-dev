@@ -1,0 +1,3 @@
+#!/bin/bash
+
+source $LETDEV_HOME/create-aliases

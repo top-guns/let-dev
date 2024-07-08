@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Allow an app to run on macOS
+
+  _do_command() {
+  # Check the operating system
+  if [[ "$OSTYPE" != "darwin"* ]]; then
+    echo "This script is only supported on macOS"
+    return
+  fi
+
+  local app=$1
+  xattr -d com.apple.quarantine $(which $app)
+  echo "$app is now allowed to run on macOS"
+}
+
+_do_command $@
