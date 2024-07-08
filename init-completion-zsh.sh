@@ -18,17 +18,18 @@ multiline_to_array() {
 # # fi
 # compdef _letdev_command '\:'
 
-init_completion() {
+_letdev_init_completion() {
     local commands=$($LETDEV_HOME/list-commands.sh)
     multiline_to_array "$commands" commands
 
     # Create alias for every command
     for command in $commands; do
-        alias ": $command"="$LETDEV_HOME/default.sh $command"
+        alias_name=$(echo $command | sed 's|/|:|g')
+        alias ": $alias_name"="$LETDEV_HOME/default.sh $command"
     done
 }
 
-init_completion
+_letdev_init_completion
 
 # TODO: change it and implement the / trigger behavior
 # Disable / trigger continuous completion (used when completing a deep path)

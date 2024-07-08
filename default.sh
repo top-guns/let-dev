@@ -20,6 +20,9 @@ default_command() {
     if [ "${cmd:0:1}" == "$LETDEV_SYMBOL" ]; then
         # Remove the first symbol
         cmd=`echo "$cmd" | sed "s/^$LETDEV_SYMBOL[ ]*//"`
+        # Replace colons with slashes
+        cmd=`echo "$cmd" | tr ":" "/"`
+        # Add the home directory to the command
         cmd=`echo "$LETDEV_HOME/commands/:/$cmd"`
     fi
 
