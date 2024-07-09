@@ -72,7 +72,7 @@ if [ -z "$LETDEV_PROFILE" ]; then
     echo "Profile is required"
 else
     echo "Install let-dev auto-completion"
-    source $LETDEV_HOME/commands/:/install/fzf-completion-in-bash $shell_name
+    source $LETDEV_HOME/commands/install/fzf-completion-in-bash $shell_name
     echo "Installation of let-dev auto-completion has been completed."
     echo ""
 

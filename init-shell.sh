@@ -54,7 +54,7 @@ init_shell() {
     export LETDEV_PROJECT_PATH=`echo "./.let-dev"`
 
     # Default command alias
-    alias "$LETDEV_SYMBOL"="$LETDEV_HOME/default.sh"
+    alias "$LETDEV_SYMBOL"="source $LETDEV_HOME/default.sh"
 
     # Shell command alias
     # alias "$LETDEV_SYMBOL$LETDEV_SYMBOL"="$LETDEV_HOME/shell/start.sh"

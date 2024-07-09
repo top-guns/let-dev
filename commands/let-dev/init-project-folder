@@ -2,11 +2,11 @@
 
 profile="$1"
 
-[ -z "$profile" ] && read -p "Enter profile name (default $LETDEV_PROFILE): " profile
+[ -z "$profile" ] && profile=$(:ask "Enter profile name (default is '$LETDEV_PROFILE')")
 [ -z "$profile" ] && profile=$LETDEV_PROFILE
 
 script_dir="./.let-dev/$profile"
 
-mkdir -p "$script_dir"
+mkdir -p "$script_dir/commands"
 
 echo "let.dev initialized for profile $profile"

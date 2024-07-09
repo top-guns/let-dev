@@ -13,7 +13,8 @@ default_command() {
         return
     fi
 
-    local cmd=`echo "$@"`
+    local cmd=`echo "$1"`
+    shift
     # echo "cmd: $cmd"
     
     # # Remove ': ' from the beginning of the command
@@ -24,22 +25,32 @@ default_command() {
     # echo "cmd: $cmd"
 
     # If the first symbol is a colon, then add the home directory to the command
-    if [ "${cmd:0:1}" == "$LETDEV_SYMBOL" ]; then
-        # Remove the first symbol
-        cmd=`echo "$cmd" | sed "s/^$LETDEV_SYMBOL[ ]*//"`
+    if [[ "${cmd:0:1}" == "$LETDEV_SYMBOL" ]]; then
+        # Remove let-dev command at the beginning of the line
+        cmd=$(echo "$cmd" | sed "s/^[ ]*:[ ][ ]*//")
+        # Remove the first symbol if it is a colon
+        cmd=$(echo "$cmd" | sed "s/^://")
         # Replace colons with slashes
         cmd=`echo "$cmd" | tr ":" "/"`
         # Add the home directory to the command
-        cmd=`echo "$LETDEV_HOME/commands/:/$cmd"`
+        if [ -f ".let-dev/$LETDEV_PROFILE/commands/$cmd" ]; then
+            cmd=`echo ".let-dev/$LETDEV_PROFILE/commands/$cmd"`
+        elif [ -f "$LETDEV_HOME/profiles/$LETDEV_PROFILE/commands/$cmd" ]; then
+            cmd=`echo "$LETDEV_HOME/profiles/$LETDEV_PROFILE/commands/$cmd"`
+        elif [ -f "$LETDEV_HOME/commands/$cmd" ]; then
+            cmd=`echo "$LETDEV_HOME/commands/$cmd"`
+        else 
+            echo "Command '$cmd' not found"
+            return
+        fi
     fi
 
-    # if [ ! -f "$cmd" ]; then
-    #     echo "Command '$cmd' not found"
-    #     return
-    # fi
+    # Resolve symbolic links
+    # cmd=`readlink -f $cmd`
 
-    echo "Run command: $cmd"
-    eval $cmd
+    echo "run '$cmd $@'"
+    echo ""
+    eval . $cmd $@
 }
 
 default_command $@
