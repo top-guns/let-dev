@@ -6,5 +6,12 @@
 FILE_TO_OPEN="$HOME/.vimrc"
 FILE_TITLE="vim configuration file"
 
-source ./.edit_config.sh
+SCRIPT_PATH=''
+[ -n "${BASH_SOURCE[0]}" ] && SCRIPT_PATH="${BASH_SOURCE[0]}" || SCRIPT_PATH="$0"
+# Get the absolute path of the current script and expand the '..' to the real path
+SCRIPT_PATH=`readlink -f $SCRIPT_PATH`
+# Get the directory of the script
+SCRIPT_DIR=`dirname $SCRIPT_PATH`
+
+source "$SCRIPT_DIR/.edit_config.sh"
 _edit_config "$FILE_TO_OPEN" "$FILE_TITLE"
