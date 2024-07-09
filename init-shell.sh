@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# _update_command_line() {
+#     # Add : to the beginning of the line
+#     READLINE_LINE=$(echo "$READLINE_LINE" | sed '/^: /!s/^/: /')
+# }
+
 init_shell() {
     local shell_name=$1
     shift
@@ -56,6 +61,7 @@ init_shell() {
 
     # Add commands to path
     # export PATH="$LETDEV_PROJECT_PATH/$LETDEV_PROFILE/commands:$LETDEV_USERS_PATH/$LETDEV_PROFILE/commands:$LETDEV_HOME/commands:$PATH"
+    export PATH="$LETDEV_PROJECT_PATH/$LETDEV_PROFILE/commands:$PATH"
 
     # Param value reader alias
     alias "${LETDEV_SYMBOL}?"=":ask"
@@ -73,6 +79,20 @@ init_shell() {
     elif [ "$shell_name" = "zsh" ]; then
         source $LETDEV_HOME/init-completion-zsh.sh
     fi
+
+    # Bindings
+    # if [ "$shell_name" = "bash" ]; then
+    #     # Sequence can be used like bind -x '"\C-x\C-a": preprocess_command'
+    #     # bind -x '"\e-;": _update_command_line'
+    #     # bind -x '"\C-x;": _update_command_line'
+    #     # bind -x '"\e;": _update_command_line'
+    #     bind "\"\C-'\":\"\e;\""
+    #     bind -x "\"\e;\":_update_command_line"
+        
+    # elif [ "$shell_name" = "zsh" ]; then
+    #     # bindkey '^:' "$LETDEV_SYMBOL"
+    #     bindkey "^;" _update_command_line
+    # fi
 }
 
 :ask() {
