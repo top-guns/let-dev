@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+
+# This script is used to write a new value to a variable in the .env file
+
+_do_command() {
+    if [[ "$1" = "--help" ]]; then
+      echo "Write a new value to a variable in the .env file."
+      echo "Usage:"
+      echo "  :$0 <env_file> <variable_name> <new_value>"
+      echo "Example:"
+      echo "  :$0 .env MY_ENV_VAR \"new_value\""
+      return
+    fi
+    
+  if [[ "$#" -ne 3 ]]; then
+    # echo "Invalid number of arguments"
+    return 1
+  fi
+
+  local ENV_FILE="$1"
+  local VARIABLE_NAME="$2"
+  local NEW_VALUE="$3"
+
+  if [ ! -f "$ENV_FILE" ]; then
+    # echo "File $ENV_FILE does not exist"
+    return 1
+  fi
+
+  # Check if the variable exists in the .env file
+  if ! grep -q "^$VARIABLE_NAME=" $ENV_FILE; then
+    # If there are no new lines at the end of the file, add one
+    if [ "$(tail -c 1 $ENV_FILE)" != "" ]; then
+      echo "" >> $ENV_FILE
+    fi
+    # Append the variable to the end of the file
+    echo "$VARIABLE_NAME=$NEW_VALUE" >> $ENV_FILE
+  else
+    # Use sed to replace the variable value in the .env file
+    sed -i "" "s/^$VARIABLE_NAME=.*/$VARIABLE_NAME=$NEW_VALUE/" $ENV_FILE
+  fi
+}
+
+_do_command "$@"

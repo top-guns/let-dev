@@ -49,7 +49,6 @@ default_command() {
     # cmd=`readlink -f $cmd`
 
     echo "run '$cmd $@'"
-    echo ""
     eval . $cmd $@
 }
 
