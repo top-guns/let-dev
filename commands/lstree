@@ -1,4 +1,14 @@
 #! /bin/bash
 
-lstree="ls -R | grep ":$" | sed -e 's/:$//' -e 's/[^-][^\/]*\//--/g' -e 's/^/   /' -e 's/-/|/'"
-eval "$lstree"
+COMMAND_DESCRIPTION="Display directory tree recursively with files and directories"
+
+COMMAND_HELP="\
+Display directory tree recursively with files and directories
+Usage: :lstree [path]"
+
+_do_command() {
+    local lstree="ls -R | grep ":$" | sed -e 's/:$//' -e 's/[^-][^\/]*\//--/g' -e 's/^/   /' -e 's/-/|/'"
+    eval "$lstree"
+}
+
+_do_command "$@"

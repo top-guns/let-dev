@@ -5,7 +5,13 @@
 #};
 #llsfn
 
-function lls {
+COMMAND_DESCRIPTION="Standart ls command, but with some common options and with header"
+
+COMMAND_HELP="\
+Standart ls command, but with some common options and with header
+Usage: :ls [path]"
+
+function _do_command {
   LLS_PATH=$1
 
   HEADER="Per Perms       N Owner Group   Size Modified     Name";
@@ -13,4 +19,4 @@ function lls {
   ls -AHhl --color=always $LLS_PATH | awk "{ k=0; n=n+1; for(i=0;i<=8;i++) k+=((substr(\$1,i+2,1)~/[rwx]/)*2^(8-i)); if(n==2) printf(\"$HEADER\\n\"); if(k) printf(\"%0o \",k); print }"
 }
 
-lls $1
+_do_command $1
