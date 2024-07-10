@@ -7,7 +7,7 @@ COMMAND_DESCRIPTION="List all listening ports."
 COMMAND_HELP="\
 List all listening ports.
 Usage:
-    :net:ls [lsof|netstat|ss]\
+    :net:ls [lsof|netstat|ss]
 "
 
 _do_command() {

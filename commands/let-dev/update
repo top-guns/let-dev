@@ -4,7 +4,8 @@ COMMAND_DESCRIPTION="Update local LetDev from the git remote"
 
 COMMAND_HELP="\
 Update local LetDev from the git remote repository with git pull.
-Usage: :let-dev:update-from-git"
+Usage: :let-dev:update-from-git
+"
 
 _do_command() {
     local current_dir=$(pwd)

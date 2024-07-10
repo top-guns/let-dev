@@ -12,7 +12,8 @@ Options:
   --execute: Get the value of the environment variable after the file execution as a shell script (source)
 Example:
   :env:read .env MY_ENV_VAR
-  :env:read .env MY_ENV_VAR --execute"
+  :env:read .env MY_ENV_VAR --execute
+"
 
 _do_command() {
   if [[ "$1" = "--help" ]]; then

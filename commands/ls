@@ -9,7 +9,8 @@ COMMAND_DESCRIPTION="Standart ls command, but with some common options and with 
 
 COMMAND_HELP="\
 Standart ls command, but with some common options and with header
-Usage: :ls [path]"
+Usage: :ls [path]
+"
 
 function _do_command {
   LLS_PATH=$1

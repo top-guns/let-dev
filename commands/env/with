@@ -9,7 +9,8 @@ Load environment variables from a file and run a command.
 Usage:
   :with <env_file> <command> <args>
 Example:
-  :with .env echo \$MY_ENV_VAR"
+  :with .env env | grep MY_ENV_VAR
+"
 
 _do_command() {
   if [[ "$1" = "--help" || "$#" -lt 2 ]]; then

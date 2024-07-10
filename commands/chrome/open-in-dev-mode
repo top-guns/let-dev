@@ -15,7 +15,8 @@ Predefined mode settings:
   - User data directory is set to tmp/chrome_dev_profile
 Update: For Chrome 22+ you will be presented with an error message that says: 
 You are using an unsupported command-line flag: --disable-web-security. Stability and security will suffer.
-However you can just ignore that message while developing."
+However you can just ignore that message while developing.
+"
 
 _do_command() {
     if [[ "$1" == "-h" || "$1" == "--help" ]]; then

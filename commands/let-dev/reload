@@ -4,7 +4,7 @@ COMMAND_DESCRIPTION="Reload LetDev shell settings"
 
 COMMAND_HELP="\
 Reload LetDev shell settings.
-Usage: :let-dev:reload\
+Usage: :let-dev:reload
 "
 
 _do_command() {

@@ -8,7 +8,8 @@ Write a new value to a variable in the .env file.
 Usage:
   :env:write <env_file> <variable_name> <new_value>
 Example:
-  :env:read .env MY_ENV_VAR 'new_value'"
+  :env:read .env MY_ENV_VAR 'new_value'
+"
 
 _do_command() {
     if [[ "$1" = "--help" ]]; then
