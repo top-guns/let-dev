@@ -1,15 +1,18 @@
 #!/usr/bin/env bash
 # set -euo pipefail
 
-# This script is used to write a new value to a variable in the .env file
+COMMAND_DESCRIPTION="Write a new value to a variable in the .env file"
+
+COMMAND_HELP="\
+Write a new value to a variable in the .env file.
+Usage:
+  :env:write <env_file> <variable_name> <new_value>
+Example:
+  :env:read .env MY_ENV_VAR 'new_value'"
 
 _do_command() {
     if [[ "$1" = "--help" ]]; then
-      echo "Write a new value to a variable in the .env file."
-      echo "Usage:"
-      echo "  :$0 <env_file> <variable_name> <new_value>"
-      echo "Example:"
-      echo "  :$0 .env MY_ENV_VAR \"new_value\""
+      echo "$COMMAND_HELP"
       return
     fi
     

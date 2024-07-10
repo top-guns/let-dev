@@ -1,31 +1,38 @@
 #!/usr/bin/env bash
 # set -euo pipefail
 
-# This script is used to load environment variables from a file and then run a command.
-# It is useful for running commands that require environment variables to be set.
+COMMAND_DESCRIPTION="This script is used to load environment variables from a file and then run a command.
+It is useful for running commands that require environment variables to be set."
 
-if [[ "$1" = "--help" || "$#" -lt 2 ]]; then
-  echo "Load environment variables from a file and run a command."
-  echo "Usage:"
-  echo "  :with <env_file> <command> <args>"
-  echo "Example:"
-  echo "  :with .env echo \$MY_ENV_VAR"
-  return 1
-fi
+COMMAND_HELP="\
+Load environment variables from a file and run a command.
+Usage:
+  :with <env_file> <command> <args>
+Example:
+  :with .env echo \$MY_ENV_VAR"
+
+_do_command() {
+  if [[ "$1" = "--help" || "$#" -lt 2 ]]; then
+    echo "$COMMAND_HELP"
+    return 1
+  fi
 
 
-ENV_FILE="$1"
-shift
-args="$@"
+  ENV_FILE="$1"
+  shift
+  args="$@"
 
-if [ ! -f "$ENV_FILE" ]; then
-  echo "File $ENV_FILE does not exist"
-  return 1
-fi
+  if [ ! -f "$ENV_FILE" ]; then
+    echo "File $ENV_FILE does not exist"
+    return 1
+  fi
 
-(
-  set -a
-  source $ENV_FILE
-  set +a
-  exec "$args"
-)
+  (
+    set -a
+    source $ENV_FILE
+    set +a
+    exec "$args"
+  )
+}
+
+_do_command "$@"

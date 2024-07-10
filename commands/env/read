@@ -1,19 +1,22 @@
 #!/usr/bin/env bash
 # set -euo pipefail
 
-# This script returns the value of the specified variable from the .env file
+COMMAND_DESCRIPTION="Get the value of the specified variable from the file"
+
+COMMAND_HELP="\
+Read environment variable value from .env or .sh file.
+Usage:
+  :env:read <env_file> <variable_name> [--find|--execute]
+Options:
+  --find (default): Find the value of the variable in the text of the file (grep)
+  --execute: Get the value of the environment variable after the file execution as a shell script (source)
+Example:
+  :env:read .env MY_ENV_VAR
+  :env:read .env MY_ENV_VAR --execute"
 
 _do_command() {
   if [[ "$1" = "--help" ]]; then
-    echo "Read environment variable value from .env or .sh file."
-    echo "Usage:"
-    echo "  :$0 <env_file> <variable_name> [--find|--execute]"
-    echo "Options:"
-    echo "  --find (default): Find the value of the variable in the text of the file (grep)"
-    echo "  --execute: Get the value of the environment variable after the file execution as a shell script (source)"
-    echo "Example:"
-    echo "  :$0 .env MY_ENV_VAR"
-    echo "  :$0 .env MY_ENV_VAR --execute"
+    echo "$COMMAND_HELP"
     return
   fi
 
