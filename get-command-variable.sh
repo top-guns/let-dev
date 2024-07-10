@@ -7,7 +7,8 @@ extract_variable_from_file() {
     local variable_name=$2
 
     # Read the variable value from the file
-    local variable_value=$(awk -F= -v var="$variable_name" '$1 == var {gsub(/['"'"'\x22]/, "", $2); print $2}' $file)
+    # local variable_value=$(awk -F= -v var="$variable_name" '$1 == var {gsub(/['"'"'\x22]/, "", $2); print $2}' $file)
+    local variable_value=$(sed -n -e '/^'"$variable_name"'=/,/"/ p' $file | sed '1d;$d' | tr -d '"')
 
     # Print the variable value
     echo "$variable_value"
