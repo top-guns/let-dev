@@ -6,7 +6,8 @@ COMMAND_HELP="\
 Create new command to change directory to a specific location.
 If location is not provided, the current directory will be used.
 Usage:
-  :let-dev:save-location <alias_name> [location]"
+  :let-dev:save-location <alias_name> [location]\
+"
 
 _do_command() {
     alias_name="$1"
