@@ -22,33 +22,11 @@ _do_command() {
     local command=$1
     local relative_path=$(echo $command | sed 's|:|/|g')
     local variable_name=$2
-    local file=""
+    local file=$($LETDEV_HOME/get-command-script-path.sh $command)
     
-    # Find command file
-    
-    # in project commands
-    file=".let-dev/$LETDEV_PROFILE/commands$relative_path"
-    if [ -f "$file" ]; then
-        echo "$(extract_variable_from_file "$file" "$variable_name")"
-        return
-    fi
+    [ -f "$file" ] && echo "$(extract_variable_from_file "$file" "$variable_name")" && return
 
-    # in users commands
-    file="$LETDEV_HOME/profiles/$LETDEV_PROFILE/commands$relative_path"
-    if [ -f "$file" ]; then
-        echo "$(extract_variable_from_file "$file" "$variable_name")"
-        return
-    fi
-
-    # in system commands
-    file="$LETDEV_HOME/commands$relative_path"
-    if [ -f "$file" ]; then
-        echo "$(extract_variable_from_file "$file" "$variable_name")"
-        return
-    fi
-
-
-    echo "Command not found: $command"
+    # echo "Command not found: $command"
     return 1
 }
 

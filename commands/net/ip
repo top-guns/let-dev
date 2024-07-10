@@ -1,10 +1,15 @@
 #!/bin/bash
 
-# Print ip address of the machine
-
 # ip addr show eth0 | grep inet | awk '{ print $2; }' | sed 's/\/.*$//'
 
-_do_command_info_ip() {
+COMMAND_DESCRIPTION="Display local and external IP addresses of the machine"
+
+COMMAND_HELP="\
+Display local and external IP addresses of the machine
+Usage: :net:ip
+"
+
+_do_command() {
     local OS="$(uname)"
 
     local IP_ADDRESS=""
@@ -25,4 +30,4 @@ _do_command_info_ip() {
     echo "external: $IP_ADDRESS_EXTERNAL"
 }
 
-_do_command_info_ip
+_do_command $@

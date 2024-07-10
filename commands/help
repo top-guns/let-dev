@@ -1,0 +1,37 @@
+#!/bin/bash
+
+COMMAND_DESCRIPTION="Print help information for the given command."
+
+COMMAND_HELP="\
+Print help information for the given command.
+Usage:
+    :help [command]
+"
+
+_do_command() {
+    # Help
+    if [ "$1" == "--help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    if [ -z "$1" ]; then
+        echo "$COMMAND_HELP"
+        return 1
+    fi
+
+    local command=$1
+
+    local command_help=$($LETDEV_HOME/get-command-variable.sh $command COMMAND_HELP)
+
+    [ -n "$command_help" ] && echo "$command_help" && return
+
+    # Try to get help from the command itself and print it if the command has executed successfully
+    local command_help=$($command --help 2>&1)
+    if [ $? -eq 0 ]; then
+        echo "$command_help"
+        return
+    fi
+}
+
+_do_command $@

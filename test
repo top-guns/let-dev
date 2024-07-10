@@ -1,4 +1,25 @@
 #!/bin/bash
 
-cd commands
-exit 0
+COMMAND_DESCRIPTION="Test command"
+COMMAND_HELP="Simply call it as test"
+
+declare -A cmds
+cmds=(
+  ["command1"]="Description for command1"
+  ["command2"]="Description for command2"
+  ["command3"]="Description for command3"
+)
+
+# Generate the list for fzf
+cmd_list=""
+for cmd in "${!cmds[@]}"; do
+  cmd_list+="$cmd - ${cmds[$cmd]}"$'\n'
+done
+
+# Use fzf
+selected_cmd=$(echo -e "$cmd_list" | fzf --reverse --inline-info --tac --preview 'echo {}')
+
+# Extract the command name from the selected line
+selected_cmd=${selected_cmd%% -*}
+
+echo "You selected: $selected_cmd"
