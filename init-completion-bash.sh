@@ -3,8 +3,8 @@
 _letdev_complete() {
     local cur prev words cword
     _init_completion || return
-    local cmds=$($LETDEV_HOME/list-commands.sh)
-    COMPREPLY=($(compgen -W "$(echo "$cmds" | fzf --reverse --inline-info --tac)" -- "$cur"))
+    local cmds=$($LETDEV_HOME/list-commands.sh --with-descriptions)
+    COMPREPLY=($(compgen -W "$(echo "$cmds" | fzf --reverse --inline-info --tac --preview)" -- "$cur"))
 }
 
 _letdev_tab_complete() {
@@ -18,7 +18,6 @@ _letdev_tab_complete() {
         )
         local cur=${words[cur_word_index - 1]}
         local prev=${words[cur_word_index - 2]}
-
         # If the previous symbol is space, then the new argument is started
         local symbol_before_cursor=${READLINE_LINE:READLINE_POINT-1:1}
         if [[ "$symbol_before_cursor" != " " ]]; then
@@ -27,7 +26,8 @@ _letdev_tab_complete() {
 
                 if [[ $cur_word_index -eq 1 ]]; then
                     # Command completion
-                    local selected=$(echo "$cmds" | fzf --reverse --inline-info --tac --query=": $cur")
+                    # $LETDEV_HOME/list-commands.sh | sed "s|:|$LETDEV_HOME/commands/|" | fzf --reverse --inline-info --tac --preview="$LETDEV_HOME/get-command-variable.sh {} COMMAND_HELP"
+                    local selected=$(echo "$cmds" | fzf --reverse --inline-info --tac --query=": $cur" --preview="$LETDEV_HOME/get-command-variable.sh {} COMMAND_HELP")
                     if [[ -n $selected ]]; then
                         READLINE_LINE=": $selected"
                         READLINE_POINT=$((2 + ${#selected}))

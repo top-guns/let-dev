@@ -19,7 +19,7 @@ multiline_to_array() {
 # compdef _letdev_command '\:'
 
 _letdev_init_completion() {
-    local commands=$($LETDEV_HOME/list-commands.sh)
+    local commands=$($LETDEV_HOME/list-commands.sh --with-descriptions)
     multiline_to_array "$commands" commands
 
     # Create alias for every command
