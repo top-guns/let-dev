@@ -4,71 +4,76 @@
 # This script starts Chrome in development mode.
 # https://blog.keul.it/configure-chrome-for-cors-and-samesite-cookies/
 
-print_help() {
-    echo "Start Chrome in development mode."
-    echo "Usage:"
-    echo "  :chrome:open-in-dev-mode [trusted_host] [trusted_host] ..."
-    echo "Predefined mode settings:"
-    echo "  - Web security is disabled"
-    echo "  - User data directory is set to tmp/chrome_dev_profile"
-    echo "Update: For Chrome 22+ you will be presented with an error message that says: "
-    echo "You are using an unsupported command-line flag: --disable-web-security. Stability and security will suffer."
-    echo "However you can just ignore that message while developing."
+COMMAND_DESCRIPTION="Start Chrome in development mode"
+
+COMMAND_HELP="\
+Start Chrome in development mode.
+Usage:
+  :chrome:open-in-dev-mode [trusted_host] [trusted_host] ...
+Predefined mode settings:
+  - Web security is disabled
+  - User data directory is set to tmp/chrome_dev_profile
+Update: For Chrome 22+ you will be presented with an error message that says: 
+You are using an unsupported command-line flag: --disable-web-security. Stability and security will suffer.
+However you can just ignore that message while developing."
+
+_do_command() {
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    # Calculate the new profile path
+    profile_dir="$LETDEV_HOME/tmp"
+    [ ! -d "$profile_dir" ] && mkdir -p "$profile_dir"
+    profile_path="$profile_dir/chrome_dev_profile"
+
+    trusted_hosts=$@
+    trusted_hosts_default=("localhost" "localhost:8080" "localhost:8081" "localhost:3000" "localhost:3001" "localhost:3002")
+    trusted_host_options=""
+    for host in "${trusted_hosts[@]}"; do
+        trusted_host_options="$trusted_host_options --unsafely-treat-insecure-origin-as-secure=http://$host"
+        trusted_host_options="$trusted_host_options --unsafely-treat-insecure-origin-as-secure=https://$host"
+        trusted_host_options="$trusted_host_options --unsafely-treat-insecure-origin-as-secure=ws://$host"
+        trusted_host_options="$trusted_host_options --unsafely-treat-insecure-origin-as-secure=wss://$host"
+    done
+    for host in "${trusted_hosts_default[@]}"; do
+        if [[ ! " ${trusted_hosts[@]} " =~ " ${host} " ]]; then
+        trusted_host_options="$trusted_host_options --unsafely-treat-insecure-origin-as-secure=http://$host"
+        trusted_host_options="$trusted_host_options --unsafely-treat-insecure-origin-as-secure=https://$host"
+        trusted_host_options="$trusted_host_options --unsafely-treat-insecure-origin-as-secure=ws://$host"
+        trusted_host_options="$trusted_host_options --unsafely-treat-insecure-origin-as-secure=wss://$host"
+        fi
+    done
+
+
+    echo "Start Chrome in development mode"
+    # Is it OSX
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # Old version: 
+        # open -na "Google Chrome" --args --user-data-dir="/tmp/chrome_dev_profile" --disable-web-security
+
+        # New version: 
+        open -na Google\ Chrome \
+            --args --disable-web-security --allow-running-insecure-content \
+            --user-data-dir="$profile_path" \
+            --disable-features=SameSiteByDefaultCookies,SameSiteDefaultChecksMethodRigorously \
+            --disable-site-isolation-trials --ignore-certificate-errors \
+            $trusted_host_options
+    elif [[ "$OSTYPE" == "linux-gnu" ]]; then
+        # Old version: 
+        # google-chrome --user-data-dir="/tmp/chrome_dev_profile" --disable-web-security
+
+        # New version:
+        google-chrome -na \
+            --user-data-dir="$profile_path" \
+            --disable-web-security --allow-running-insecure-content \
+            --disable-features=SameSiteByDefaultCookies,SameSiteDefaultChecksMethodRigorously \
+            --disable-site-isolation-trials --ignore-certificate-errors \
+            $trusted_host_options
+    else
+        echo "Unsupported OS"
+    fi
 }
 
-if [[ "$1" == "-h" || "$1" == "--help" ]]; then
-    print_help
-    return
-fi
-
-# Calculate the new profile path
-profile_dir="$LETDEV_HOME/tmp"
-[ ! -d "$profile_dir" ] && mkdir -p "$profile_dir"
-profile_path="$profile_dir/chrome_dev_profile"
-
-trusted_hosts=$@
-trusted_hosts_default=("localhost" "localhost:8080" "localhost:8081" "localhost:3000" "localhost:3001" "localhost:3002")
-trusted_host_options=""
-for host in "${trusted_hosts[@]}"; do
-    trusted_host_options="$trusted_host_options --unsafely-treat-insecure-origin-as-secure=http://$host"
-    trusted_host_options="$trusted_host_options --unsafely-treat-insecure-origin-as-secure=https://$host"
-    trusted_host_options="$trusted_host_options --unsafely-treat-insecure-origin-as-secure=ws://$host"
-    trusted_host_options="$trusted_host_options --unsafely-treat-insecure-origin-as-secure=wss://$host"
-done
-for host in "${trusted_hosts_default[@]}"; do
-    if [[ ! " ${trusted_hosts[@]} " =~ " ${host} " ]]; then
-    trusted_host_options="$trusted_host_options --unsafely-treat-insecure-origin-as-secure=http://$host"
-    trusted_host_options="$trusted_host_options --unsafely-treat-insecure-origin-as-secure=https://$host"
-    trusted_host_options="$trusted_host_options --unsafely-treat-insecure-origin-as-secure=ws://$host"
-    trusted_host_options="$trusted_host_options --unsafely-treat-insecure-origin-as-secure=wss://$host"
-    fi
-done
-
-
-echo "Start Chrome in development mode"
-# Is it OSX
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    # Old version: 
-    # open -na "Google Chrome" --args --user-data-dir="/tmp/chrome_dev_profile" --disable-web-security
-
-    # New version: 
-    open -na Google\ Chrome \
-        --args --disable-web-security --allow-running-insecure-content \
-        --user-data-dir="$profile_path" \
-        --disable-features=SameSiteByDefaultCookies,SameSiteDefaultChecksMethodRigorously \
-        --disable-site-isolation-trials --ignore-certificate-errors \
-        $trusted_host_options
-elif [[ "$OSTYPE" == "linux-gnu" ]]; then
-    # Old version: 
-    # google-chrome --user-data-dir="/tmp/chrome_dev_profile" --disable-web-security
-
-    # New version:
-    google-chrome -na \
-        --user-data-dir="$profile_path" \
-        --disable-web-security --allow-running-insecure-content \
-        --disable-features=SameSiteByDefaultCookies,SameSiteDefaultChecksMethodRigorously \
-        --disable-site-isolation-trials --ignore-certificate-errors \
-        $trusted_host_options
-else
-    echo "Unsupported OS"
-fi
+_do_command $@

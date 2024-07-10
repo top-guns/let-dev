@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # set -euo pipefail
 
-# Open hosts file in the default text editor
+COMMAND_DESCRIPTION="Edit hosts file"
+COMMAND_HELP="Open hosts in the preferred text editor"
 
 FILE_TO_OPEN="/etc/hosts"
-FILE_TITLE="hosts configuration file"
 
 SCRIPT_PATH=''
 [ -n "${BASH_SOURCE[0]}" ] && SCRIPT_PATH="${BASH_SOURCE[0]}" || SCRIPT_PATH="$0"
@@ -14,4 +14,4 @@ SCRIPT_PATH=`readlink -f $SCRIPT_PATH`
 SCRIPT_DIR=`dirname $SCRIPT_PATH`
 
 source "$SCRIPT_DIR/.edit_config.sh"
-_edit_config "$FILE_TO_OPEN" "$FILE_TITLE"
+_edit_config "$FILE_TO_OPEN" $@
