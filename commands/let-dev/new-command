@@ -1,49 +1,55 @@
 #!/bin/bash
 
-command="$@"
+COMMAND_DESCRIPTION="Create new let-dev command"
 
-# Get name for the creating alias script
-read -p "Enter command name: " alias_name
-if [ -z "$alias_name" ]; then
-    echo "Alias name is required"
-    exit 1
-fi
+COMMAND_HELP="\
+Create new command in the current project or globally in the current profile.
+Usage:
+  :let-dev:new-command [command]"
 
-# Get is in local or global alias and determine the script folder
-read -p "Local or global alias? (l/g): " alias_type
-script_dir=""
-if [ "$alias_type" == "l" ]; then
-    script_dir="$LETDEV_HOME/profiles/$LETDEV_PROFILE"
-elif [ "$alias_type" == "g" ]; then
-    script_dir="./.let-dev/$LETDEV_PROFILE"
-else
-    echo "Invalid alias type"
-    exit 1
-fi 
+_do_command() {
+    command="$@"
 
-[ -n "$command" ] && echo "Add alias ':$alias_name' for the command '$command'"
-[ -z "$command" ] && echo "Add alias ':$alias_name'"
+    # Get name for the creating alias script
+    read -p "Enter command name: " alias_name
+    if [ -z "$alias_name" ]; then
+        echo "Alias name is required"
+        exit 1
+    fi
 
-mkdir -p "$script_dir"
-script_path="$script_dir/$alias_name.sh"
+    # Get is in local or global alias and determine the script folder
+    read -p "Local or global alias? (l/g): " alias_type
+    script_dir=""
+    if [ "$alias_type" == "l" ]; then
+        script_dir="$LETDEV_HOME/profiles/$LETDEV_PROFILE"
+    elif [ "$alias_type" == "g" ]; then
+        script_dir="./.let-dev/$LETDEV_PROFILE"
+    else
+        echo "Invalid alias type"
+        exit 1
+    fi 
 
-[ -f "$script_path" ] && echo "Alias with the name '$alias_name' already exists" && exit 1
+    [ -n "$command" ] && echo "Add alias ':$alias_name' for the command '$command'"
+    [ -z "$command" ] && echo "Add alias ':$alias_name'"
 
-touch "$script_path"
-chmod +x $script_path
+    mkdir -p "$script_dir"
+    script_path="$script_dir/$alias_name.sh"
 
-if [ "$alias_type" == "g" ]; then
-    alias ":$alias_name"="source $script_path"
-fi
+    [ -f "$script_path" ] && echo "Alias with the name '$alias_name' already exists" && exit 1
 
-echo "#!/bin/bash" > "$script_path"
-echo "" >> "$script_path"
-[ -n "$command" ] && echo "$command" >> "$script_path"
+    touch "$script_path"
+    chmod +x $script_path
 
-# Open script in default editor, if any. Otherwise, use vim
-if [ -n "$EDITOR" ]; then
-    $EDITOR $script_path
-else
-    vim $script_path
-fi
+    if [ "$alias_type" == "g" ]; then
+        alias ":$alias_name"="source $script_path"
+    fi
 
+    echo "#!/bin/bash" > "$script_path"
+    echo "" >> "$script_path"
+    [ -n "$command" ] && echo "$command" >> "$script_path"
+
+    # Open script to edit
+    eval ":edit $script_path"
+}
+
+_do_command "$@"

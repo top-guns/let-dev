@@ -6,4 +6,8 @@ COMMAND_HELP="\
 Reload LetDev shell settings.
 Usage: :let-dev:reload"
 
-source $LETDEV_HOME/init-shell.sh
+_do_command() {
+    source $LETDEV_HOME/init-shell.sh
+}
+
+_do_command "$@"

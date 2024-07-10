@@ -1,25 +1,37 @@
 #!/bin/bash
 
-alias_name="$1"
-[ -z "$alias_name" ] && alias_name=$(basename $PWD)
+COMMAND_DESCRIPTION="Create new command to change directory to a specific location"
 
-location="$2"
-[ -z "$location" ] && location="$PWD"
+COMMAND_HELP="\
+Create new command to change directory to a specific location.
+If location is not provided, the current directory will be used.
+Usage:
+  :let-dev:save-location <alias_name> [location]"
 
-script_name="$alias_name"
-script_path="$LETDEV_HOME/profiles/$LETDEV_PROFILE/cd/$script_name"
+_do_command() {
+    alias_name="$1"
+    [ -z "$alias_name" ] && alias_name=$(basename $PWD)
 
-echo "Add alias ':cd:$alias_name' which will change directory to '$location'"
+    location="$2"
+    [ -z "$location" ] && location="$PWD"
 
-[ -f "$script_path" ] && echo "Alias with the name ':cd:$alias_name' already exists" && return
+    script_name="$alias_name"
+    script_path="$LETDEV_HOME/profiles/$LETDEV_PROFILE/cd/$script_name"
 
-mkdir -p "$LETDEV_HOME/profiles/$LETDEV_PROFILE/cd"
+    echo "Add alias ':cd:$alias_name' which will change directory to '$location'"
 
-touch "$script_path"
-chmod +x $script_path
+    [ -f "$script_path" ] && echo "Alias with the name ':cd:$alias_name' already exists" && return
 
-echo "#! /bin/bash" > "$script_path"
-echo "" >> "$script_path"
-echo "cd $location" >> "$script_path"
+    mkdir -p "$LETDEV_HOME/profiles/$LETDEV_PROFILE/cd"
 
-eval ::reload
+    touch "$script_path"
+    chmod +x $script_path
+
+    echo "#! /bin/bash" > "$script_path"
+    echo "" >> "$script_path"
+    echo "cd $location" >> "$script_path"
+
+    eval ::reload
+}
+
+_do_command "$@"

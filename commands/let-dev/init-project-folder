@@ -1,12 +1,23 @@
 #!/bin/bash
 
-profile="$1"
+COMMAND_DESCRIPTION="Initialize the current folder as the let.dev project folder."
 
-[ -z "$profile" ] && profile=$(:ask "Enter profile name (default is '$LETDEV_PROFILE')")
-[ -z "$profile" ] && profile=$LETDEV_PROFILE
+COMMAND_HELP="\
+Initialize the current folder as the let.dev project folder.
+Usage:
+  :let-dev:init-project-folder [profile]"
 
-script_dir="./.let-dev/$profile"
+_do_command() {
+    profile="$1"
 
-mkdir -p "$script_dir/commands"
+    [ -z "$profile" ] && profile=$(:ask "Enter profile name (default is '$LETDEV_PROFILE')")
+    [ -z "$profile" ] && profile=$LETDEV_PROFILE
 
-echo "let.dev initialized for profile $profile"
+    script_dir="./.let-dev/$profile"
+
+    mkdir -p "$script_dir/commands"
+
+    echo "let.dev initialized for profile $profile"
+}
+
+_do_command "$@"
