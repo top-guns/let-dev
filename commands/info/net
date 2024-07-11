@@ -6,28 +6,29 @@ COMMAND_DESCRIPTION="Network Information"
 
 COMMAND_HELP="\
 Display Network Interface Information and Open TCP/UDP Ports
-Usage: :info:net
+Usage: 
+    :info:net
 "
 
 _do_command() {
-  echo "Network Interface Information:"
-  if [ -x "$(command -v ip)" ]; then
-    ip addr
-  elif [ -x "$(command -v ifconfig)" ]; then
-    ifconfig
-  else
-    echo "Cannot find network interface information"
-  fi
-  echo ""
+    echo "Network Interface Information:"
+    if [ -x "$(command -v ip)" ]; then
+        ip addr
+    elif [ -x "$(command -v ifconfig)" ]; then
+        ifconfig
+    else
+        echo "Cannot find network interface information"
+    fi
+    echo ""
 
-  echo "Open TCP/UDP Ports:"
-  if [ -x "$(command -v ss)" ]; then
-    ss -tuln
-  elif [ -x "$(command -v lsof)" ]; then
-    lsof -i -P | grep -i "listen"
-  else
-    echo "Cannot find open TCP/UDP ports information"
-  fi
+    echo "Open TCP/UDP Ports:"
+    if [ -x "$(command -v ss)" ]; then
+        ss -tuln
+    elif [ -x "$(command -v lsof)" ]; then
+        lsof -i -P | grep -i "listen"
+    else
+        echo "Cannot find open TCP/UDP ports information"
+    fi
 }
 
 _do_command $@

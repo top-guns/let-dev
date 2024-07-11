@@ -1,46 +1,56 @@
 #!/usr/bin/env bash
 #set -euo pipefail
 
-# Update git settings for the project with the GitHub account
+COMMAND_DESCRIPTION="Update project git GitHub account."
 
-# Help
-if [ "$1" == "--help" ]; then
-    echo "Usage: $0 <github_account> <email> [project_dir]"
-    exit 0
-fi
+COMMAND_HELP="\
+Update git settings for the project to use specified GitHub account.
+Usage: 
+    :git:set-git-user-for-project <github_account> <email> [project_dir]
+"
 
-# Variables
-github_account=$1
-email=$2
-project_dir=$3
+_do_command() {
+    if [[ "$1" = "--help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
 
-# Check if the GitHub account is provided
-if [ -z "$github_account" ]; then
-    echo "GitHub account is required"
-    exit 1
-fi
+    # Variables
+    local github_account=$1
+    local email=$2
+    local project_dir=$3
 
-# Check if the email is provided
-if [ -z "$email" ]; then
-    echo "Email is required"
-    exit 1
-fi
+    # Check if the GitHub account is provided
+    if [ -z "$github_account" ]; then
+        echo "GitHub account is required"
+        exit 1
+    fi
 
-# Check if the project directory is provided or use the current directory
-[ -z "$project_dir" ] && project_dir="."
+    # Check if the email is provided
+    if [ -z "$email" ]; then
+        email=$(eval ": :git:github-no-reply-email '$github_account'")
+        echo "Email is not specified, use no-reply github address: $email"
+    fi
 
-# Check if the project directory exists
-if [ ! -d "$project_dir" ]; then
-    echo "Project directory does not exist: $project_dir"
-    exit 1
-fi
+    # Check if the project directory is provided or use the current directory
+    [ -z "$project_dir" ] && project_dir="."
 
-# Update the git settings for the project
-if [ "$project_dir" != "." ]; then
-    cd "$project_dir"
-fi
+    # Check if the project directory exists
+    if [ ! -d "$project_dir" ]; then
+        echo "Project directory does not exist: $project_dir"
+        exit 1
+    fi
 
-git config user.name "$github_account"
-git config user.email "$email"
+    # Update the git settings for the project
+    if [ "$project_dir" != "." ]; then
+        cd "$project_dir"
+    fi
 
-echo "Git settings updated for the project: $project_dir"
+    git config user.name "$github_account"
+    git config user.email "$email"
+
+    echo "Git settings updated for the project: $project_dir"
+}
+
+_do_command $@
+

@@ -4,7 +4,8 @@ COMMAND_DESCRIPTION="Monitore running processes information"
 
 COMMAND_HELP="\
 Monitore running processes information
-Usage: :info:proc
+Usage: 
+    :info:proc
 "
 
 _do_command() {

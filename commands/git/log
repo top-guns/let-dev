@@ -1,4 +1,21 @@
 #!/usr/bin/env bash
 #set -euo pipefail
 
-git log --graph --decorate --oneline
+COMMAND_DESCRIPTION="Display git log in a graph format."
+
+COMMAND_HELP="\
+Display git log in a graph format.
+Usage: 
+    :git:log
+"
+
+_do_command() {
+    if [[ "$1" = "--help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    git log --graph --decorate --oneline
+}
+
+_do_command $@

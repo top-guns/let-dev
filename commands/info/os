@@ -4,23 +4,23 @@ COMMAND_DESCRIPTION="OS Information"
 
 COMMAND_HELP="\
 Display operation system information
-Usage: :info:os
+    Usage: :info:os
 "
 
 _do_command() {
-  echo "Kernel Information:"
-  uname -a
-  echo ""
+    echo "Kernel Information:"
+    uname -a
+    echo ""
 
-  echo "Operation System Information:"
-  if [ -x "$(command -v lsb_release)" ]; then
-    lsb_release -a
-  elif [ -x "$(command -v sw_vers)" ]; then
-    sw_vers
-  else
-    echo "Cannot find system information"
-  fi
-  echo ""
+    echo "Operation System Information:"
+    if [ -x "$(command -v lsb_release)" ]; then
+        lsb_release -a
+    elif [ -x "$(command -v sw_vers)" ]; then
+        sw_vers
+    else
+        echo "Cannot find system information"
+    fi
+    echo ""
 }
 
 _do_command $@

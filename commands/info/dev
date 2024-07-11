@@ -4,29 +4,30 @@ COMMAND_DESCRIPTION="Installed Development Tools Information"
 
 COMMAND_HELP="\
 Display information about the installed programming languages and development tools
-Usage: :info:dev
+Usage: 
+    :info:dev
 "
 
 _do_command() {
-  [ -x "$(command -v node)" ] && echo "Node.js Information:" && node --version && echo "------------------------------------"
-  [ -x "$(command -v ruby)" ] && echo "Ruby Information:" && ruby --version && echo "------------------------------------"
-  [ -x "$(command -v python)" ] && echo "Python Information:" && python --version && echo "------------------------------------"
-  [ -x "$(command -v code)" ] && echo "Visual Studio Code Information:" && code --version && echo "------------------------------------"
-  [ -x "$(command -v docker)" ] && echo "Docker Information:" && docker --version && echo "------------------------------------"
-  [ -x "$(command -v git)" ] && echo "Git Information:" && git --version && echo "------------------------------------"
-  [ -x "$(command -v gh)" ] && echo "GitHub CLI Information:" && gh --version && echo "------------------------------------"
-  [ -x "$(command -v java)" ] && echo "Java Information:" && java -version && echo "------------------------------------"
-  [ -x "$(command -v go)" ] && echo "Go Information:" && go version && echo "------------------------------------"
-  [ -x "$(command -v kubectl)" ] && echo "Kubernetes Information:" && kubectl version --client && echo "------------------------------------"
-  [ -x "$(command -v terraform)" ] && echo "Terraform Information:" && terraform version && echo "------------------------------------"
-  [ -x "$(command -v ansible)" ] && echo "Ansible Information:" && ansible --version && echo "------------------------------------"
-  [ -x "$(command -v idea)" ] && echo "IntelliJ IDEA Information:" && idea --version && echo "------------------------------------"
-  [ -x "$(command -v pycharm)" ] && echo "PyCharm Information:" && pycharm --version && echo "------------------------------------"
-  [ -x "$(command -v webstorm)" ] && echo "WebStorm Information:" && webstorm --version && echo "------------------------------------"
-  [ -x "$(command -v studio)" ] && echo "Android Studio Information:" && studio --version && echo "------------------------------------"
-  [ -x "$(command -v xcodebuild)" ] && echo "Xcode Information:" && xcodebuild -version && echo "------------------------------------"
-  [ -x "$(command -v devenv)" ] && echo "Visual Studio Information:" && devenv --version && echo "------------------------------------"
-  [ -x "$(command -v eclipse)" ] && echo "Eclipse Information:" && eclipse --version && echo "------------------------------------"
+    [ -x "$(command -v node)" ] && echo "Node.js Information:" && node --version && echo "------------------------------------"
+    [ -x "$(command -v ruby)" ] && echo "Ruby Information:" && ruby --version && echo "------------------------------------"
+    [ -x "$(command -v python)" ] && echo "Python Information:" && python --version && echo "------------------------------------"
+    [ -x "$(command -v code)" ] && echo "Visual Studio Code Information:" && code --version && echo "------------------------------------"
+    [ -x "$(command -v docker)" ] && echo "Docker Information:" && docker --version && echo "------------------------------------"
+    [ -x "$(command -v git)" ] && echo "Git Information:" && git --version && echo "------------------------------------"
+    [ -x "$(command -v gh)" ] && echo "GitHub CLI Information:" && gh --version && echo "------------------------------------"
+    [ -x "$(command -v java)" ] && echo "Java Information:" && java -version && echo "------------------------------------"
+    [ -x "$(command -v go)" ] && echo "Go Information:" && go version && echo "------------------------------------"
+    [ -x "$(command -v kubectl)" ] && echo "Kubernetes Information:" && kubectl version --client && echo "------------------------------------"
+    [ -x "$(command -v terraform)" ] && echo "Terraform Information:" && terraform version && echo "------------------------------------"
+    [ -x "$(command -v ansible)" ] && echo "Ansible Information:" && ansible --version && echo "------------------------------------"
+    [ -x "$(command -v idea)" ] && echo "IntelliJ IDEA Information:" && idea --version && echo "------------------------------------"
+    [ -x "$(command -v pycharm)" ] && echo "PyCharm Information:" && pycharm --version && echo "------------------------------------"
+    [ -x "$(command -v webstorm)" ] && echo "WebStorm Information:" && webstorm --version && echo "------------------------------------"
+    [ -x "$(command -v studio)" ] && echo "Android Studio Information:" && studio --version && echo "------------------------------------"
+    [ -x "$(command -v xcodebuild)" ] && echo "Xcode Information:" && xcodebuild -version && echo "------------------------------------"
+    [ -x "$(command -v devenv)" ] && echo "Visual Studio Information:" && devenv --version && echo "------------------------------------"
+    [ -x "$(command -v eclipse)" ] && echo "Eclipse Information:" && eclipse --version && echo "------------------------------------"
 }
 
 _do_command $@

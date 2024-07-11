@@ -4,7 +4,8 @@ COMMAND_DESCRIPTION="Mounted Filesystems"
 
 COMMAND_HELP="\
 Display mounted filesystems information
-Usage: :info:mounted
+Usage: 
+    :info:mounted
 "
 
 _do_command() {

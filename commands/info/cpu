@@ -4,18 +4,19 @@ COMMAND_DESCRIPTION="CPU Information"
 
 COMMAND_HELP="\
 Display CPU Information
-Usage: :info:cpu
+Usage: 
+    :info:cpu
 "
 
 _do_command() {
-  echo "CPU Information:"
-  if [ -x "$(command -v lscpu)" ]; then
-    lscpu
-  elif [ -x "$(command -v sysctl)" ]; then
-    sysctl -n machdep.cpu.brand_string
-  else
-    echo "Cannot find CPU information"
-  fi
+    echo "CPU Information:"
+    if [ -x "$(command -v lscpu)" ]; then
+        lscpu
+    elif [ -x "$(command -v sysctl)" ]; then
+        sysctl -n machdep.cpu.brand_string
+    else
+        echo "Cannot find CPU information"
+    fi
 }
 
 _do_command $@

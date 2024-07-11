@@ -1,32 +1,42 @@
 #!/usr/bin/env bash
 #set -euo pipefail
 
-# Update git settings for the project with the GitHub account
+COMMAND_DESCRIPTION="Update global git GitHub account."
 
-# Help
-if [ "$1" == "--help" ]; then
-    echo "Usage: $0 <github_account> <email> [project_dir]"
-    exit 0
-fi
+COMMAND_HELP="\
+Update global git settings to use specified GitHub account.
+Usage: 
+    :git:set-git-user-for-global <github_account> <email> [project_dir]
+"
 
-# Variables
-github_account=$1
-email=$2
-project_dir=$3
+_do_command() {
+    if [[ "$1" = "--help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
 
-# Check if the GitHub account is provided
-if [ -z "$github_account" ]; then
-    echo "GitHub account is required"
-    exit 1
-fi
+    # Variables
+    local github_account=$1
+    local email=$2
+    local project_dir=$3
 
-# Check if the email is provided
-if [ -z "$email" ]; then
-    echo "Email is required"
-    exit 1
-fi
+    # Check if the GitHub account is provided
+    if [ -z "$github_account" ]; then
+        echo "GitHub account is required"
+        exit 1
+    fi
 
-git config --global user.name "$github_account"
-git config --global user.email "$email"
+    # Check if the email is provided
+    if [ -z "$email" ]; then
+        email=$(eval ": :git:github-no-reply-email '$github_account'")
+        echo "Email is not specified, use no-reply github address: $email"
+    fi
 
-echo "Git settings updated globally"
+    git config --global user.name "$github_account"
+    git config --global user.email "$email"
+
+    echo "Git settings updated globally"
+}
+
+_do_command $@
+ 

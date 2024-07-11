@@ -4,7 +4,8 @@ COMMAND_DESCRIPTION="RAM information"
 
 COMMAND_HELP="\
 RAM information
-Usage: :info:ram
+Usage: 
+    :info:ram
 "
 
 _do_command() {

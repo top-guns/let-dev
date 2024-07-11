@@ -1,9 +1,27 @@
 #!/usr/bin/env bash
 
-git_version=$(git --version | awk '{print $3}')
+COMMAND_DESCRIPTION="Revert changes to the last commit."
 
-if [[ $(echo "$git_version 2.23.0" | tr " " "\n" | sort -V | head -n 1) == "2.23.0" ]]; then
-    git restore $@
-else
-    git checkout -- $@
-fi
+COMMAND_HELP="\
+Reset all changes in the working directory or the specified files to the last commit.
+Usage: 
+    :git:restore [file1 file2 ...]
+If no files are specified, all changes in the working directory will be reset.
+"
+
+_do_command() {
+    if [[ "$1" = "--help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    git_version=$(git --version | awk '{print $3}')
+
+    if [[ $(echo "$git_version 2.23.0" | tr " " "\n" | sort -V | head -n 1) == "2.23.0" ]]; then
+        git restore $@
+    else
+        git checkout -- $@
+    fi
+}
+
+_do_command $@

@@ -1,3 +1,20 @@
 #!/usr/bin/env bash
 
-git reset --hard HEAD~1
+COMMAND_DESCRIPTION="Remove the last local commit."
+
+COMMAND_HELP="\
+Remove the last local commit.
+Usage: 
+    :git:remove-last-local-commit
+"
+
+_do_command() {
+    if [[ "$1" = "--help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    git reset --hard HEAD~1
+}
+
+_do_command $@

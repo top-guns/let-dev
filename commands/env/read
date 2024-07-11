@@ -6,49 +6,49 @@ COMMAND_DESCRIPTION="Get the value of the specified variable from the file"
 COMMAND_HELP="\
 Read environment variable value from .env or .sh file.
 Usage:
-  :env:read <env_file> <variable_name> [--find|--execute]
+    :env:read <env_file> <variable_name> [--find|--execute]
 Options:
-  --find (default): Find the value of the variable in the text of the file (grep)
-  --execute: Get the value of the environment variable after the file execution as a shell script (source)
+    --find (default): Find the value of the variable in the text of the file (grep)
+    --execute: Get the value of the environment variable after the file execution as a shell script (source)
 Example:
-  :env:read .env MY_ENV_VAR
-  :env:read .env MY_ENV_VAR --execute
+    :env:read .env MY_ENV_VAR
+    :env:read .env MY_ENV_VAR --execute
 "
 
 _do_command() {
-  if [[ "$1" = "--help" ]]; then
-    echo "$COMMAND_HELP"
-    return
-  fi
+    if [[ "$1" = "--help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
 
-  if [[ "$#" -lt 2 ]]; then
-    # echo "Invalid number of arguments"
-    return 1
-  fi
+    if [[ "$#" -lt 2 ]]; then
+        # echo "Invalid number of arguments"
+        return 1
+    fi
 
-  local ENV_FILE="$1"
-  local VARIABLE_NAME="$2"
-  local MODE="${3:-"--find"}"
+    local ENV_FILE="$1"
+    local VARIABLE_NAME="$2"
+    local MODE="${3:-"--find"}"
 
-  if [ ! -f "$ENV_FILE" ]; then
-    # echo "File $ENV_FILE does not exist"
-    return 1
-  fi
+    if [ ! -f "$ENV_FILE" ]; then
+        # echo "File $ENV_FILE does not exist"
+        return 1
+    fi
 
-  if [[ "$MODE" = "--execute" ]]; then
-    (
-      set -a
-      source $ENV_FILE
-      set +a
-      eval echo \$$VARIABLE_NAME
-    )
-  elif [[ "$MODE" = "--find" ]]; then
-    local VARIABLE_VALUE=$(awk -F '=' -v var="$VARIABLE_NAME" '$1==var {print $2}' $ENV_FILE)
-    echo $VARIABLE_VALUE
-  else
-    # echo "Invalid mode"
-    return 1
-  fi
+    if [[ "$MODE" = "--execute" ]]; then
+        (
+            set -a
+            source $ENV_FILE
+            set +a
+            eval echo \$$VARIABLE_NAME
+        )
+    elif [[ "$MODE" = "--find" ]]; then
+        local VARIABLE_VALUE=$(awk -F '=' -v var="$VARIABLE_NAME" '$1==var {print $2}' $ENV_FILE)
+        echo $VARIABLE_VALUE
+    else
+        # echo "Invalid mode"
+        return 1
+    fi
 }
 
 _do_command "$@"

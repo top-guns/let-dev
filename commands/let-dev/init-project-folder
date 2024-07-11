@@ -5,7 +5,7 @@ COMMAND_DESCRIPTION="Initialize the current folder as the let.dev project folder
 COMMAND_HELP="\
 Initialize the current folder as the let.dev project folder.
 Usage:
-  :let-dev:init-project-folder [profile]
+    :let-dev:init-project-folder [profile]
 "
 
 _do_command() {

@@ -4,7 +4,8 @@ COMMAND_DESCRIPTION="HDD Information"
 
 COMMAND_HELP="\
 Display Hard Disk Information and Filesystem Disk Space Usage
-Usage: :info:hdd
+Usage: 
+    :info:hdd
 "
 
 _do_command() {

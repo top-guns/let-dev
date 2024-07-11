@@ -4,53 +4,54 @@ COMMAND_DESCRIPTION="Users Information"
 
 COMMAND_HELP="\
 Display information about the users on the system
-Usage: :info:mounted
+Usage: 
+    :info:mounted
 "
 
 _do_command() {
-  echo "Currently logged in users:"
-  who
-  echo ""
+    echo "Currently logged in users:"
+    who
+    echo ""
 
-  echo -n "User Information"
-  if [ -x "$(command -v getent)" ]; then
-    echo " (getent):"
-    getent passwd
-  elif [ -x "$(command -v cat)" ]; then
-    echo " (/etc/passwd):"
-    # Only real users, skip all users starting with "_"
-    cat /etc/passwd | grep -v "^#" | grep -v "^$" | grep -v "^_" | column -t -s ":"
-    #  | grep -v "/nologin" | grep -v "/false" | grep -v "/shutdown" | grep -v "/halt" | grep -v "/sync" | grep -v "/bin/false" | grep -v "/bin/nologin" | grep -v "/bin/sync" | grep -v "/bin/halt" | grep -v "/bin/shutdown" | grep -v "/usr/bin/false" | grep -v "/usr/bin/nologin" | grep -v "/usr/bin/sync" | grep -v "/usr/bin/halt" | grep -v "/usr/bin/shutdown"
-    #  | cut -d ":" -f 1,5
-    #  | column -t -s ":"
-  else
-    echo "Cannot find user information"
-  fi
-  echo ""
+    echo -n "User Information"
+    if [ -x "$(command -v getent)" ]; then
+        echo " (getent):"
+        getent passwd
+    elif [ -x "$(command -v cat)" ]; then
+        echo " (/etc/passwd):"
+        # Only real users, skip all users starting with "_"
+        cat /etc/passwd | grep -v "^#" | grep -v "^$" | grep -v "^_" | column -t -s ":"
+        #  | grep -v "/nologin" | grep -v "/false" | grep -v "/shutdown" | grep -v "/halt" | grep -v "/sync" | grep -v "/bin/false" | grep -v "/bin/nologin" | grep -v "/bin/sync" | grep -v "/bin/halt" | grep -v "/bin/shutdown" | grep -v "/usr/bin/false" | grep -v "/usr/bin/nologin" | grep -v "/usr/bin/sync" | grep -v "/usr/bin/halt" | grep -v "/usr/bin/shutdown"
+        #  | cut -d ":" -f 1,5
+        #  | column -t -s ":"
+    else
+        echo "Cannot find user information"
+    fi
+    echo ""
 
-  echo -n "User and Group Information"
-  if [ -x "$(command -v id)" ]; then
-    echo " (id):"
-    id | sed -r "s/([=,])([0-9]*)\(([^\)]*)\)/\1\3 (\2)/g" | sed -r "s/,_[^\(]*\([^\)]*\)//g" | sed "s/^uid=//" | sed -r "s/ gid=([^ ]*)/\n· gid:\n  - \1/" | sed "s/ groups=/\n· groups:\n  - /" | sed "s/,/\n  - /g"
-    return
-  elif [ -x "$(command -v whoami)" ]; then
-    echo " (whoami):"
-    whoami
-  else
-    echo "Cannot find user and group information"
-  fi
-  echo ""
+    echo -n "User and Group Information"
+    if [ -x "$(command -v id)" ]; then
+        echo " (id):"
+        id | sed -r "s/([=,])([0-9]*)\(([^\)]*)\)/\1\3 (\2)/g" | sed -r "s/,_[^\(]*\([^\)]*\)//g" | sed "s/^uid=//" | sed -r "s/ gid=([^ ]*)/\n· gid:\n  - \1/" | sed "s/ groups=/\n· groups:\n  - /" | sed "s/,/\n  - /g"
+        return
+    elif [ -x "$(command -v whoami)" ]; then
+        echo " (whoami):"
+        whoami
+    else
+        echo "Cannot find user and group information"
+    fi
+    echo ""
 
-  echo -n "Group Information"
-  if [ -x "$(command -v getent)" ]; then
-    echo " (getent):"
-    getent group
-  elif [ -x "$(command -v cat)" ]; then
-    echo " (/etc/group):"
-    cat /etc/group | grep -v "^#" | grep -v "^$" | grep -v "^_" | column -t -s ":"
-  else
-    echo "Cannot find group information"
-  fi
+    echo -n "Group Information"
+    if [ -x "$(command -v getent)" ]; then
+        echo " (getent):"
+        getent group
+    elif [ -x "$(command -v cat)" ]; then
+        echo " (/etc/group):"
+        cat /etc/group | grep -v "^#" | grep -v "^$" | grep -v "^_" | column -t -s ":"
+    else
+        echo "Cannot find group information"
+    fi
 }
 
 _do_command $@

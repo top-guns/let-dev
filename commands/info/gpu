@@ -4,7 +4,8 @@ COMMAND_DESCRIPTION="GPU Information"
 
 COMMAND_HELP="\
 Display GPU Information
-Usage: :info:gpu
+Usage: 
+    :info:gpu
 "
 
 _do_command() {
