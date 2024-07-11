@@ -48,7 +48,7 @@ default_command() {
     # Resolve symbolic links
     # cmd=`readlink -f $cmd`
 
-    echo "run '$cmd $@'"
+    # echo "run '$cmd $@'"
     eval . $cmd $@
 }
 
