@@ -1,56 +1,67 @@
 #!/bin/bash
 
-# Install free with system package manager if not installed and java is available
-if ! [ -x "$(command -v free)" ]; then
-    # If it is not MacOS
-    if ! [ -x "$(command -v sw_vers)" ]; then
-        if command -v apt &>/dev/null; then
-            sudo apt install free
-        elif command -v dnf &>/dev/null; then
-            sudo dnf install free
-        else
-            echo "Cannot install free. Please install it manually."
-            return
+COMMAND_DESCRIPTION="RAM information"
+
+COMMAND_HELP="\
+RAM information
+Usage: :info:ram
+"
+
+_do_command() {
+    # Install free with system package manager if not installed and java is available
+    if ! [ -x "$(command -v free)" ]; then
+        # If it is not MacOS
+        if ! [ -x "$(command -v sw_vers)" ]; then
+            if command -v apt &>/dev/null; then
+                sudo apt install free
+            elif command -v dnf &>/dev/null; then
+                sudo dnf install free
+            else
+                echo "Cannot install free. Please install it manually."
+                return
+            fi
         fi
     fi
-fi
 
-echo "Memory Information:"
-if [ -x "$(command -v free)" ]; then
-    #   free -h
-    free -mt
-elif [ -x "$(command -v vm_stat)" ]; then
-    pages_free=$(vm_stat | grep 'Pages free:' | awk '{print $3}' | sed 's/\.//')
-    pages_active=$(vm_stat | grep 'Pages active:' | awk '{print $3}' | sed 's/\.//')
-    pages_inactive=$(vm_stat | grep 'Pages inactive:' | awk '{print $3}' | sed 's/\.//')
-    pages_speculative=$(vm_stat | grep 'Pages speculative:' | awk '{print $3}' | sed 's/\.//')
+    echo "Memory Information:"
+    if [ -x "$(command -v free)" ]; then
+        #   free -h
+        free -mt
+    elif [ -x "$(command -v vm_stat)" ]; then
+        pages_free=$(vm_stat | grep 'Pages free:' | awk '{print $3}' | sed 's/\.//')
+        pages_active=$(vm_stat | grep 'Pages active:' | awk '{print $3}' | sed 's/\.//')
+        pages_inactive=$(vm_stat | grep 'Pages inactive:' | awk '{print $3}' | sed 's/\.//')
+        pages_speculative=$(vm_stat | grep 'Pages speculative:' | awk '{print $3}' | sed 's/\.//')
 
-    pages_free=$((pages_free * 4096 / 1048576))
-    pages_active=$((pages_active * 4096 / 1048576))
-    pages_inactive=$((pages_inactive * 4096 / 1048576))
-    pages_speculative=$((pages_speculative * 4096 / 1048576))
+        pages_free=$((pages_free * 4096 / 1048576))
+        pages_active=$((pages_active * 4096 / 1048576))
+        pages_inactive=$((pages_inactive * 4096 / 1048576))
+        pages_speculative=$((pages_speculative * 4096 / 1048576))
 
-    pages_wired_down=$(vm_stat | grep 'Pages wired down:' | awk '{print $4}' | sed 's/\.//')
-    pages_purgeable=$(vm_stat | grep 'Pages purgeable:' | awk '{print $3}' | sed 's/\.//')
+        pages_wired_down=$(vm_stat | grep 'Pages wired down:' | awk '{print $4}' | sed 's/\.//')
+        pages_purgeable=$(vm_stat | grep 'Pages purgeable:' | awk '{print $3}' | sed 's/\.//')
 
-    pages_wired_down=$((pages_wired_down * 4096 / 1048576))
-    pages_purgeable=$((pages_purgeable * 4096 / 1048576))
+        pages_wired_down=$((pages_wired_down * 4096 / 1048576))
+        pages_purgeable=$((pages_purgeable * 4096 / 1048576))
 
-    total_memory=$(sysctl -n hw.memsize)
-    total_memory=$((total_memory / 1048576))
+        total_memory=$(sysctl -n hw.memsize)
+        total_memory=$((total_memory / 1048576))
 
-    echo "Total Memory: $total_memory MB"
-    echo "Free Memory: $pages_free MB"
-    echo "Active Memory: $pages_active MB"
-    echo "Inactive Memory: $pages_inactive MB"
-    # echo "Speculative Memory: $pages_speculative MB"
-    # echo "Wired Down Memory: $pages_wired_down MB"
-    # echo "Purgeable Memory: $pages_purgeable MB"
-else
-    echo "Cannot find memory information"
-fi
-echo ""
+        echo "Total Memory: $total_memory MB"
+        echo "Free Memory: $pages_free MB"
+        echo "Active Memory: $pages_active MB"
+        echo "Inactive Memory: $pages_inactive MB"
+        # echo "Speculative Memory: $pages_speculative MB"
+        # echo "Wired Down Memory: $pages_wired_down MB"
+        # echo "Purgeable Memory: $pages_purgeable MB"
+    else
+        echo "Cannot find memory information"
+    fi
+    echo ""
 
-echo "Top 5 Processes by RAM and CPU Usage:"
-ps aux | sort -nrk 3,3 | head -n 5
-echo ""
+    echo "Top 5 Processes by RAM and CPU Usage:"
+    ps aux | sort -nrk 3,3 | head -n 5
+    echo ""
+}
+
+_do_command $@

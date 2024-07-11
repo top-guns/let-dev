@@ -1,9 +1,20 @@
 #!/bin/bash
 
-echo "Hard Disk Information:"
-df -h
-echo ""
+COMMAND_DESCRIPTION="HDD Information"
 
-echo "Filesystem Disk Space Usage:"
-df -h
-echo ""
+COMMAND_HELP="\
+Display Hard Disk Information and Filesystem Disk Space Usage
+Usage: :info:hdd
+"
+
+_do_command() {
+    echo "Hard Disk Information:"
+    df -h
+    echo ""
+
+    echo "Filesystem Disk Space Usage:"
+    df -h
+    echo ""
+}
+
+_do_command $@

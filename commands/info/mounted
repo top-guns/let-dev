@@ -1,6 +1,16 @@
 #!/bin/bash
 
-# Display main system information
+COMMAND_DESCRIPTION="Mounted Filesystems"
 
-echo "Mounted Filesystems:"
-mount | column -t
+COMMAND_HELP="\
+Display mounted filesystems information
+Usage: :info:mounted
+"
+
+_do_command() {
+    echo "Mounted Filesystems:"
+    mount | column -t
+}
+
+_do_command $@
+

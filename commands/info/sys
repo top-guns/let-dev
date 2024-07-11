@@ -1,62 +1,71 @@
 #!/bin/bash
 
-# Display main system information
+COMMAND_DESCRIPTION="System Information"
 
-echo "Kernel Information:"
-uname -a
-echo ""
+COMMAND_HELP="\
+Display main system information
+Usage: :info:sys
+"
 
-echo "System Information:"
-if [ -x "$(command -v lsb_release)" ]; then
-  lsb_release -a
-elif [ -x "$(command -v sw_vers)" ]; then
-  sw_vers
-else
-  echo "Cannot find system information"
-fi
-echo ""
+_do_command() {
+  echo "Kernel Information:"
+  uname -a
+  echo ""
 
-echo "System Uptime and Load:"
-uptime
-echo ""
+  echo "System Information:"
+  if [ -x "$(command -v lsb_release)" ]; then
+    lsb_release -a
+  elif [ -x "$(command -v sw_vers)" ]; then
+    sw_vers
+  else
+    echo "Cannot find system information"
+  fi
+  echo ""
 
-echo "Currently logged in users:"
-who
-echo ""
+  echo "System Uptime and Load:"
+  uptime
+  echo ""
 
-echo "Package Manager Information:"
-if [ -x "$(command -v dpkg)" ]; then
-  dpkg --version
-elif [ -x "$(command -v rpm)" ]; then
-  rpm --version
-elif [ -x "$(command -v brew)" ]; then
-  brew --version
-elif [ -x "$(command -v pacman)" ]; then
-  pacman --version
-elif [ -x "$(command -v apk)" ]; then
-  apk --version
-elif [ -x "$(command -v dnf)" ]; then
-  dnf --version
-elif [ -x "$(command -v yum)" ]; then
-  yum --version
-elif [ -x "$(command -v apt)" ]; then
-  apt --version
-elif [ -x "$(command -v pkg)" ]; then
-  pkg --version
-elif [ -x "$(command -v emerge)" ]; then
-  emerge --version
-elif [ -x "$(command -v port)" ]; then
-  port --version
-elif [ -x "$(command -v zypper)" ]; then
-  zypper --version
-else
-  echo "Cannot find package manager information"
-fi
-echo ""
+  echo "Currently logged in users:"
+  who
+  echo ""
 
-echo "Available shells:"
-if [ -f /etc/shells ]; then
-  cat /etc/shells | grep -v "^#" | grep -v "^$"
-else
-  echo "Cannot find available shells information"
-fi
+  echo "Package Manager Information:"
+  if [ -x "$(command -v dpkg)" ]; then
+    dpkg --version
+  elif [ -x "$(command -v rpm)" ]; then
+    rpm --version
+  elif [ -x "$(command -v brew)" ]; then
+    brew --version
+  elif [ -x "$(command -v pacman)" ]; then
+    pacman --version
+  elif [ -x "$(command -v apk)" ]; then
+    apk --version
+  elif [ -x "$(command -v dnf)" ]; then
+    dnf --version
+  elif [ -x "$(command -v yum)" ]; then
+    yum --version
+  elif [ -x "$(command -v apt)" ]; then
+    apt --version
+  elif [ -x "$(command -v pkg)" ]; then
+    pkg --version
+  elif [ -x "$(command -v emerge)" ]; then
+    emerge --version
+  elif [ -x "$(command -v port)" ]; then
+    port --version
+  elif [ -x "$(command -v zypper)" ]; then
+    zypper --version
+  else
+    echo "Cannot find package manager information"
+  fi
+  echo ""
+
+  echo "Available shells:"
+  if [ -f /etc/shells ]; then
+    cat /etc/shells | grep -v "^#" | grep -v "^$"
+  else
+    echo "Cannot find available shells information"
+  fi
+}
+
+_do_command $@

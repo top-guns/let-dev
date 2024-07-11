@@ -1,6 +1,19 @@
 #!/bin/bash
 
-# GPU memory usage monitoring
+COMMAND_DESCRIPTION="GPU Information"
 
-# watch -n1 nvidia-smi
-nvidia-smi
+COMMAND_HELP="\
+Display GPU Information
+Usage: :info:gpu
+"
+
+_do_command() {
+    echo "GPU Information:"
+    if [ -x "$(command -v nvidia-smi)" ]; then
+        nvidia-smi
+    else
+        echo "Cannot find GPU information"
+    fi
+}
+
+_do_command $@
