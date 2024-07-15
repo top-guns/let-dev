@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+
+COMMAND_DESRIPTION="Translate text to the specified language"
+COMMAND_HELP="\
+This script is used to translate the text to the specified language.
+Usage: 
+    :translate <language> <text>
+Example:
+    :translate ru Hello World
+"
+
+function url_encode() {
+    bash -c "
+    function url_encode() {
+        local LANG=C
+        for (( i=0; i<\${#1}; i++ )); do
+            local c="\${1:i:1}"
+            case \$c in
+                [a-zA-Z0-9.~_-]) printf \"\$c\" ;;
+                *) printf '%%%02X' \"'\$c\" ;;
+            esac
+        done
+        printf '\n'
+    }
+    url_encode \"$@\"
+    "
+}
+
+_do_command() {
+    if [[ "$1" = "help" ]] || [[ "$1" = "--help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local language="$1"
+    shift
+    local text="$@"
+
+    if [[ -z "$language" ]] || [[ -z "$text" ]]; then
+        echo "Error: language and text are required"
+        return
+    fi
+
+    # echo "'$text' to $language"
+
+    # Encode text
+    text=$(url_encode "$text")
+    # echo "'$text' encoded"
+
+    # Translate with Yandex
+    # curl -s "https://translate.yandex.net/api/v1.5/tr.json/translate?key=trnsl.1.1.20190131T070747Z.b3e3d3f1d1e2e1f2&lang=$language&text=$text" | jq -r '.text[]'
+
+    # Translate with Google
+    resp=$(curl -s "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=$language&dt=t&q=$text")
+    # echo "$resp" 
+    echo "$resp" | jq -r '.[0][0][0]'
+
+    # Translate with Microsoft
+    # curl -s"https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&from=auto&to=$language&text=$text" | jq -r '.translations[0].text'
+}
+
+_do_command "$@"
