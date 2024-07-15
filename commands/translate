@@ -52,8 +52,7 @@ _do_command() {
 
     # Translate with Google
     resp=$(curl -s "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=$language&dt=t&q=$text")
-    # echo "$resp" 
-    echo "$resp" | jq -r '.[0][0][0]'
+    echo "$resp" | awk -F'"' '{print $2}'
 
     # Translate with Microsoft
     # curl -s"https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&from=auto&to=$language&text=$text" | jq -r '.translations[0].text'
