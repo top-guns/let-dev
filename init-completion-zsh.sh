@@ -25,7 +25,7 @@ _letdev_init_completion() {
     # Create alias for every command
     for command in $commands; do
         alias_name=$(echo $command | sed 's|/|:|g')
-        alias ": $alias_name"="$LETDEV_HOME/default.sh $command"
+        alias "$alias_name"="$LETDEV_HOME/default.sh $command"
     done
 }
 

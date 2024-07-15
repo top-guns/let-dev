@@ -65,12 +65,12 @@ init_shell() {
 
     # Param value reader alias
     alias "${LETDEV_SYMBOL}?"=":ask"
-    alias "${LETDEV_SYMBOL}u"=":ask"
-    alias "${LETDEV_SYMBOL}user"=":ask"
+    # alias "${LETDEV_SYMBOL}u"=":ask"
+    # alias "${LETDEV_SYMBOL}user"=":ask"
 
      # File value reader alias
-    alias "${LETDEV_SYMBOL}f"=":load"
-    alias "${LETDEV_SYMBOL}file"=":load"
+    alias "${LETDEV_SYMBOL}@"=":load"
+    # alias "${LETDEV_SYMBOL}file"=":load"
 
 
     # Auto-completion
@@ -93,6 +93,15 @@ init_shell() {
     #     # bindkey '^:' "$LETDEV_SYMBOL"
     #     bindkey "^;" _update_command_line
     # fi
+
+    # Shell options configuration
+    if [ "$shell_name" = "bash" ]; then
+        # Disable replacment of glob patterns which don't match any files
+        shopt -u nullglob
+    elif [ "$shell_name" = "zsh" ]; then
+        # Disable special characters substitution (like * and ?)
+        setopt NO_NOMATCH
+    fi
 }
 
 :ask() {
