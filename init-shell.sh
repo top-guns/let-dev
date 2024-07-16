@@ -5,6 +5,15 @@
 #     READLINE_LINE=$(echo "$READLINE_LINE" | sed '/^: /!s/^/: /')
 # }
 
+multiline_to_array() {
+    local str=$1
+    local arr_name=$2
+    eval $arr_name'=()'
+    while IFS= read -r line; do
+        eval $arr_name'+=("$line")'
+    done <<< "$str"
+}
+
 init_shell() {
     local shell_name=$1
     shift
@@ -71,6 +80,14 @@ init_shell() {
      # File value reader alias
     alias "${LETDEV_SYMBOL}@"=":load"
     # alias "${LETDEV_SYMBOL}file"=":load"
+
+    # Create alias for every command
+    local alias_commands=$($LETDEV_HOME/list-commands.sh --system --user)
+    multiline_to_array "$alias_commands" "alias_commands"
+    for command in "${alias_commands[@]}"; do
+        alias_name=$(echo $command | sed 's|/|:|g')
+        alias "$alias_name"="source $LETDEV_HOME/default.sh $command"
+    done
 
 
     # Auto-completion

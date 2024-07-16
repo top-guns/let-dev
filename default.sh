@@ -32,16 +32,31 @@ default_command() {
         cmd=$(echo "$cmd" | sed "s/^://")
         # Replace colons with slashes
         cmd=`echo "$cmd" | tr ":" "/"`
-        # Add the home directory to the command
-        if [ -f ".let-dev/$LETDEV_PROFILE/commands/$cmd" ]; then
-            cmd=`echo ".let-dev/$LETDEV_PROFILE/commands/$cmd"`
-        elif [ -f "$LETDEV_HOME/profiles/$LETDEV_PROFILE/commands/$cmd" ]; then
-            cmd=`echo "$LETDEV_HOME/profiles/$LETDEV_PROFILE/commands/$cmd"`
-        elif [ -f "$LETDEV_HOME/commands/$cmd" ]; then
-            cmd=`echo "$LETDEV_HOME/commands/$cmd"`
-        else 
-            echo "Command '$cmd' not found"
-            return
+        # If it starts with project/ then 
+        if [[ "$cmd" == "project/"* ]]; then
+            # Remove project/ from the command
+            cmd=$(echo "$cmd" | sed "s/^project\///")
+            # Add the project directory to the command
+            if [ -f ".let-dev/$LETDEV_PROFILE/commands/$cmd" ]; then
+                cmd=`echo ".let-dev/$LETDEV_PROFILE/commands/$cmd"`
+            elif [ -f ".let-dev/$LETDEV_PROFILE/commands/:$cmd" ]; then
+                cmd=`echo ".let-dev/$LETDEV_PROFILE/commands/:$cmd"`
+            else 
+                echo "Project command '$cmd' not found"
+                return
+            fi
+        else
+            # Add the home directory to the command
+            if [ -f ".let-dev/$LETDEV_PROFILE/commands/$cmd" ]; then
+                cmd=`echo ".let-dev/$LETDEV_PROFILE/commands/$cmd"`
+            elif [ -f "$LETDEV_HOME/profiles/$LETDEV_PROFILE/commands/$cmd" ]; then
+                cmd=`echo "$LETDEV_HOME/profiles/$LETDEV_PROFILE/commands/$cmd"`
+            elif [ -f "$LETDEV_HOME/commands/$cmd" ]; then
+                cmd=`echo "$LETDEV_HOME/commands/$cmd"`
+            else 
+                echo "Command '$cmd' not found"
+                return
+            fi
         fi
     fi
 

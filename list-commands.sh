@@ -26,6 +26,7 @@ _get_list() {
     local dir="$1"
     local with_descriptions="$2"
     local with_examples="$3"
+    local from_path=${4:-false}
 
     if [ -d "$dir" ]; then
         local cur_dir=`pwd`
@@ -33,13 +34,19 @@ _get_list() {
 
         # If with description option is provided, use 'eval "command description"' to get description and return 'command:description' as a result
         if $with_descriptions; then
-            # All files that do not contain the variable DESCRIPTION
-            find . -type f -not -path '*/.*' -exec grep -L 'DESCRIPTION=' {} \; | sed 's|^./|:|'
-            # All files that contain the variable DESCRIPTION
-            find . -type f -not -path '*/.*' -exec grep -l 'DESCRIPTION=' {} \; | sed 's|^./||' | \
-                xargs -I{} awk -F= '/DESCRIPTION=/ {gsub(/['"'"'\x22]/, "", $2); print FILENAME " - " $2}' {}
+            # # All files that do not contain the variable DESCRIPTION
+            # find . -type f -not -path '*/.*' -exec grep -L 'DESCRIPTION=' {} \; | sed 's|^./|:|'
+            # # All files that contain the variable DESCRIPTION
+            # find . -type f -not -path '*/.*' -exec grep -l 'DESCRIPTION=' {} \; | sed 's|^./||' | \
+            #     xargs -I{} awk -F= '/DESCRIPTION=/ {gsub(/['"'"'\x22]/, "", $2); print FILENAME " - " $2}' {}
+            echo "NOT IMPLEMENTED"
         else
-            find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print | sed 's|^./|:|'
+            local result=$(find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print)
+            if $from_path; then
+                echo "$result" | sed 's|^\./||'
+            else
+                echo "$result" | sed 's|^\./|:|'
+            fi
         fi
 
         cd $cur_dir
@@ -122,7 +129,7 @@ list_commands() {
     if $include_project; then
         local dir=".let-dev/$LETDEV_PROFILE/commands"
         if [ -d "$dir" ]; then
-            PROJECT_COMMAND_LIST=$(_get_list "$dir" $with_descriptions $with_examples)
+            PROJECT_COMMAND_LIST=$(_get_list "$dir" $with_descriptions $with_examples true | sed 's|^|: :project/|' | sed 's|/:|/|')
         fi
     fi
 
