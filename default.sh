@@ -50,7 +50,7 @@ default_command() {
             if [ -f ".let-dev/$LETDEV_PROFILE/commands/$cmd" ]; then
                 cmd=`echo ".let-dev/$LETDEV_PROFILE/commands/$cmd"`
             elif [ -f ".let-dev/$LETDEV_PROFILE/commands/:$cmd" ]; then
-                cmd=`echo ".let-dev/$LETDEV_PROFILE/commands/$cmd"`
+                cmd=`echo ".let-dev/$LETDEV_PROFILE/commands/:$cmd"`
             elif [ -f "$LETDEV_HOME/profiles/$LETDEV_PROFILE/commands/$cmd" ]; then
                 cmd=`echo "$LETDEV_HOME/profiles/$LETDEV_PROFILE/commands/$cmd"`
             elif [ -f "$LETDEV_HOME/commands/$cmd" ]; then
