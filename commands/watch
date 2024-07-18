@@ -1,15 +1,29 @@
 #!/usr/bin/env bash
-# set -euo pipefail
 
-# Repeat or Loop command
+COMMAND_DESCRIPTION="Execute command in a loop"
 
-args="$@"
-if [ -z "$args" ]; then
-    args="./status"
-fi
+COMMAND_HELP="\
+Execute command in a loop every second.
+Usage:
+    :watch <command>
+Example:
+    :watch ls -l
+"
 
-while true; do
-    printf "\033c\033[3J"
-    eval "$args"
-    sleep 1
-done
+_do_command() {
+    # Show help on --help
+    if [[ "$#" -eq 0 || "$1" == "--help" || "$1" == "help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    args="$@"
+
+    while true; do
+        printf "\033c\033[3J"
+        eval "$args"
+        sleep 1
+    done
+}
+
+_do_command $@

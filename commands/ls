@@ -1,23 +1,32 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-#llsfn () { 
-#  while test $# -gt 0; do perl -s -e '@fields = stat "$f"; printf "%04o\t", $fields[2] & 07777' -- -f=$1; ls -ld $1; shift; done; unset -f llsf; 
+#llsfn () {
+#  while test $# -gt 0; do perl -s -e '@fields = stat "$f"; printf "%04o\t", $fields[2] & 07777' -- -f=$1; ls -ld $1; shift; done; unset -f llsf;
 #};
 #llsfn
 
 COMMAND_DESCRIPTION="Standart ls command, but with some common options and with header"
 
 COMMAND_HELP="\
-Standart ls command, but with some common options and with header
-Usage: :ls [path]
+Standart ls command, but with some common options and with header.
+Usage: 
+    :ls [path]
+Example:
+    :ls /path/to/dir
 "
 
 function _do_command {
-  LLS_PATH=$1
+    # Show help on --help
+    if [[ "$#" -eq 0 || "$1" == "--help" || "$1" == "help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
 
-  HEADER="Per Perms       N Owner Group   Size Modified     Name";
-  n=0
-  ls -AHhl --color=always $LLS_PATH | awk "{ k=0; n=n+1; for(i=0;i<=8;i++) k+=((substr(\$1,i+2,1)~/[rwx]/)*2^(8-i)); if(n==2) printf(\"$HEADER\\n\"); if(k) printf(\"%0o \",k); print }"
+    LLS_PATH=$1
+
+    HEADER="Per Perms       N Owner Group   Size Modified     Name"
+    n=0
+    ls -AHhl --color=always $LLS_PATH | awk "{ k=0; n=n+1; for(i=0;i<=8;i++) k+=((substr(\$1,i+2,1)~/[rwx]/)*2^(8-i)); if(n==2) printf(\"$HEADER\\n\"); if(k) printf(\"%0o \",k); print }"
 }
 
-_do_command $1
+_do_command $@

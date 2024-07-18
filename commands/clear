@@ -1,7 +1,15 @@
 #!/usr/bin/env bash
-# set -euo pipefail
 
-# Clear the terminal screen
+COMMAND_DESCRIPTION="Clear the terminal screen"
 
-printf "\033c\033[3J"
+COMMAND_HELP="\
+Full clear the terminal screen.
+Usage:
+    :clear
+"
 
+_do_command() {
+    printf "\033c\033[3J"
+}
+
+_do_command $@

@@ -1,37 +1,45 @@
 #!/usr/bin/env bash
-# set -euo pipefail
 
-# This script deletes all files and directories in the specified or current directory, including hidden files and directories.
+COMMAND_DESCRIPTION="deletes all files and directories in the specified directory"
 
-if [[ "$1" = "--help" || "$#" -lt 1 ]]; then
-    echo "Delete all files and directories in the specified or current directory."
-    echo "Usage:"
-    echo "  :rm-all [dir]"
-    echo "Example:"
-    echo "  :rm-all /path/to/dir"
-    return
-fi
+COMMAND_HELP="\
+This script deletes all files and directories in the specified or current directory, including hidden files and directories.
+Usage: 
+    :rm-all [dir]
+Example:
+    :rm-all /path/to/dir
+"
 
-TARGET_DIR="${1:-.}"
+_do_command() {
+    # Show help on --help
+    if [[ "$#" -eq 0 || "$1" == "--help" || "$1" == "help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
 
-if [[ ! -d "$TARGET_DIR" ]]; then
-    echo "Directory '$TARGET_DIR' does not exist."
-    return 1
-fi
+    TARGET_DIR="${1:-.}"
 
-# Get the user confirmation
-read -p "Are you sure you want to delete all files and directories in '$TARGET_DIR'? (y/n): " -n 1 -r
-echo ""
+    if [[ ! -d "$TARGET_DIR" ]]; then
+        echo "Directory '$TARGET_DIR' does not exist."
+        return 1
+    fi
 
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Operation cancelled."
-    return 1
-fi
+    # Get the user confirmation
+    read -p "Are you sure you want to delete all files and directories in '$TARGET_DIR'? (y/n): " -n 1 -r
+    echo ""
 
-(
-    cd "$TARGET_DIR"
-    # Delete all files and directories in the specified directory except the current and parent directories
-    find "$TARGET_DIR" -mindepth 1 -delete
-)
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "Operation cancelled."
+        return 1
+    fi
 
-echo "All files and directories in '$TARGET_DIR' have been deleted."
+    (
+        cd "$TARGET_DIR"
+        # Delete all files and directories in the specified directory except the current and parent directories
+        find "$TARGET_DIR" -mindepth 1 -delete
+    )
+
+    echo "All files and directories in '$TARGET_DIR' have been deleted."
+}
+
+_do_command $@

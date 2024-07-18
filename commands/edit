@@ -1,6 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Edit a file
+COMMAND_DESCRIPTION="Open the specified file in the preferred text editor"
+
+COMMAND_HELP="\
+Open the specified file in the preferred text editor.
+Usage:
+    :edit <file>
+Example:
+    :edit /path/to/file
+"
 
 _confirm() {
     read -p "$1 (y/n) " -n 1 -r
@@ -86,10 +94,8 @@ _install() {
 
 _do_command() {
   # Show help on --help
-  if [[ "$#" -eq 0 || "$1" == "--help" ]]; then
-    echo "Edit the contents of a file"
-    echo "Usage:"
-    echo "  : :edit <file>"
+  if [[ "$#" -eq 0 || "$1" == "--help" || "$1" == "help" ]]; then
+    echo "$COMMAND_HELP"
     return
   fi
 

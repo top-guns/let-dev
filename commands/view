@@ -1,6 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# View the contents of a file with colorized syntax highlighting
+COMMAND_DESCRIPTION="View the contents of a file"
+
+COMMAND_HELP="\
+View the contents of the specified file with colorized syntax highlighting.
+Usage:
+    :view <file>
+Example:
+    :view /path/to/file
+"
 
 _install() {
   # Check the operating system
@@ -36,10 +44,8 @@ _install() {
 
 _do_command() {
   # Show help on --help
-  if [[ "$#" -eq 0 || "$1" == "--help" ]]; then
-    echo "View the contents of a file"
-    echo "Usage:"
-    echo "  : :view <file>"
+  if [[ "$#" -eq 0 || "$1" == "--help" || "$1" == "help" ]]; then
+    echo "$COMMAND_HELP"
     return
   fi
 

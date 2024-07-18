@@ -1,10 +1,23 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-[ $# -eq 2 ] && input="$1" || input="-"
+COMMAND_DESCRIPTION="Grep with header"
 
-read line
-echo "$line"
-grep $1 $input
+COMMAND_HELP="\
+Grep with header.
+Usage:
+    :greph <pattern>
+Example:
+    ls | :greph .git
+"
+
+_do_command() {
+    [ $# -eq 2 ] && input="$1" || input="-"
+    read line
+    echo "$line"
+    grep $1 $input
+}
+
+_do_command $@
 
 
 #while read line; do
