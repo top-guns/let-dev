@@ -17,7 +17,7 @@ _do_ping() {
 
     # local bar=""
     for i in $(seq 1 $total_pings); do
-        local ping_result="$(ping -c 2 "$url" 2>&1)"
+        local ping_result="$(ping -c 1 "$url" 2>&1)"
 
         # Extract the average RTT from the RTT section
         local value_to_add=$(echo "$ping_result" | grep 'avg' | awk '{print $4}' | awk -F'/' '{print $2}')
@@ -44,40 +44,47 @@ _do_ping() {
 }
 
 _do_curl() {
+    local output="$1"
+    local url="$2"
+
     local prev_char=""
-    curl -# $@ 2>&1 | while IFS= read -r -n1 char; do 
-        if [[ ! "$char" =~ [#\ \r\n\f] ]]; then
-            [[ "$prev_char" == " " ]] && echo -ne "    "
-            echo -ne "$char";
-        fi
-        prev_char="$char"
-    done
+    bash -c "
+        curl -# -o \"$output\" \"$url\" 2>&1 | while IFS= read -r -n1 char; do 
+            if [[ ! \"\$char\" =~ [#\\ \\r\\n\\f] ]]; then
+                [[ \"\$prev_char\" == \" \" ]] && echo -ne \"    \"
+                echo -ne \"\$char\";
+            fi
+            prev_char=\"\$char\"
+        done
+    "
     echo -en "\r"
 }
 
 _do_curl_upload() {
     local output="$1"
     local url="$2"
-    local done=false
-    local last_chars="      "
-    local prev_char=""
-    curl -# -X POST -F "file=@$output" "$url" 2>&1 | while IFS= read -r -n1 char; do 
-        if [[ "$done" == false && ! "$char" =~ [#\ \r\n\f] ]]; then
-            [[ "$prev_char" == " " ]] && echo -ne "    "
-            echo -ne "$char"
 
-            last_chars="${last_chars:1}$char"
-            [[ "$last_chars" == "100.0%" ]] && done=true && break
-        fi
-        prev_char="$char"
-    done
+    bash -c "
+        done=false
+        last_chars=\"      \"
+        prev_char=\"\"
+        curl -# -X POST -F \"file=@$output\" \"$url\" 2>&1 | while IFS= read -r -n1 char; do
+            if [[ \"\$done\" == false && ! \"\$char\" =~ [#\ \r\n\f] ]]; then
+                [[ \"\$prev_char\" == \" \" ]] && echo -ne \"    \"
+                echo -ne \"\$char\"
+                last_chars=\"\${last_chars:1}\$char\"
+                [[ \"\$last_chars\" == \"100.0%\" ]] && done=true && break
+            fi
+            prev_char=\"\$char\"
+        done
+    "
     echo -en "\r"
 }
 
 _do_command() {
     # ------------------------------------------------------------------------------
 
-    echo "1) Test round-trip time (with ping to google.com)  "
+    echo "1) Round-trip time (with ping to google.com)  "
 
     # Pings count
     total_pings=4
@@ -97,18 +104,19 @@ _do_command() {
     fi
 
     local avg_rtt=$(echo "$avg_sum / $total_pings" | bc -l)
-    printf "    Average RTT: %.2f ms\n" $avg_rtt
+    # printf "    Average RTT: %.2f ms\n" $avg_rtt
+    printf "    %.2f ms\n" $avg_rtt
 
     # ------------------------------------------------------------------------------
 
-    echo "2) Test download speed (with curl to http://speedtest.ftp.otenet.gr)"
+    echo "2) Download speed (with curl to http://speedtest.ftp.otenet.gr)"
 
     # Test download speed using curl
-    url="http://speedtest.ftp.otenet.gr/files/test10Mb.db"
+    url="http://speedtest.ftp.otenet.gr/files/test1Mb.db"
     output=$(mktemp)
 
     start_time=$(date +%s.%N)
-    _do_curl -o "$output" "$url"
+    _do_curl "$output" "$url"
     end_time=$(date +%s.%N)
 
     if [ $? -ne 0 ]; then
@@ -124,19 +132,20 @@ _do_command() {
     file_size=$(ls -lh "$output" | awk '{print $5}' | sed 's/\([0-9]\)\([KMGTP]\)/\1 \2/')
     raw_file_size=$(wc -c <"$output")
 
-    echo "    File size: $file_size"
-    echo "    Download time: $elapsed s"
+    # echo "    File size: $file_size"
+    # echo "    Download time: $elapsed s"
     
     download_speed=$(echo "scale=2; $raw_file_size / 1024 / 1024 / $elapsed" | bc -l)
     if [[ $download_speed == .* ]]; then
         download_speed="0$download_speed"
     fi
 
-    echo "    Download speed: $download_speed Mb/s"
+    # echo "    Download speed: $download_speed Mb/s"
+    echo "    $download_speed Mb/s"
 
     # ------------------------------------------------------------------------------
 
-    echo "3) Test upload speed (with curl to https://httpbin.org/post)..."
+    echo "3) Upload speed (with curl to https://httpbin.org/post)"
 
     url="https://httpbin.org/post"
     
@@ -154,15 +163,16 @@ _do_command() {
     # Calculate the elapsed time for the upload
     elapsed=$(echo "$end_time - $start_time" | bc)
     
-    echo "    File size: $file_size"
-    echo "    Upload time: $elapsed s"
+    # echo "    File size: $file_size"
+    # echo "    Upload time: $elapsed s"
     
     upload_speed=$(echo "scale=2; $raw_file_size / 1024 / 1024 / $elapsed" | bc -l)
     if [[ $upload_speed == .* ]]; then
         upload_speed="0$upload_speed"
     fi
 
-    echo "    Upload speed: $upload_speed Mb/s"
+    # echo "    Upload speed: $upload_speed Mb/s"
+    echo "    $upload_speed Mb/s"
 
     # ------------------------------------------------------------------------------
 
