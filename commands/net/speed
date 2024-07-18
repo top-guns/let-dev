@@ -8,61 +8,87 @@ Usage:
     :net:speed
 "
 
+avg_sum=0
+
+_do_ping() {
+    local url="$1"
+    local total_pings="$2"
+    # local chars_per_ping="$3"
+
+    # local bar=""
+    for i in $(seq 1 $total_pings); do
+        local ping_result="$(ping -c 2 "$url" 2>&1)"
+
+        # Extract the average RTT from the RTT section
+        local value_to_add=$(echo "$ping_result" | grep 'avg' | awk '{print $4}' | awk -F'/' '{print $2}')
+        avg_sum=$(echo "$avg_sum + $value_to_add" | bc -l)
+        
+        # for j in $(seq 1 $chars_per_ping); do
+        #     bar+="#"
+        # done
+
+        # echo -n "$bar"
+
+        # local bar_len=${#bar}
+        # local spaces=$((cols - 6 - bar_len))
+        
+        local percent=$(echo "$i * 100 / $total_pings" | bc -l)
+        # format as 100.0%
+        # printf "%${spaces}s%0.1f%%\r" "" $percent
+        printf "%0.1f%%\r" $percent
+    done
+
+    # progress_width_int=$(printf "%.0f" $progress_width)
+    # hashes=$(printf '%*s' "$((progress_width_int - 1))" | tr ' ' '#')
+    # printf "%s %0.1f%%\r" "$hashes" $percent
+}
+
+_do_curl() {
+    curl -# $@ 2>&1 | while IFS= read -r -n1 char; do 
+        [[ ! "$char" =~ [#\ \r\n\f] ]] && echo -ne "$char"; 
+    done
+    echo -en "\r"
+}
+
+_do_curl_upload() {
+    local output="$1"
+    local url="$2"
+    local done=false
+    local last_chars="      "
+    curl -# -X POST -F "file=@$output" "$url" 2>&1 | while IFS= read -r -n1 char; do 
+        if [[ "$done" == false && ! "$char" =~ [#\ \r\n\f] ]]; then
+            echo -ne "$char"
+
+            last_chars="${last_chars:1}$char"
+            [[ "$last_chars" == "100.0%" ]] && done=true && break
+        fi
+    done
+    echo -en "\r"
+}
+
 _do_command() {
-    #!/bin/bash
+    # ------------------------------------------------------------------------------
+
+    echo "1) Test round-trip time (with ping to google.com)  "
 
     # Pings count
     total_pings=4
-
     # Get terminal width
-    cols=$(tput cols)
-
+    # cols=$(tput cols)
     # Calculate available space for progress bar, subtracting space for percents and some padding
-    progress_width=$((cols - 6))
-
+    # progress_width=$((cols - 6))
     # How many characters "=" on one ping
-    chars_per_ping=$((progress_width / total_pings))
+    # chars_per_ping=$((progress_width / total_pings))
 
-    # ------------------------------------------------------------------------------
-
-    echo "1) Test round-trip time (with ping to google.com)"
-
-    # Check latency (ping) to google.com
-
-    local avg_sum=0
-    local bar=""
-    for i in $(seq 1 $total_pings); do
-        local ping_result="$(ping -c 1 google.com 2>&1)"
-
-        # Extract the average RTT from the RTT section
-        avg_sum=$((avg_sum + $(echo "$ping_result" | grep 'avg' | awk '{print $4}' | awk -F'/' '{print $2}')))
-        
-        for j in $(seq 1 $chars_per_ping); do
-            bar+="#"
-        done
-
-        echo -n "$bar"
-
-        local bar_len=${#bar}
-        local spaces=$((cols - 6 - bar_len))
-        
-        local percent=$((i * 100 / total_pings))
-        # format as 100.0%
-        # printf " %0.1f%%\r" $percent
-        printf "%${spaces}s%0.1f%%\r" "" $percent
-    done
-
-    hashes=$(printf '%*s' "$((progress_width - 1))" | tr ' ' '#')
-    printf "%s %0.1f%%\r" "$hashes" $percent
+    avg_sum=0
+    _do_ping "google.com" $total_pings
 
     if [ $? -ne 0 ]; then
         echo "Failed to perform ping."
         return 1
     fi
 
-    echo ""
-
-    local avg_rtt=$((avg_sum / total_pings))
+    local avg_rtt=$(echo "$avg_sum / $total_pings" | bc -l)
     printf "    Average RTT: %.2f ms\n" $avg_rtt
 
     # ------------------------------------------------------------------------------
@@ -70,11 +96,11 @@ _do_command() {
     echo "2) Test download speed (with curl to http://speedtest.ftp.otenet.gr)"
 
     # Test download speed using curl
-    url="http://speedtest.ftp.otenet.gr/files/test10Mb.db"
+    url="http://speedtest.ftp.otenet.gr/files/test100Mb.db"
     output=$(mktemp)
 
     start_time=$(date +%s.%N)
-    curl --progress-bar -o "$output" "$url"
+    _do_curl -o "$output" "$url"
     end_time=$(date +%s.%N)
 
     if [ $? -ne 0 ]; then
@@ -103,10 +129,13 @@ _do_command() {
     # ------------------------------------------------------------------------------
 
     echo "3) Test upload speed (with curl to https://httpbin.org/post)..."
+
+    url="https://httpbin.org/post"
     
     # Use the same file for upload test
     start_time=$(date +%s.%N)
-    curl --progress-bar -X POST -F "file=@$output" https://httpbin.org/post > /dev/null
+    _do_curl_upload "$output" "$url"
+    # curl --progress-bar -X POST -F "file=@$output" https://httpbin.org/post > /dev/null
     end_time=$(date +%s.%N)
 
     if [ $? -ne 0 ]; then
