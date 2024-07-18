@@ -1,0 +1,141 @@
+#!/bin/bash
+
+COMMAND_DESCRIPTION="Display internet speed"
+
+COMMAND_HELP="\
+Display speed of internet connection
+Usage: 
+    :net:speed
+"
+
+_do_command() {
+    #!/bin/bash
+
+    # Pings count
+    total_pings=4
+
+    # Get terminal width
+    cols=$(tput cols)
+
+    # Calculate available space for progress bar, subtracting space for percents and some padding
+    progress_width=$((cols - 6))
+
+    # How many characters "=" on one ping
+    chars_per_ping=$((progress_width / total_pings))
+
+    # ------------------------------------------------------------------------------
+
+    echo "1) Test round-trip time (with ping to google.com)"
+
+    # Check latency (ping) to google.com
+
+    local avg_sum=0
+    local bar=""
+    for i in $(seq 1 $total_pings); do
+        local ping_result="$(ping -c 1 google.com 2>&1)"
+
+        # Extract the average RTT from the RTT section
+        avg_sum=$((avg_sum + $(echo "$ping_result" | grep 'avg' | awk '{print $4}' | awk -F'/' '{print $2}')))
+        
+        for j in $(seq 1 $chars_per_ping); do
+            bar+="#"
+        done
+
+        echo -n "$bar"
+
+        local bar_len=${#bar}
+        local spaces=$((cols - 6 - bar_len))
+        
+        local percent=$((i * 100 / total_pings))
+        # format as 100.0%
+        # printf " %0.1f%%\r" $percent
+        printf "%${spaces}s%0.1f%%\r" "" $percent
+    done
+
+    hashes=$(printf '%*s' "$((progress_width - 1))" | tr ' ' '#')
+    printf "%s %0.1f%%\r" "$hashes" $percent
+
+    if [ $? -ne 0 ]; then
+        echo "Failed to perform ping."
+        return 1
+    fi
+
+    echo ""
+
+    local avg_rtt=$((avg_sum / total_pings))
+    printf "    Average RTT: %.2f ms\n" $avg_rtt
+
+    # ------------------------------------------------------------------------------
+
+    echo "2) Test download speed (with curl to http://speedtest.ftp.otenet.gr)"
+
+    # Test download speed using curl
+    url="http://speedtest.ftp.otenet.gr/files/test10Mb.db"
+    output=$(mktemp)
+
+    start_time=$(date +%s.%N)
+    curl --progress-bar -o "$output" "$url"
+    end_time=$(date +%s.%N)
+
+    if [ $? -ne 0 ]; then
+        echo "Failed to download the file."
+        return 1
+    fi
+
+    # Calculate the elapsed time for the download
+    elapsed=$(echo "$end_time - $start_time" | bc)
+    
+    # Get the file size in human-readable format
+    # file_size=$(ls -lh "$output" | awk '{print $5}')
+    file_size=$(ls -lh "$output" | awk '{print $5}' | sed 's/\([0-9]\)\([KMGTP]\)/\1 \2/')
+    raw_file_size=$(wc -c <"$output")
+
+    echo "    File size: $file_size"
+    echo "    Download time: $elapsed s"
+    
+    download_speed=$(echo "scale=2; $raw_file_size / 1024 / 1024 / $elapsed" | bc -l)
+    if [[ $download_speed == .* ]]; then
+        download_speed="0$download_speed"
+    fi
+
+    echo "    Download speed: $download_speed Mb/s"
+
+    # ------------------------------------------------------------------------------
+
+    echo "3) Test upload speed (with curl to https://httpbin.org/post)..."
+    
+    # Use the same file for upload test
+    start_time=$(date +%s.%N)
+    curl --progress-bar -X POST -F "file=@$output" https://httpbin.org/post > /dev/null
+    end_time=$(date +%s.%N)
+
+    if [ $? -ne 0 ]; then
+        echo "Failed to upload the file."
+        return 1
+    fi
+
+    # Calculate the elapsed time for the upload
+    elapsed=$(echo "$end_time - $start_time" | bc)
+    
+    echo "    File size: $file_size"
+    echo "    Upload time: $elapsed s"
+    
+    upload_speed=$(echo "scale=2; $raw_file_size / 1024 / 1024 / $elapsed" | bc -l)
+    if [[ $upload_speed == .* ]]; then
+        upload_speed="0$upload_speed"
+    fi
+
+    echo "    Upload speed: $upload_speed Mb/s"
+
+    # ------------------------------------------------------------------------------
+
+    # Remove the temporary file
+    rm "$output"
+    return 0
+}
+
+_do_command "$@"
+result=$?
+if [ $result -ne 0 ]; then
+    echo "Command failed with status $result"
+fi
