@@ -1,46 +1,56 @@
 #!/usr/bin/env bash
-# set -euo pipefail
 
-# Create a self-signed SSL certificate
+COMMAND_DESCRIPTION="Create self-signed SSL certificate"
 
-# Help
-if [ "$1" == "--help" ]; then
-  echo "Usage: create-self-signed <domain> <days> <output_dir>"
-  exit 0
-fi
+COMMAND_HELP="\
+Create self-signed SSL certificate.
+Usage:
+    :create-self-signed <domain> <days> <output_dir>
+Example:
+    :create-self-signed example.com 365 /path/to/output_dir
+"
 
-# Variables
-domain=$1
-days=$2
-output_dir=$3
+_do_command() {
+    # Show help on --help
+    if [[ "$#" -eq 0 || "$1" == "--help" || "$1" == "help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
 
-# Check if the domain is provided
-if [ -z "$domain" ]; then
-  echo "Domain is required"
-  exit 1
-fi
+    # Variables
+    local domain=$1
+    local days=$2
+    local output_dir=$3
 
-# Check if the days is provided or use 10 years
-[ -z "$days" ] && days=3650
+    # Check if the domain is provided
+    if [ -z "$domain" ]; then
+      echo "Domain is required"
+      return 1
+    fi
+    
+    # Check if the days is provided or use 10 years
+    [ -z "$days" ] && days=3650
+    
+    # Check if the output directory is provided or use the current directory
+    [ -z "$output_dir" ] && output_dir="."
+    
+    # Create the output directory if it does not exist
+    [ ! -d "$output_dir" ] && mkdir -p "$output_dir"
+    
+    # Check if the domain is wildcard
+    local wildcard_domain=false
+    if [[ "$domain" == *"*"* ]]; then
+      echo "Wildcard domain"
+      wildcard_domain=true
+    fi
+    
+    # Generate the certificate
+    openssl req -new -newkey rsa:2048 -days "$days" -nodes -x509 \
+      -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=$domain" \
+      -keyout "$output_dir/$domain.key" -out "$output_dir/$domain.crt"
+}
 
-# Check if the output directory is provided or use the current directory
-[ -z "$output_dir" ] && output_dir="."
-
-# Create the output directory if it does not exist
-[ ! -d "$output_dir" ] && mkdir -p "$output_dir"
-
-# Check if the domain is wildcard
-wildcard_domain=false
-if [[ "$domain" == *"*"* ]]; then
-  echo "Wildcard domain"
-  wildcard_domain=true
-fi
-
-# Generate the certificate
-openssl req -new -newkey rsa:2048 -days "$days" -nodes -x509 \
-  -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=$domain" \
-  -keyout "$output_dir/$domain.key" -out "$output_dir/$domain.crt"
-
+_do_command $@    
 
 
 # # Generate the private key

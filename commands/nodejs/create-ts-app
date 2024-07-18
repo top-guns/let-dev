@@ -1,251 +1,270 @@
 #!/usr/bin/env bash
-# set -euo pipefail
 
-# Create a new TypeScript node.js application
+COMMAND_DESCRIPTION="Create a new TypeScript node.js application"
 
-# Load aliases to make them available in the current shell
-# shopt -s expand_aliases
-# source $LETDEV_HOME/create-aliases
+COMMAND_HELP="\
+Create a new TypeScript node.js application.
+Usage:
+    :create-ts-app <dir>
+Arguments:
+    <dir> - The directory to create the application in. If not provided, the current directory will be used.
+Example:
+    :create-ts-app .
+"
 
-# Variables
-dir=$1
-author=$LETDEV_PROFILE
+_do_command() {
+    # Show help on --help
+    if [[ "$#" -eq 0 || "$1" == "--help" || "$1" == "help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
 
-appname=$dir
-# Check if the appname is provided
-if [ -z "$dir" ]; then
-    dir="."
-    appname=$(basename $(pwd))
-fi
+    # Load aliases to make them available in the current shell
+    # shopt -s expand_aliases
+    # source $LETDEV_HOME/create-aliases
 
-# Create the directory
-if [ "$dir" != "." ]; then 
-    mkdir -p $dir
-    pushd $dir > /dev/null
-fi
+    # Variables
+    local dir=$1
+    local author=$LETDEV_PROFILE
 
-# Create .tools-version file
-echo "nodejs 22.3.0" > .tool-versions
-asdf install
+    local appname=$dir
+    # Check if the appname is provided
+    if [ -z "$dir" ]; then
+        dir="."
+        appname=$(basename $(pwd))
+    fi
 
-# Initialize the let-dev
-::init $LETDEV_PROFILE
+    # Create the directory
+    if [ "$dir" != "." ]; then 
+        mkdir -p $dir
+        pushd $dir > /dev/null
+    fi
 
-# Create the package.json file
-printf '{
-  "name": "%s",
-  "version": "1.0.0",
-  "author": "%s",
-  "type": "module",
-  "exports": "./dist/index.js",
-  "scripts": {
-    "start": "node --import tsx src/index.ts",
-    "start:local": "bash -c \\\"(set -a; source .env; set +a; node --import tsx src/index.ts)\\\"",
-    "build": "tsc",
-    "dev": "node --import tsx --watch src/index.js",
-    "dev:local": "bash -c \\\"(set -a; source .env; set +a; node --import tsx --watch src/index.js)\\\"",
-    "test": "echo \\\"Error: no test specified\\\" && exit 1",
-    "lint": "eslint --ext .ts src",
-    "lint:fix": "eslint --ext .ts src --fix",
-    "format": "prettier --write src/**/*.ts",
-    "format:check": "prettier --check src/**/*.ts",
-    "validate": "npm lint && npm test",
-    "validate:fix": "npm lint:fix && npm test",
-    "clean": "rm -rf dist",
-    "clean:all": "rm -rf dist node_modules",
-    "postinstall": "npm build"
-  }
-}' $appname $author > package.json
+    # Create .tools-version file
+    echo "nodejs 22.3.0" > .tool-versions
+    asdf install
 
-# Install latest versions of the dependencies
-npm install typescript tsx @types/node eslint eslint-config-prettier eslint-plugin-prettier prettier --save-dev
+    # Initialize the let-dev
+    ::init $LETDEV_PROFILE
 
-# Create the tsconfig.json file
-echo '{
-  "compilerOptions": {
-    "incremental": true,
-    "strict": true,
-    "target": "ESNext",
-    "module": "ESNext",
-    "outDir": "dist",
-    "rootDir": "src",
-    "esModuleInterop": true,
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "noImplicitAny": false,
-    "lib": [
-      "dom", 
-      "dom.iterable"
-    ],
-    "paths": {
-      "@/*": ["./src/*"]
+    # Create the package.json file
+    printf '{
+    "name": "%s",
+    "version": "1.0.0",
+    "author": "%s",
+    "type": "module",
+    "exports": "./dist/index.js",
+    "scripts": {
+        "start": "node --import tsx src/index.ts",
+        "start:local": "bash -c \\\"(set -a; source .env; set +a; node --import tsx src/index.ts)\\\"",
+        "build": "tsc",
+        "dev": "node --import tsx --watch src/index.js",
+        "dev:local": "bash -c \\\"(set -a; source .env; set +a; node --import tsx --watch src/index.js)\\\"",
+        "test": "echo \\\"Error: no test specified\\\" && exit 1",
+        "lint": "eslint --ext .ts src",
+        "lint:fix": "eslint --ext .ts src --fix",
+        "format": "prettier --write src/**/*.ts",
+        "format:check": "prettier --check src/**/*.ts",
+        "validate": "npm lint && npm test",
+        "validate:fix": "npm lint:fix && npm test",
+        "clean": "rm -rf dist",
+        "clean:all": "rm -rf dist node_modules",
+        "postinstall": "npm build"
     }
-  },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-  ],
-  "exclude": ["node_modules", "**/* copy.*", "**/* copy *.*", "**/*.tmp.*", "**/*.tmp", "**/tmp", "**/temp", "**/.let-dev"]
-}' > tsconfig.json
+    }' $appname $author > package.json
 
-# Create the README.md file
-echo "# $appname" > README.md
+    # Install latest versions of the dependencies
+    npm install typescript tsx @types/node eslint eslint-config-prettier eslint-plugin-prettier prettier --save-dev
 
-# Create .env file
-echo "# Environment variables
-" > .env
+    # Create the tsconfig.json file
+    echo '{
+    "compilerOptions": {
+        "incremental": true,
+        "strict": true,
+        "target": "ESNext",
+        "module": "ESNext",
+        "outDir": "dist",
+        "rootDir": "src",
+        "esModuleInterop": true,
+        "moduleResolution": "bundler",
+        "resolveJsonModule": true,
+        "skipLibCheck": true,
+        "noImplicitAny": false,
+        "lib": [
+        "dom", 
+        "dom.iterable"
+        ],
+        "paths": {
+        "@/*": ["./src/*"]
+        }
+    },
+    "include": [
+        "src/**/*.ts",
+        "src/**/*.tsx",
+    ],
+    "exclude": ["node_modules", "**/* copy.*", "**/* copy *.*", "**/*.tmp.*", "**/*.tmp", "**/tmp", "**/temp", "**/.let-dev"]
+    }' > tsconfig.json
 
-# Create example.env file
-echo "# Environment variables
-" > example.env
+    # Create the README.md file
+    echo "# $appname" > README.md
 
-# Create the .eslintrc.json file
-echo '{
-  "root": true,
-  "env": {
-    "node": true,
-    "es2021": true
-  },
-  "extends": [
-    "eslint:recommended",
-    "plugin:prettier/recommended"
-  ],
-  "parserOptions": {
-    "ecmaVersion": 12,
-    "sourceType": "module"
-  },
-  "rules": {
-    "no-console": "off"
-  }
-}' > .eslintrc.json
+    # Create .env file
+    echo "# Environment variables
+    " > .env
 
-# Create the .prettierrc.json file
-echo '{
-  "semi": false,
-  "singleQuote": true,
-  "tabWidth": 2,
-  "useTabs": false,
-  "printWidth": 120
-}' > .prettierrc.json
+    # Create example.env file
+    echo "# Environment variables
+    " > example.env
 
+    # Create the .eslintrc.json file
+    echo '{
+    "root": true,
+    "env": {
+        "node": true,
+        "es2021": true
+    },
+    "extends": [
+        "eslint:recommended",
+        "plugin:prettier/recommended"
+    ],
+    "parserOptions": {
+        "ecmaVersion": 12,
+        "sourceType": "module"
+    },
+    "rules": {
+        "no-console": "off"
+    }
+    }' > .eslintrc.json
 
-# Create the src directory
-mkdir src
-
-# Create the index.ts file
-echo '// Use file name without extension to import your files:
-// import ... from "./some-file";
-
-console.log("Hello, World!");
-' > src/index.ts
-
-# Create the .gitignore file
-echo "# Temporary files
-tmp
-temp
-*.tmp
-*.tmp.*
-*.log
-*.log.*
-*.log-*
-* copy*
-.DS_Store
-
-# Local settings
-.env
-.let-dev
-.tools-version
-" > .gitignore
-
-# Create the .npmignore file
-echo '# Temporary files
-.DS_Store
-tmp
-temp
-*.tmp
-*.tmp.*
-*.copy
-*.copy.*
-* copy
-
-# Local settings
-.env
-.let-dev
-.tools-version
-
-# Intermediate files
-node_modules
-' > .npmignore
+    # Create the .prettierrc.json file
+    echo '{
+    "semi": false,
+    "singleQuote": true,
+    "tabWidth": 2,
+    "useTabs": false,
+    "printWidth": 120
+    }' > .prettierrc.json
 
 
-# Create the .vscode/settings.json file
-mkdir -p .vscode
-echo '{
-  "editor.formatOnSave": true,
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
-  },
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.tabSize": 2,
-  "editor.insertSpaces": true,
-  "editor.detectIndentation": false,
-  "files.insertFinalNewline": true,
-  "files.trimTrailingWhitespace": true,
-  "files.exclude": {
-    "**/.git": true,
-    "**/.DS_Store": true,
-    "**/.vscode": true,
-    "**/node_modules": true,
-    "**/tmp": true,
-    "**/temp": true,
-    "**/*.tmp": true,
-    "**/*.tmp.*": true,
-    "**/*.copy": true,
-    "**/*.copy.*": true,
-    "**/* copy": true,
-    "**/dist": true
-  },
-  "files.watcherExclude": {
-    "**/.git/objects/**": true,
-    "**/.git/subtree-cache/**": true,
-    "**/node_modules/**": true,
-    "**/tmp/**": true,
-    "**/temp/**": true,
-    "**/*.tmp": true,
-    "**/*.tmp.*": true,
-    "**/*.copy": true,
-    "**/*.copy.*": true,
-    "**/* copy": true,
-    "**/dist/**": true
-  },
-  "files.autoSave": "onFocusChange",
-  "files.associations": {
-    "*.js": "javascript",
-    "*.jsx": "javascriptreact",
-    "*.ts": "typescript",
-    "*.tsx": "typescriptreact"
-  },
-  "typescript.tsdk": "node_modules/typescript/lib"
+    # Create the src directory
+    mkdir src
+
+    # Create the index.ts file
+    echo '// Use file name without extension to import your files:
+    // import ... from "./some-file";
+
+    console.log("Hello, World!");
+    ' > src/index.ts
+
+    # Create the .gitignore file
+    echo "# Temporary files
+    tmp
+    temp
+    *.tmp
+    *.tmp.*
+    *.log
+    *.log.*
+    *.log-*
+    * copy*
+    .DS_Store
+
+    # Local settings
+    .env
+    .let-dev
+    .tools-version
+    " > .gitignore
+
+    # Create the .npmignore file
+    echo '# Temporary files
+    .DS_Store
+    tmp
+    temp
+    *.tmp
+    *.tmp.*
+    *.copy
+    *.copy.*
+    * copy
+
+    # Local settings
+    .env
+    .let-dev
+    .tools-version
+
+    # Intermediate files
+    node_modules
+    ' > .npmignore
+
+
+    # Create the .vscode/settings.json file
+    mkdir -p .vscode
+    echo '{
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": true
+    },
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false,
+    "files.insertFinalNewline": true,
+    "files.trimTrailingWhitespace": true,
+    "files.exclude": {
+        "**/.git": true,
+        "**/.DS_Store": true,
+        "**/.vscode": true,
+        "**/node_modules": true,
+        "**/tmp": true,
+        "**/temp": true,
+        "**/*.tmp": true,
+        "**/*.tmp.*": true,
+        "**/*.copy": true,
+        "**/*.copy.*": true,
+        "**/* copy": true,
+        "**/dist": true
+    },
+    "files.watcherExclude": {
+        "**/.git/objects/**": true,
+        "**/.git/subtree-cache/**": true,
+        "**/node_modules/**": true,
+        "**/tmp/**": true,
+        "**/temp/**": true,
+        "**/*.tmp": true,
+        "**/*.tmp.*": true,
+        "**/*.copy": true,
+        "**/*.copy.*": true,
+        "**/* copy": true,
+        "**/dist/**": true
+    },
+    "files.autoSave": "onFocusChange",
+    "files.associations": {
+        "*.js": "javascript",
+        "*.jsx": "javascriptreact",
+        "*.ts": "typescript",
+        "*.tsx": "typescriptreact"
+    },
+    "typescript.tsdk": "node_modules/typescript/lib"
+    }
+    ' > .vscode/settings.json
+
+
+
+    # Initialize the git repository
+    local current_branch=$(git config --global --get init.defaultBranch)
+    git config --global init.defaultBranch main
+    git init
+    # git branch -m master main
+    git add .
+    git commit -m "Initial commit"
+    if [ -n "$current_branch" ]; then
+        git config --global init.defaultBranch $current_branch
+    else
+        git config --global --unset init.defaultBranch
+    fi
+
+
+    # Done
+    [ "$dir" != "." ] && popd > /dev/null
+    echo "Created a new TypeScript node.js application '$appname' in the '$dir' directory"
 }
-' > .vscode/settings.json
 
-
-
-# Initialize the git repository
-current_branch=$(git config --global --get init.defaultBranch)
-git config --global init.defaultBranch main
-git init
-# git branch -m master main
-git add .
-git commit -m "Initial commit"
-if [ -n "$current_branch" ]; then
-    git config --global init.defaultBranch $current_branch
-else
-    git config --global --unset init.defaultBranch
-fi
-
-
-# Done
-[ "$dir" != "." ] && popd > /dev/null
-echo "Created a new TypeScript node.js application '$appname' in the '$dir' directory"
+_do_command $@

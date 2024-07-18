@@ -1,118 +1,129 @@
 #!/usr/bin/env bash
-# set -euo pipefail
 
-# Create a SSL certificate using Certbot
+COMMAND_DESCRIPTION="Create SSL certificate with Certbot"
 
-# Help
-if [ "$1" == "--help" ]; then
-    echo "Usage: create-with-cerbot <domain> <email> <output_dir>"
-    exit 0
-fi
+COMMAND_HELP="\
+Create SSL certificate with Certbot tool.
+Usage:
+    :create-with-cerbot <domain> <email> <output_dir>
+Example:
+    :create-with-cerbot example.com user@example.com /path/to/output_dir
+"
 
-# Variables
-domain=$1
-email=$2
-output_dir=$3
-
-# Check if the domain is provided
-if [ -z "$domain" ]; then
-    echo "Domain is required"
-    exit 1
-fi
-
-# Check if the email is provided
-if [ -z "$email" ]; then
-    echo "Email is required"
-    exit 1
-fi
-
-# Check if the output directory is provided or use the current directory
-[ -z "$output_dir" ] && output_dir="."
-
-# Create the output directory if it does not exist
-[ ! -d "$output_dir" ] && mkdir -p "$output_dir"
-
-# Check if Certbot is installed or install it
-if command -v certbot &>/dev/null; then
-    echo "Certbot is installed"
-else
-    echo "Install certbot"
-    if command -v apt &>/dev/null; then
-        sudo apt install certbot
-    elif command -v dnf &>/dev/null; then
-        sudo dnf install certbot
-    elif command -v brew &>/dev/null; then
-        brew install certbot
-    else
-        echo "Please install certbot"
-        exit 1
+_do_command() {
+    # Show help on --help
+    if [[ "$#" -eq 0 || "$1" == "--help" || "$1" == "help" ]]; then
+        echo "$COMMAND_HELP"
+        return
     fi
-fi
 
-# Check if the domain is wildcard
-wildcard_domain=false
-if [[ "$domain" == *"*"* ]]; then
-    echo "Wildcard domain"
-    wildcard_domain=true
-    root_domain=$(echo "$domain" | cut -d '.' -f 2-)
-    sudo certbot certonly --manual --preferred-challenges=dns --manual-public-ip-logging-ok \
-        -d "$domain" -d "*.$root_domain" \
-        --config-dir "$output_dir" --work-dir "$output_dir" --logs-dir "$output_dir"
-else
-    echo "Non-wildcard domain"
-    sudo certbot certonly --standalone --non-interactive --agree-tos --email "$email" \
-        --domains "$domain" \
-        --config-dir "$output_dir" --work-dir "$output_dir" --logs-dir "$output_dir"
-fi
+    # Variables
+    local domain=$1
+    local email=$2
+    local output_dir=$3
 
-# Check if the certificate is created
-if [ -f "$output_dir/live/$domain/fullchain.pem" ]; then
-    echo "Certificate created"
+    # Check if the domain is provided
+    if [ -z "$domain" ]; then
+        echo "Domain is required"
+        return 1
+    fi
 
-    # # Create a symbolic link to the certificate
-    # ln -s "$output_dir/live/$domain/fullchain.pem" "$output_dir/$domain.crt"
+    # Check if the email is provided
+    if [ -z "$email" ]; then
+        echo "Email is required"
+        return 1
+    fi
 
-    # Remove the existing symbolic links
-    echo "Remove the existing symbolic links"
-    [ -f "$output_dir/$domain.key" ] && rm "$output_dir/$domain.key" || [ -L "$output_dir/$domain.key" ] && rm "$output_dir/$domain.key"
-    [ -f "$output_dir/$domain.crt" ] && rm "$output_dir/$domain.crt" || [ -L "$output_dir/$domain.crt" ] && rm "$output_dir/$domain.crt"
-    [ -f "$output_dir/$domain.chain" ] && rm "$output_dir/$domain.chain" || [ -L "$output_dir/$domain.chain" ] && rm "$output_dir/$domain.chain"
-    [ -f "$output_dir/$domain.fullchain" ] && rm "$output_dir/$domain.fullchain" || [ -L "$output_dir/$domain.fullchain" ] && rm "$output_dir/$domain.fullchain"
-    
+    # Check if the output directory is provided or use the current directory
+    [ -z "$output_dir" ] && output_dir="."
 
-    # Create a symbolic link to the private key
-    link_name="$output_dir/$domain.key"
-    [ "$wildcard_domain" = true ] && link_name="$output_dir/$domain.wildcard.key"
-    [ -f "$output_dir/live/$domain/privkey.pem" ] && ln -s "$output_dir/live/$domain/privkey.pem" "$link_name"
+    # Create the output directory if it does not exist
+    [ ! -d "$output_dir" ] && mkdir -p "$output_dir"
 
-    # Create a symbolic link to the certificate
-    link_name="$output_dir/$domain.crt"
-    [ "$wildcard_domain" = true ] && link_name="$output_dir/$domain.wildcard.crt"
-    [ -f "$output_dir/live/$domain/fullchain.pem" ] && ln -s "$output_dir/live/$domain/fullchain.pem" "$link_name"
+    # Check if Certbot is installed or install it
+    if command -v certbot &>/dev/null; then
+        echo "Certbot is installed"
+    else
+        echo "Install certbot"
+        if command -v apt &>/dev/null; then
+            sudo apt install certbot
+        elif command -v dnf &>/dev/null; then
+            sudo dnf install certbot
+        elif command -v brew &>/dev/null; then
+            brew install certbot
+        else
+            echo "Please install certbot"
+            return 1
+        fi
+    fi
 
-    # Create a symbolic link to the certificate chain
-    link_name="$output_dir/$domain.chain"
-    [ "$wildcard_domain" = true ] && link_name="$output_dir/$domain.wildcard.chain"
-    [ -f "$output_dir/live/$domain/chain.pem" ] && ln -s "$output_dir/live/$domain/chain.pem" "$link_name"
+    # Check if the domain is wildcard
+    local wildcard_domain=false
+    if [[ "$domain" == *"*"* ]]; then
+        echo "Wildcard domain"
+        wildcard_domain=true
+        local root_domain=$(echo "$domain" | cut -d '.' -f 2-)
+        sudo certbot certonly --manual --preferred-challenges=dns --manual-public-ip-logging-ok \
+            -d "$domain" -d "*.$root_domain" \
+            --config-dir "$output_dir" --work-dir "$output_dir" --logs-dir "$output_dir"
+    else
+        echo "Non-wildcard domain"
+        sudo certbot certonly --standalone --non-interactive --agree-tos --email "$email" \
+            --domains "$domain" \
+            --config-dir "$output_dir" --work-dir "$output_dir" --logs-dir "$output_dir"
+    fi
 
-    # Create a symbolic link to the certificate full chain
-    link_name="$output_dir/$domain.fullchain"
-    [ "$wildcard_domain" = true ] && link_name="$output_dir/$domain.wildcard.fullchain"
-    [ -f "$output_dir/live/$domain/fullchain.pem" ] && ln -s "$output_dir/live/$domain/fullchain.pem" "$link_name"
+    # Check if the certificate is created
+    if [ -f "$output_dir/live/$domain/fullchain.pem" ]; then
+        echo "Certificate created"
 
-    # Print the certificate paths
-    echo "Certificate paths:"
-    echo "Private key: $output_dir/$domain.key"
-    echo "Certificate: $output_dir/$domain.crt"
-    echo "Certificate chain: $output_dir/$domain.chain"
-    echo "Certificate full chain: $output_dir/$domain.fullchain"
+        # # Create a symbolic link to the certificate
+        # ln -s "$output_dir/live/$domain/fullchain.pem" "$output_dir/$domain.crt"
 
-    # Print the instructions to activate the certificate
-    echo "Activate the certificate with the following command:"
-    echo "sudo certbot install --cert-path $output_dir/$domain.crt --key-path $output_dir/$domain.key --chain-path $output_dir/$domain.chain --fullchain-path $output_dir/$domain.fullchain"
+        # Remove the existing symbolic links
+        echo "Remove the existing symbolic links"
+        [ -f "$output_dir/$domain.key" ] && rm "$output_dir/$domain.key" || [ -L "$output_dir/$domain.key" ] && rm "$output_dir/$domain.key"
+        [ -f "$output_dir/$domain.crt" ] && rm "$output_dir/$domain.crt" || [ -L "$output_dir/$domain.crt" ] && rm "$output_dir/$domain.crt"
+        [ -f "$output_dir/$domain.chain" ] && rm "$output_dir/$domain.chain" || [ -L "$output_dir/$domain.chain" ] && rm "$output_dir/$domain.chain"
+        [ -f "$output_dir/$domain.fullchain" ] && rm "$output_dir/$domain.fullchain" || [ -L "$output_dir/$domain.fullchain" ] && rm "$output_dir/$domain.fullchain"
+        
 
-    exit 0
-else
-    echo "Certificate is not created"
-    exit 1
-fi
+        # Create a symbolic link to the private key
+        local link_name="$output_dir/$domain.key"
+        [ "$wildcard_domain" = true ] && link_name="$output_dir/$domain.wildcard.key"
+        [ -f "$output_dir/live/$domain/privkey.pem" ] && ln -s "$output_dir/live/$domain/privkey.pem" "$link_name"
+
+        # Create a symbolic link to the certificate
+        link_name="$output_dir/$domain.crt"
+        [ "$wildcard_domain" = true ] && link_name="$output_dir/$domain.wildcard.crt"
+        [ -f "$output_dir/live/$domain/fullchain.pem" ] && ln -s "$output_dir/live/$domain/fullchain.pem" "$link_name"
+
+        # Create a symbolic link to the certificate chain
+        link_name="$output_dir/$domain.chain"
+        [ "$wildcard_domain" = true ] && link_name="$output_dir/$domain.wildcard.chain"
+        [ -f "$output_dir/live/$domain/chain.pem" ] && ln -s "$output_dir/live/$domain/chain.pem" "$link_name"
+
+        # Create a symbolic link to the certificate full chain
+        link_name="$output_dir/$domain.fullchain"
+        [ "$wildcard_domain" = true ] && link_name="$output_dir/$domain.wildcard.fullchain"
+        [ -f "$output_dir/live/$domain/fullchain.pem" ] && ln -s "$output_dir/live/$domain/fullchain.pem" "$link_name"
+
+        # Print the certificate paths
+        echo "Certificate paths:"
+        echo "Private key: $output_dir/$domain.key"
+        echo "Certificate: $output_dir/$domain.crt"
+        echo "Certificate chain: $output_dir/$domain.chain"
+        echo "Certificate full chain: $output_dir/$domain.fullchain"
+
+        # Print the instructions to activate the certificate
+        echo "Activate the certificate with the following command:"
+        echo "sudo certbot install --cert-path $output_dir/$domain.crt --key-path $output_dir/$domain.key --chain-path $output_dir/$domain.chain --fullchain-path $output_dir/$domain.fullchain"
+
+        return 0
+    else
+        echo "Certificate is not created"
+        return 1
+    fi
+}
+
+_do_command $@
