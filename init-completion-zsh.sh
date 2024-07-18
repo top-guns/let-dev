@@ -139,11 +139,8 @@ _letdev_init_completion() {
     # Add letdev_command to the completion list
     # compdef _letdev_command letdev_command
     # compdef _letdev_command :*
-
-    echo "init completion"
 }
 
-echo "letdev_init_completion"
 _letdev_init_completion
 
 # TODO: change it and implement the / trigger behavior
