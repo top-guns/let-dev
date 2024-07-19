@@ -151,9 +151,6 @@ list_commands() {
         local dir="$LETDEV_HOME/profiles/$LETDEV_PROFILE/commands"
         if [ -d "$dir" ]; then
             USER_COMMAND_LIST=$(_get_list "$dir" $with_descriptions $with_examples)
-        else
-            echo "User $LETDEV_PROFILE commands directory not found: $dir"
-            return 1
         fi
     fi
 
