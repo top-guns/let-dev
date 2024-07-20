@@ -24,30 +24,57 @@ _extract_definitions() {
 
 _get_list() {
     local dir="$1"
-    local with_descriptions="$2"
-    local with_examples="$3"
-    local from_path=${4:-false}
+    # local with_descriptions="$2"
+    # local with_examples="$3"
+    local format="$2"
+    # local from_path="$3"
 
     if [ -d "$dir" ]; then
         local cur_dir=`pwd`
         cd "$dir"
+        dir=$(pwd) # To make it absolute
 
-        # If with description option is provided, use 'eval "command description"' to get description and return 'command:description' as a result
-        if $with_descriptions; then
-            # # All files that do not contain the variable DESCRIPTION
-            # find . -type f -not -path '*/.*' -exec grep -L 'DESCRIPTION=' {} \; | sed 's|^./|:|'
-            # # All files that contain the variable DESCRIPTION
-            # find . -type f -not -path '*/.*' -exec grep -l 'DESCRIPTION=' {} \; | sed 's|^./||' | \
-            #     xargs -I{} awk -F= '/DESCRIPTION=/ {gsub(/['"'"'\x22]/, "", $2); print FILENAME " - " $2}' {}
-            echo "NOT IMPLEMENTED"
-        else
-            local result=$(find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print)
-            if $from_path; then
-                echo "$result" | sed 's|^\./||'
+        # # If with description option is provided, use 'eval "command description"' to get description and return 'command:description' as a result
+        # if $with_descriptions; then
+        #     # # All files that do not contain the variable DESCRIPTION
+        #     # find . -type f -not -path '*/.*' -exec grep -L 'DESCRIPTION=' {} \; | sed 's|^./|:|'
+        #     # # All files that contain the variable DESCRIPTION
+        #     # find . -type f -not -path '*/.*' -exec grep -l 'DESCRIPTION=' {} \; | sed 's|^./||' | \
+        #     #     xargs -I{} awk -F= '/DESCRIPTION=/ {gsub(/['"'"'\x22]/, "", $2); print FILENAME " - " $2}' {}
+        #     echo "NOT IMPLEMENTED"
+        # else
+            #local result=$(find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print)
+            # if $from_path; then
+            #     echo "$result" | sed 's|^\./||'
+            # else
+            #     echo "$result" | sed 's|^\./|:|'
+            # fi
+            if [ "$format" = "command" ]; then
+                # Print as ':dir:subdir:command'
+                find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print | sed 's|^\./|:|' | sed 's|/|:|' | sed 's|::|:|'
+            elif [ "$format" = "path" ]; then
+                # Print as 'dir/subdir/command'
+                find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print | sed 's|^\./||'
+            elif [ "$format" = "fullpath" ]; then
+                # Print as '/.../dir/subdir/command'
+                find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print | sed "s|^\.|$dir|"
+            elif [ "$format" = "var" ]; then
+                # Print as ':dir:subdir:command="/.../dir/subdir/command"'
+                find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print | sed 's|^\./||' \
+                    | awk -F/ -v OFS=":" -v dir="$dir" '{path=$0; gsub("/", ":", path); print path"=\"" dir "/" $0 "\""}' \
+                    | sed 's|^|:|' | sed 's|^::|:|'
+            elif [ "$format" = "alias" ]; then
+                # Print as 'alias :dir:subdir:command="/.../dir/subdir/command"'
+                find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print | sed 's|^\./||' \
+                    | awk -F/ -v OFS=":" -v dir="$dir" '{path=$0; gsub("/", ":", path); print "alias "path"=\"source " dir "/" $0 "\""}' \
+                    | sed 's|^alias |alias :|' | sed 's|::|:|'
+            elif [ "$format" = "raw" ]; then
+                find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print
             else
-                echo "$result" | sed 's|^\./|:|'
+                echo "Invalid format: '$format'. Supported formats are: command, path, var, raw."
+                return 1
             fi
-        fi
+        # fi
 
         cd $cur_dir
     fi
@@ -60,27 +87,35 @@ list_commands() {
         echo "  :$0 [--system] [--user] [--project] [--with-description] [filter]"
         echo "Options:"
         echo "  filter: Filter commands by name."
+        echo "  --format: Format the output (command | path | fullpath | var | raw)."
         echo "  --system: Include system commands."
         echo "  --user: Include user commands."
         echo "  --project: Include project commands."
-        echo "  --with-description: Include command description."
-        echo "  --with-examples: Include command examples."
+        # echo "  --with-description: Include command description."
+        # echo "  --with-examples: Include command examples."
+        echo "If no filter is provided, all commands are listed."
+        echo "If no format is provided, the output is commands."
         echo "If no option is provided, all commands are listed."
         echo "Example:"
         echo "  :$0 .env MY_ENV_VAR"
-        echo "  :$0 .env MY_ENV_VAR --system --user --with-description"
+        echo "  :$0 .env MY_ENV_VAR --format=path --system --user"
         return
     fi
 
     # Parse arguments
     local filter=""
+    local format="command"
     local include_system=false
     local include_user=false
     local include_project=false
-    local with_descriptions=false
-    local with_examples=false
+    # local with_descriptions=false
+    # local with_examples=false
     for arg in "$@"; do
         case $arg in
+            --format=*)
+                format=`echo $arg | sed 's/--format=//' | tr '[:upper:]' '[:lower:]'`
+                shift
+                ;;
             --system)
                 include_system=true
                 shift
@@ -93,16 +128,17 @@ list_commands() {
                 include_project=true
                 shift
                 ;;
-            --with-descriptions)
-                with_descriptions=true
-                shift
-                ;;
-            --with-examples)
-                with_examples=true
-                shift
-                ;;
+            # --with-descriptions)
+            #     with_descriptions=true
+            #     shift
+            #     ;;
+            # --with-examples)
+            #     with_examples=true
+            #     shift
+            #     ;;
             *)
-                filter=$arg
+                [ -n "$filter" ] && filter+=" "
+                filter+=$arg
                 shift
                 ;;
         esac
@@ -122,14 +158,15 @@ list_commands() {
     # Remove the first symbol if it is a colon
     # filter=`echo "$filter" | sed "s/^:[ ]*//"`
 
-    local cur_dir=`pwd`
-
     # Get project commands
     local PROJECT_COMMAND_LIST=""
     if $include_project; then
         local dir=".let-dev/$LETDEV_PROFILE/commands"
         if [ -d "$dir" ]; then
-            PROJECT_COMMAND_LIST=$(_get_list "$dir" $with_descriptions $with_examples true | sed 's|^|: :project/|' | sed 's|/:|/|')
+            PROJECT_COMMAND_LIST=$(_get_list "$dir" $format)
+            if [ "$format" = "command" ] || [ "$format" = "var" ]; then
+                PROJECT_COMMAND_LIST=$(echo "$PROJECT_COMMAND_LIST" | sed 's|^|:project|')
+            fi
         fi
     fi
 
@@ -138,7 +175,7 @@ list_commands() {
     if $include_system; then
         local dir="$LETDEV_HOME/commands"
         if [ -d "$dir" ]; then
-            SYS_COMMAND_LIST=$(_get_list "$dir" $with_descriptions $with_examples)
+            SYS_COMMAND_LIST=$(_get_list "$dir" $format)
         else
             echo "System commands directory not found: $dir"
             return 1
@@ -150,11 +187,9 @@ list_commands() {
     if $include_user; then
         local dir="$LETDEV_HOME/profiles/$LETDEV_PROFILE/commands"
         if [ -d "$dir" ]; then
-            USER_COMMAND_LIST=$(_get_list "$dir" $with_descriptions $with_examples)
+            USER_COMMAND_LIST=$(_get_list "$dir" $format)
         fi
     fi
-
-    cd $cur_dir
 
     # Merge both command lists, user commands have higher priority
     local COMMAND_LIST=""

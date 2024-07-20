@@ -82,13 +82,8 @@ init_shell() {
     # alias "${LETDEV_SYMBOL}file"=":load"
 
     # Create alias for every command
-    local alias_commands=$($LETDEV_HOME/list-commands.sh --system --user)
-    multiline_to_array "$alias_commands" "alias_commands"
-    for command in "${alias_commands[@]}"; do
-        alias_name=$(echo $command | sed 's|/|:|g')
-        alias "$alias_name"="source $LETDEV_HOME/default.sh $command"
-    done
-
+    local alias_commands=$($LETDEV_HOME/list-commands.sh --system --user --format=alias)
+    eval "$alias_commands"
 
     # Auto-completion
     if [ "$shell_name" = "bash" ]; then

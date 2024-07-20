@@ -1,11 +1,11 @@
 #!/bin/bash
 
-_letdev_complete() {
-    local cur prev words cword
-    _init_completion || return
-    local cmds=$($LETDEV_HOME/list-commands.sh --with-descriptions)
-    COMPREPLY=($(compgen -W "$(echo "$cmds" | fzf --reverse --inline-info --tac --preview)" -- "$cur"))
-}
+# _letdev_complete() {
+#     local cur prev words cword
+#     _init_completion || return
+#     local cmds=$($LETDEV_HOME/list-commands.sh --with-descriptions)
+#     COMPREPLY=($(compgen -W "$(echo "$cmds" | fzf --reverse --inline-info --tac --preview)" -- "$cur"))
+# }
 
 _letdev_tab_complete() {
     if [[ -n "$READLINE_LINE" ]]; then
@@ -22,7 +22,7 @@ _letdev_tab_complete() {
         local symbol_before_cursor=${READLINE_LINE:READLINE_POINT-1:1}
         if [[ "$symbol_before_cursor" != " " ]]; then
             if [[ "$cur" =~ ^: ]]; then
-                local cmds=$($LETDEV_HOME/list-commands.sh | sed 's|/|:|g')
+                local cmds=$($LETDEV_HOME/list-commands.sh --format=command)
                 if [[ $cur_word_index -eq 1 ]]; then
                     # Command completion
                     # $LETDEV_HOME/list-commands.sh | sed "s|:|$LETDEV_HOME/commands/|" | fzf --reverse --inline-info --tac --preview="$LETDEV_HOME/get-command-variable.sh {} COMMAND_HELP"
@@ -52,7 +52,7 @@ _letdev_tab_complete() {
 }
 
 _letdev_init_completion() {
-    complete -F _letdev_complete :
+    # complete -F _letdev_complete :
     bind -x '"\t": _letdev_tab_complete'
 }
 

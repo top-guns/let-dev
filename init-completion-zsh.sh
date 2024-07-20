@@ -106,7 +106,7 @@
 
 _custom_tab_handler() {
   if [[ $LBUFFER =~ .*:[^[:space:]]*$ ]]; then
-    local command_list=$($LETDEV_HOME/list-commands.sh | sed 's|/|:|g')
+    local command_list=$($LETDEV_HOME/list-commands.sh --format=command)
     local -a commands
     multiline_to_array "$command_list" commands
 
