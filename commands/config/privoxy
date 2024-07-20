@@ -2,25 +2,16 @@
 # set -euo pipefail
 
 COMMAND_DESCRIPTION="Edit privoxy configuration"
-COMMAND_HELP="Open privoxy configuration file in the preferred text editor"
+COMMAND_HELP="\
+Open privoxy configuration file in the preferred text editor
+"
 
 _do_command() {
-    if [[ "$1" = "--help" ]]; then
-        echo "$COMMAND_HELP"
-        return
-    fi
-
     local FILE_TO_OPEN="/usr/local/etc/privoxy/config"
 
-    local SCRIPT_PATH=''
-    [ -n "${BASH_SOURCE[0]}" ] && SCRIPT_PATH="${BASH_SOURCE[0]}" || SCRIPT_PATH="$0"
-    # Get the absolute path of the current script and expand the '..' to the real path
-    SCRIPT_PATH=`readlink -f $SCRIPT_PATH`
-    # Get the directory of the script
-    local SCRIPT_DIR=`dirname $SCRIPT_PATH`
-
-    source "$SCRIPT_DIR/.edit_config.sh"
+    source "$LETDEV_HOME/commands/config/.edit_config.sh"
     _edit_config "$FILE_TO_OPEN" $@
+    return $?
 }
 
 _do_command "$@"

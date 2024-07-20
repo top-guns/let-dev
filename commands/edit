@@ -12,9 +12,8 @@ Example:
 
 _confirm() {
     read -p "$1 (y/n) " -n 1 -r
-    echo    # (optional) move to a new line
-    if [[ $REPLY =~ ^[Yy]$ ]]
-    then
+    echo # (optional) move to a new line
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
         return 0
     else
         return 1
@@ -22,120 +21,171 @@ _confirm() {
 }
 
 _select_editor() {
-  local prompt="$1"
+    local prompt="$1"
 
-  local editors=()
-  command -v "micro" &>/dev/null && editors+=("micro")
-  command -v "nano" &>/dev/null && editors+=("nano")
-  command -v "mcedit" &>/dev/null && editors+=("mcedit")
-  command -v "code" &>/dev/null && editors+=("code")
-  command -v "vim" &>/dev/null && editors+=("vim")
-  command -v "subl" &>/dev/null && editors+=("subl")
-  command -v "atom" &>/dev/null && editors+=("atom")
-  command -v "gedit" &>/dev/null && editors+=("gedit")
-  command -v "kate" &>/dev/null && editors+=("kate")
-  command -v "mousepad" &>/dev/null && editors+=("mousepad")
-  command -v "pluma" &>/dev/null && editors+=("pluma")
-  command -v "geany" &>/dev/null && editors+=("geany")
-  command -v "bluefish" &>/dev/null && editors+=("bluefish")
-  command -v "leafpad" &>/dev/null && editors+=("leafpad")
-  command -v "juffed" &>/dev/null && editors+=("juffed")
-  command -v "jedit" &>/dev/null && editors+=("jedit")
-  command -v "kwrite" &>/dev/null && editors+=("kwrite")
+    local editors=()
+    command -v "micro" &>/dev/null && editors+=("micro")
+    command -v "nano" &>/dev/null && editors+=("nano")
+    command -v "mcedit" &>/dev/null && editors+=("mcedit")
+    command -v "code" &>/dev/null && editors+=("code")
+    command -v "vim" &>/dev/null && editors+=("vim")
+    command -v "subl" &>/dev/null && editors+=("subl")
+    command -v "atom" &>/dev/null && editors+=("atom")
+    command -v "gedit" &>/dev/null && editors+=("gedit")
+    command -v "kate" &>/dev/null && editors+=("kate")
+    command -v "mousepad" &>/dev/null && editors+=("mousepad")
+    command -v "pluma" &>/dev/null && editors+=("pluma")
+    command -v "geany" &>/dev/null && editors+=("geany")
+    command -v "bluefish" &>/dev/null && editors+=("bluefish")
+    command -v "leafpad" &>/dev/null && editors+=("leafpad")
+    command -v "juffed" &>/dev/null && editors+=("juffed")
+    command -v "jedit" &>/dev/null && editors+=("jedit")
+    command -v "kwrite" &>/dev/null && editors+=("kwrite")
 
-  # If fzf is installed, use it to select the editor
-  if command -v "fzf" &>/dev/null; then
-    # echo "${editors[@]}" | tr ' ' '\n' | fzf --prompt="$prompt" #--preview="echo {}" --preview-window=up:1:wrap
-    echo "${editors[@]}" | tr ' ' '\n' | fzf --height 30% --reverse --prompt="$prompt"
-    return
-  fi
-
-  # If fzf is not installed, use the default select
-  echo "$prompt"
-  select editor in "${editors[@]}"; do
-    if [[ " ${editors[@]} " =~ " ${editor} " ]]; then
-      echo $editor
-      break
+    # If fzf is installed, use it to select the editor
+    if command -v "fzf" &>/dev/null; then
+        # echo "${editors[@]}" | tr ' ' '\n' | fzf --prompt="$prompt" #--preview="echo {}" --preview-window=up:1:wrap
+        echo "${editors[@]}" | tr ' ' '\n' | fzf --height 30% --reverse --prompt="$prompt"
+        return
     fi
-  done
+
+    # If fzf is not installed, use the default select
+    echo "$prompt"
+    select editor in "${editors[@]}"; do
+        if [[ " ${editors[@]} " =~ " ${editor} " ]]; then
+            echo $editor
+            break
+        fi
+    done
 }
 
 _install() {
-  # Check the operating system
-  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    # Check if micro is installed
-    if ! command -v micro &> /dev/null; then
-      # Install micro using the package manager
-      sudo apt install micro
-      echo "Micro installed successfully"
-    else
-      echo "Micro is already installed"
-    fi
-  elif [[ "$OSTYPE" == "darwin"* ]]; then
-    # Check if brew is installed
-    if ! command -v brew &> /dev/null; then
-      echo "Homebrew is not installed. Please install Homebrew before running this script."
-      return
-    fi
+    # Check the operating system
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        # Check if micro is installed
+        if ! command -v micro &>/dev/null; then
+            # Install micro using the package manager
+            sudo apt install micro
+            echo "Micro installed successfully"
+        else
+            echo "Micro is already installed"
+        fi
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        # Check if brew is installed
+        if ! command -v brew &>/dev/null; then
+            echo "Homebrew is not installed. Please install Homebrew before running this script."
+            return
+        fi
 
-    # Check if micro is installed
-    if ! command -v micro &> /dev/null; then
-      # Install micro using the package manager
-      brew install micro
-      echo "Micro installed successfully"
+        # Check if micro is installed
+        if ! command -v micro &>/dev/null; then
+            # Install micro using the package manager
+            brew install micro
+            echo "Micro installed successfully"
+        else
+            echo "Micro is already installed"
+        fi
     else
-      echo "Micro is already installed"
+        echo "Unsupported operating system"
+        return
     fi
-  else
-    echo "Unsupported operating system"
-    return
-  fi
 }
 
 _do_command() {
-  # Show help on --help
-  if [[ "$#" -eq 0 || "$1" == "--help" || "$1" == "help" ]]; then
-    echo "$COMMAND_HELP"
-    return
-  fi
-
-  if [[ "$1" == "--install" ]]; then
-    _install
-    return
-  fi
-
-  local cmd="$EDITOR"
-  # local cmd=""
-  local file="$1"
-
-  if ! command -v "$cmd" &>/dev/null; then
-    # Ask for the editor to use
-    if [ -z "$cmd" ]; then
-      echo "Default editor is not specified (\$EDITOR environment variable is not set)"
-    else
-      echo "Default editor ('$cmd' from the \$EDITOR environment variable) was not found"
-    fi
-
-    # Check if micro is installed
-    echo "If you don't have a preferred editor, we recommend using Micro. It has color syntax highlighting, mouse support and familiar keyboard shortcuts."
-    if ! command -v micro &> /dev/null; then
-      echo "Micro is not installed. You can use ': :edit --install' command to install it."
-    fi
-
-    cmd=$(_select_editor "Select an editor to use:")
-  fi
-
-  # If the file does not exist, ask for user to creating a new file
-  if [[ ! -f "$file" ]]; then
-    echo "File '$file' not found, creating a new file"
-    if _confirm "Do you want to create a new file '$file'?"; then
-        touch $file
-    else
+    # Show help on --help
+    if [[ "$#" -eq 0 || "$1" == "--help" || "$1" == "help" ]]; then
+        echo "$COMMAND_HELP"
         return
     fi
-  fi
 
-  $cmd $file
+    if [[ "$1" == "--install" ]]; then
+        _install
+        return
+    fi
+
+    # local cmd=""
+    local file="$1"
+    shift
+
+    # Parse options
+    local create_if_not_exist="" # Argument with value yes/no
+    local recreate=false
+    local editor_arg=""
+    while [[ "$#" -gt 0 ]]; do
+        case $1 in
+        --recreate) recreate=true ;;
+        --create-if-not-exist=*)
+            create_if_not_exist="${1#*=}"
+            # Replace yes, true, 1 with true
+            if [[ "$create_if_not_exist" =~ ^[yYtT1] ]]; then
+                create_if_not_exist="true"
+            else
+                create_if_not_exist="false"
+            fi
+            ;;
+        *) editor_arg=$1 ;;
+        esac
+        shift
+    done
+
+    local cmd=""
+
+    # Editor from the argument
+    if [ -n "$editor_arg" ]; then
+        if ! command -v "$editor_arg" &>/dev/null; then
+            echo "Editor '$editor_arg' not found"
+            return 1
+        fi
+        cmd="$editor_arg"
+    fi
+
+    # Editor from the environment variable
+    if [ -z "$cmd" ] && [ -n "$EDITOR" ]; then
+        if ! command -v "$EDITOR" &>/dev/null; then
+            echo "Editor '$EDITOR' specified in the \$EDITOR environment variable not found"
+            echo "Please make sure the editor is installed and the path is correct"
+            echo "You can also specify the editor as an argument to the command"
+            # Check if Micro is installed
+            echo "If you don't have a preferred editor, we recommend using Micro. It has color syntax highlighting, mouse support and familiar keyboard shortcuts."
+            if ! command -v micro &>/dev/null; then
+                echo "Micro is not installed. You can use ': :edit --install' command to install it."
+            fi
+            return 1
+        fi
+        cmd="$EDITOR"
+    fi
+
+    # Editor from the select
+    [ -z "$cmd" ] && cmd=$(_select_editor "Select an editor to use:")
+
+    [ -z "$cmd" ] && return
+
+    [ "$recreate" = true ] && rm -f $file
+
+    # If the file does not exist, ask for user to creating a new file
+    if [[ ! -f "$file" ]]; then
+        if [ "$create_if_not_exist" = "false" ]; then
+            echo "File '$file' not found"
+            return 1
+        elif [ "$create_if_not_exist" = "true" ]; then
+            touch $file
+        else
+            if _confirm "File '$file' not found. Do you want to create a new file '$file'?"; then
+                touch $file
+            else
+                return
+            fi
+        fi
+    fi
+
+    local hash_before=$(sha256sum "$file")
+    $cmd $file
+    local hash_after=$(sha256sum "$file")
+    if [[ "$hash_before" != "$hash_after" ]]; then
+        echo "The file was modified."
+    else
+        echo "The file was not modified."
+    fi
 }
 
 _do_command $@
