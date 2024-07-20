@@ -165,7 +165,7 @@ list_commands() {
         if [ -d "$dir" ]; then
             PROJECT_COMMAND_LIST=$(_get_list "$dir" $format)
             if [ "$format" = "command" ] || [ "$format" = "var" ]; then
-                PROJECT_COMMAND_LIST=$(echo "$PROJECT_COMMAND_LIST" | sed 's|^|:project|')
+                PROJECT_COMMAND_LIST=$(echo "$PROJECT_COMMAND_LIST" | sed 's|^|: :project|')
             fi
         fi
     fi
