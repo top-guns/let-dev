@@ -51,7 +51,7 @@ _get_list() {
             # fi
             if [ "$format" = "command" ]; then
                 # Print as ':dir:subdir:command'
-                find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print | sed 's|^\./|:|' | sed 's|/|:|' | sed 's|::|:|'
+                find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print | sed 's|^\./|:|' | sed 's|/|:|g' | sed 's|::|:|'
             elif [ "$format" = "path" ]; then
                 # Print as 'dir/subdir/command'
                 find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print | sed 's|^\./||'
