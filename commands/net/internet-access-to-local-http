@@ -1,40 +1,41 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-port=$1
+COMMAND_DESCRIPTION="Expose local HTTP server to the Internet"
 
-print_help() {
-    echo "Usage:"
-    echo "  :net:internet-access-to-local-http.sh <port>"
-    echo "  :net:internet-access-to-local-http.sh ?"
-    echo "  :net:internet-access-to-local-http.sh --help"
-    echo ""
-    echo "Example:"
-    echo "  :net:internet-access-to-local-http.sh 3000"
+COMMAND_HELP="\
+Expose local HTTP server to the Internet via http://serveo.net service.
+Usage:
+    :net:internet-access-to-local-http <port>
+Example:
+    :net:internet-access-to-local-http.sh 3000
+"
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local port=$1
+
+    [ -z "$port" ] && echo -n "Enter the port number: " && read port
+
+    if [ "$port" -lt 1 ] || [ "$port" -gt 65535 ]; then
+        echo "Invalid port number"
+        return
+    fi
+
+    if [ -z "$(which ssh)" ]; then
+        echo "Install ssh"
+        sudo apt update -y
+        sudo apt install ssh -y
+        echo ""
+        echo "SSH installed successfully"
+    else
+        echo "SSH is already installed"
+    fi
+
+    ssh -R "80:localhost:$port" serveo.net
 }
 
-# Help
-if [[ "$port" == "--help" ]]; then
-    echo "Expose local HTTP server to the Internet"
-    echo ""
-    print_help
-    return
-fi
-
-[ -z "$port" ] && echo -n "Enter the port number: " && read port
-
-if [ "$port" -lt 1 ] || [ "$port" -gt 65535 ]; then
-    echo "Invalid port number"
-    return
-fi
-
-if [ -z "$(which ssh)" ]; then
-    echo "Install ssh"
-    sudo apt update -y
-    sudo apt install ssh -y
-    echo ""
-    echo "SSH installed successfully"
-else
-    echo "SSH is already installed"
-fi
-
-ssh -R "80:localhost:$port" serveo.net
+_do_command "$@"

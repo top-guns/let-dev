@@ -4,6 +4,39 @@
 
 # Start/stop http proxy with lightproxy
 
+COMMAND_DESCRIPTION="Start/stop http interceptor proxy with mitmproxy"
+
+COMMAND_HELP="\
+Start/stop http proxy with mitmproxy as interceptor.
+Usage:
+    :net:proxy:interceptor <port> [--start] [--stop] [--list] [--install] [--uninstall] [--check] [--interactive]
+Arguments:
+    port - local port to use for the proxy
+    If no arguments are provided, command will list all existing proxies.
+Options:
+    --start:  start the new proxy
+    --stop:   stop the existing proxy
+    --list:   list all existing proxies
+    --install:    install mitmproxy if not installed
+    --uninstall:  stop all proxies and uninstall mitmproxy if installed
+    --check:      check if mitmproxy is installed and command is available
+    --interactive:  start command in interactive mode
+    --help:  print this help
+Examples:
+    List all existing proxies
+        :net:proxy:interceptor
+    Start new http proxy on port 3128
+        :net:proxy:interceptor 3128 --start
+    Stop http proxy on port 3128
+        :net:proxy:interceptor 3128 --stop
+    Stop all existing proxies
+        :net:proxy:interceptor --stop
+    Install mitmproxy
+        :net:proxy:interceptor --install
+    Uninstall mitmproxy
+        :net:proxy:interceptor --uninstall
+"
+
 multiline_to_array() {
     local str=$1
     local arr_name=$2
@@ -215,166 +248,134 @@ list() {
   print_array "$processes"
 }
 
-
-print_help() {
-  echo "$PROC_CMD_DESC"
-  echo "If no arguments are provided, command will list all existing proxies"
-  echo ""
-  echo "Usage:"
-  echo "  $PROC_CMD_NAME port [--start] [--stop] [--list] [--install] [--uninstall] [--check] [--interactive] [--help]"
-  echo ""
-  echo "Examples:"
-  echo "  List all existing proxies"
-  echo "    $PROC_CMD_NAME"
-  echo "  Start new http proxy on port 3128"
-  echo "    $PROC_CMD_NAME 3128 --start"
-  echo "  Stop http proxy on port 3128"
-  echo "    $PROC_CMD_NAME 3128 --stop"
-  echo "  Stop all existing proxies"
-  echo "    $PROC_CMD_NAME --stop"
-  echo "  Install $PROC_UTILITY"
-  echo "    $PROC_CMD_NAME --install"
-  echo "  Uninstall $PROC_UTILITY"
-  echo "    $PROC_CMD_NAME --uninstall"
-  echo ""
-  echo "Arguments:"
-  echo "  port - local port to use for the proxy"
-  echo ""
-  echo "Options:"
-  echo "  --start:  start the new proxy"
-  echo "  --stop:   stop the existing proxy"
-  echo "  --list:   list all existing proxies"
-  echo "  --install:    install $PROC_UTILITY if not installed"
-  echo "  --uninstall:  stop all proxies and uninstall $PROC_UTILITY if installed"
-  echo "  --check:      check if $PROC_UTILITY is installed and command is available"
-  echo "  --interactive:  start command in interactive mode"
-  echo "  --help:  print this help"
-}
-
 #------------------------------------------------------------------------------
 # Main
 
-port=""
-action=""
-interactive=false
-install=false
-list=false
-
-# Actions (only one action can be provided)
-ACTIONS=("--start" "--stop" "--uninstall" "--check" "--help")
-
-# Parse arguments
-if [ "$#" -lt 1 ]; then
-  list=true
-else
-  for arg in "$@"; do
-    if [[ -n "$action" && $(in_array "$arg" "${ACTIONS[@]}") ]]; then
-      echo "Only one action of ${ACTIONS[@]} can be provided but got '$arg' after '$action'"
-      return
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
     fi
 
-    case $arg in
-      # Actions
-      "--start")
-        action="--start"
-        ;;
-      "--stop")
-        action="--stop"
-        ;;
-      "--uninstall")
-        action="--uninstall"
-        ;;
-      "--check")
-        action="--check"
-        ;;
+    port=""
+    action=""
+    interactive=false
+    install=false
+    list=false
 
-      # Options
-      "--list")
-        list=true
-        ;;
-      "--install")
-        install=true
-        ;;
-      
-      # Special arguments
-      "--interactive")
-        interactive=true
-        ;;
-      "--help")
-        print_help
+    # Actions (only one action can be provided)
+    ACTIONS=("--start" "--stop" "--uninstall" "--check" "--help")
+
+    # Parse arguments
+    if [ "$#" -lt 1 ]; then
+    list=true
+    else
+    for arg in "$@"; do
+        if [[ -n "$action" && $(in_array "$arg" "${ACTIONS[@]}") ]]; then
+        echo "Only one action of ${ACTIONS[@]} can be provided but got '$arg' after '$action'"
         return
+        fi
+
+        case $arg in
+        # Actions
+        "--start")
+            action="--start"
+            ;;
+        "--stop")
+            action="--stop"
+            ;;
+        "--uninstall")
+            action="--uninstall"
+            ;;
+        "--check")
+            action="--check"
+            ;;
+
+        # Options
+        "--list")
+            list=true
+            ;;
+        "--install")
+            install=true
+            ;;
+        
+        # Special arguments
+        "--interactive")
+            interactive=true
+            ;;
+        *)
+            if [ -n "$port" ]; then
+            echo "Unknown argument $arg"
+            return
+            fi
+            if [[ -n "$port" && ! $port =~ ^[0-9]+$ ]]; then
+            echo "Port must be a number, but got '$arg'"
+            return
+            fi
+            port=$arg
+            ;;
+        esac
+    done
+    fi
+
+    # Perform action
+
+    # Check arguments compatibility
+    if [[ $action = "--uninstall" && $install = true ]]; then
+    echo "Cannot install and uninstall at the same time"
+    return
+    fi
+
+    # In interactive mode, ask for unprovided arguments
+    if [ $interactive = true ]; then
+    if [ -z "$port" ]; then
+        if [ $action = "--start" ]; then
+        read -p "Enter proxy port to start: " port
+        elif [ $action = "--stop" ]; then
+        read -p "Enter proxy port to stop: " port
+        fi
+    fi
+    fi
+
+    if [[ $action = "--start" && -z "$port" ]]; then
+    echo "Port is required to start proxy"
+    return
+    fi
+
+    if [[ -n "$port" && ! ($action = "--start" || $action = "--stop") ]]; then
+    echo "Port is only required to start or stop proxy"
+    return
+    fi
+
+    # Install if need
+    if [[ $install = true ]]; then
+    install_if_needed $interactive
+    fi
+
+    case $action in
+    "--start")
+        start $port
         ;;
-      *)
-        if [ -n "$port" ]; then
-          echo "Unknown argument $arg"
-          return
-        fi
-        if [[ -n "$port" && ! $port =~ ^[0-9]+$ ]]; then
-          echo "Port must be a number, but got '$arg'"
-          return
-        fi
-        port=$arg
+    "--stop")
+        stop $port
+        ;;
+    "--uninstall")
+        stop
+        uninstall_if_needed $interactive
+        ;;
+    "--check")
+        echo "Installed: $(is_installed)"
+        ;;
+    "")
+        ;;
+    *)
+        echo "Unknown action $action"
         ;;
     esac
-  done
-fi
 
-# Perform action
-
-# Check arguments compatibility
-if [[ $action = "--uninstall" && $install = true ]]; then
-  echo "Cannot install and uninstall at the same time"
-  return
-fi
-
-# In interactive mode, ask for unprovided arguments
-if [ $interactive = true ]; then
-  if [ -z "$port" ]; then
-    if [ $action = "--start" ]; then
-      read -p "Enter proxy port to start: " port
-    elif [ $action = "--stop" ]; then
-      read -p "Enter proxy port to stop: " port
+    if [ $list = true ]; then
+    list
     fi
-  fi
-fi
+}
 
-if [[ $action = "--start" && -z "$port" ]]; then
-  echo "Port is required to start proxy"
-  return
-fi
-
-if [[ -n "$port" && ! ($action = "--start" || $action = "--stop") ]]; then
-  echo "Port is only required to start or stop proxy"
-  return
-fi
-
-# Install if need
-if [[ $install = true ]]; then
-  install_if_needed $interactive
-fi
-
-case $action in
-  "--start")
-    start $port
-    ;;
-  "--stop")
-    stop $port
-    ;;
-  "--uninstall")
-    stop
-    uninstall_if_needed $interactive
-    ;;
-  "--check")
-    echo "Installed: $(is_installed)"
-    ;;
-  "")
-    ;;
-  *)
-    echo "Unknown action $action"
-    ;;
-esac
-
-if [ $list = true ]; then
-  list
-fi
-
+_do_command "$@"

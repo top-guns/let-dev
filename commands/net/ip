@@ -11,6 +11,11 @@ Usage:
 "
 
 _do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
     local OS="$(uname)"
 
     local IP_ADDRESS=""
