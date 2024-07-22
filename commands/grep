@@ -12,7 +12,8 @@ Arguments:
 Options:
     --regexp, --re: use regular expression (in all patterns)
       if regexp is not used, you can use | and () in the patterns
-    --with-first-row[s=n]: print the first line of the input in any case before the grep output
+    --with-first-row print the first line of the input in any case before the grep output
+    --with-first-rows[=n]: print the first lines of the input in any case before the grep output
       can be used with arguments or without them
       if used without arguments, the first line will be printed
 Example:
@@ -34,7 +35,7 @@ _do_command() {
     local positive_paterns=()
     local negative_paterns=()
     local use_regexp=false
-    local with_first_rows=0
+    local with_first_rows=""
 
     while [ $# -gt 0 ]; do
         case "$1" in
@@ -44,8 +45,9 @@ _do_command() {
             --with-first-row)
                 with_first_rows=1
                 ;;
-            --with-first-rows=*)
+            --with-first-rows*)
                 with_first_rows="${1:18}"
+                [ -z "$with_first_rows" ] && with_first_rows=1
                 ;;
             !*)
                 negative_paterns+=("${1:1}")
