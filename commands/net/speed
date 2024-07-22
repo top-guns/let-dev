@@ -96,7 +96,7 @@ _do_command() {
     # chars_per_ping=$((progress_width / total_pings))
 
     avg_sum=0
-    _do_ping "google.com" $total_pings
+    _do_ping "microsoft.com" $total_pings
 
     if [ $? -ne 0 ]; then
         echo "Failed to perform ping."
