@@ -3,7 +3,7 @@
 COMMAND_DESCRIPTION="Chain of greps"
 
 COMMAND_HELP="\
-Chain of greps (grep \$1 | grep \$2 | ...).
+Chain of greps (grep $1 | grep $2 | ...).
 Usage:
     :grep [--regexp] [--with-first-row[s=n]] <contains_filter_1> <contains_filter_2> <!not_contains_filter_1> ...
 Arguments:
