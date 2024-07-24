@@ -5,10 +5,10 @@ COMMAND_DESCRIPTION="Chain of greps"
 COMMAND_HELP="\
 Chain of greps (grep $1 | grep $2 | ...).
 Usage:
-    :grep [--regexp] [--with-first-row[s=n]] <contains_filter_1> <contains_filter_2> <!not_contains_filter_1> ...
+    :grep [--regexp] [--with-first-row[s=n]] <contains1> <contains2> <!not_contains1> ...
 Arguments:
-    contains_filter - pattern which should present in the output
-    !not_contains_filter - pattern which should not present in the output
+    contains - pattern which should present in the output
+    !not_contains - pattern which should not present in the output
 Options:
     --regexp, --re: use regular expression (in all patterns)
       if regexp is not used, you can use | and () in the patterns
@@ -36,6 +36,7 @@ _do_command() {
     local negative_paterns=()
     local use_regexp=false
     local with_first_rows=""
+    local no_colors=false
 
     while [ $# -gt 0 ]; do
         case "$1" in
@@ -48,6 +49,9 @@ _do_command() {
             --with-first-rows*)
                 with_first_rows="${1:18}"
                 [ -z "$with_first_rows" ] && with_first_rows=1
+                ;;
+            --no-colors)
+                no_colors=true
                 ;;
             !*)
                 negative_paterns+=("${1:1}")
@@ -72,16 +76,20 @@ _do_command() {
     done
 
     local cmd_positive=""
+    local last_index=$((${#positive_paterns[@]} - 1))
+    local index=0
     for patern in "${positive_paterns[@]}"; do
-        if [ -z "$cmd_positive" ]; then
-            cmd_positive="grep"
-            if [ "$use_regexp" = true ]; then
-                cmd_negative="$cmd_negative -E"
-            else
-                patern=$(_escape_patern "$patern")
-            fi
+        [ -n "$cmd_positive" ] && cmd_positive="$cmd_positive | "
+        cmd_positive="${cmd_positive}grep"
+        [ ! $index -eq $last_index ] && [ "$no_colors" = false ] && cmd_positive="$cmd_positive --color=always"
+        if [ "$use_regexp" = true ]; then
+            cmd_negative="$cmd_positive -E"
+        else
+            patern=$(_escape_patern "$patern")
         fi
-        cmd_positive="$cmd_positive -e '$patern'"
+
+        cmd_positive="$cmd_positive '$patern'"
+        index=$((index + 1))
     done
     
     local cmd="$cmd_negative"
