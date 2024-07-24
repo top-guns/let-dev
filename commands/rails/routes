@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Find routes"
+
+COMMAND_HELP="\
+Find routes with chain of includes and excludes.
+Usage:
+    :ruby:routes [--regexp] <contains1> <contains2> <!not_contains_1> ...
+Arguments:
+    contains - pattern which should present in the output
+    !not_contains - pattern which should not present in the output
+Options:
+    --regexp, --re: use regular expression (in all patterns)
+      if regexp is not used, you can use | and () in the patterns
+Example:
+    :ruby:routes get !api users
+"
+
+find_line_no() {
+    local filename=$1
+    local str=$2
+
+    grep -n "$str" $filename | cut -d: -f1
+}
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    while IFS= read -r line; do
+        # get file#method
+        local file_n_method=$(echo $line | sed 's|^.* \(app/controllers/[^ ]*\).*$|\1|')
+        IFS='#' read -r file method <<< "$file_n_method"
+        # echo "file: $file, method: $method"
+        file="${file}_controller.rb"
+        local line_no=$(find_line_no $file "def $method")
+        local last_col=""
+        if [ -z "$line_no" ]; then
+            last_col=" - method '$method' (not found in file)"
+        else
+            last_col=":$line_no"
+        fi
+        echo $line | sed "s| app/controllers/.*#.*$|\n        $file$last_col|" #| :grep $@ # TODO remove the last grep!
+    done < <(bundle exec rails routes | :grep --no-colors $@ | sed -E 's/^.* (PUT|POST|DELETE|GET|PATCH|OPTIONS|HEAD) /\1 /' \
+        | sed 's|(.:format)  *| app/controllers/|')
+    
+}
+
+_do_command $@
