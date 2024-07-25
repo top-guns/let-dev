@@ -20,9 +20,10 @@ _do_command() {
         return 1
     fi
 
-    local command=$1
+    local command="$@"
 
-    local command_help=$($LETDEV_HOME/get-command-variable.sh $command COMMAND_HELP)
+    help_cmd="$LETDEV_HOME/get-command-variable.sh '$command' COMMAND_HELP"
+    local command_help=$(eval "$help_cmd")
 
     [ -n "$command_help" ] && echo "$command_help" && return
 
@@ -34,4 +35,4 @@ _do_command() {
     fi
 }
 
-_do_command $@
+_do_command "$@"

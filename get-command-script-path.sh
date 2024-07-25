@@ -1,7 +1,8 @@
 #!/bin/bash
 
 _do_command() {
-    local command=$1
+    local command="$@"
+    command=$(echo "$command" | sed 's/^: //')
     local relative_path=$(echo $command | sed 's|:|/|g')
     local file=""
     
@@ -22,4 +23,4 @@ _do_command() {
     return 1
 }
 
-_do_command $@
+_do_command "$@"

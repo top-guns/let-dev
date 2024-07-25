@@ -19,10 +19,11 @@ _do_command() {
     # find . -type f -not -path '*/.*' -exec grep -l 'DESCRIPTION=' {} \; | sed 's|^./||' | \
     #     xargs -I{} awk -F= '/DESCRIPTION=/ {gsub(/['"'"'\x22]/, "", $2); print FILENAME " - " $2}' {}
 
-    local command=$1
-    local relative_path=$(echo $command | sed 's|:|/|g')
+    local command="$1"
+    command=$(echo "$command" | sed 's/^: //')
+    local relative_path=$(echo "$command" | sed 's|:|/|g')
     local variable_name=$2
-    local file=$($LETDEV_HOME/get-command-script-path.sh $command)
+    local file=$($LETDEV_HOME/get-command-script-path.sh "$command")
     
     [ -f "$file" ] && echo "$(extract_variable_from_file "$file" "$variable_name")" && return
 
@@ -30,4 +31,4 @@ _do_command() {
     return 1
 }
 
-_do_command $@
+_do_command "$@"
