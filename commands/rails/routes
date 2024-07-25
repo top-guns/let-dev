@@ -5,7 +5,7 @@ COMMAND_DESCRIPTION="Find routes"
 COMMAND_HELP="\
 Find routes with chain of includes and excludes.
 Usage:
-    :ruby:routes [--regexp] <contains1> <contains2> <!not_contains_1> ...
+    :rails:routes [--regexp] <contains1> <contains2> <!not_contains_1> ...
 Arguments:
     contains - pattern which should present in the output
     !not_contains - pattern which should not present in the output
@@ -13,7 +13,7 @@ Options:
     --regexp, --re: use regular expression (in all patterns)
       if regexp is not used, you can use | and () in the patterns
 Example:
-    :ruby:routes get !api users
+    :rails:routes get !api users
 "
 
 find_line_no() {

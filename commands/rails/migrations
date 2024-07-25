@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Active record migrations management"
+
+COMMAND_HELP="\
+Active record migrations management.
+Usage:
+    :rails:migrations <command> [options]
+    Execution with no arguments will show the status of migrations
+Commands:
+    create <name>: create a new migration file
+    up: run up for all pending migrations
+    down: run down for the last migration
+Example:
+    :rails:migrations create add_column_to_table
+    :rails:migrations up
+    :rails:migrations down
+"
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local command=$1
+    if [ -z "$command" ]; then
+        command="status"
+    else
+        shift
+    fi
+
+    case $command in
+        create)
+            echo "Create migration..."
+            bundle exec rails generate migration $@
+            echo "Migration created"
+            ;;
+        up)
+            echo "Run up for all pending migrations..."
+            bundle exec rails db:migrate
+            echo "Migrations up done"
+            ;;
+        down)
+            echo "Run down for the last migration..."
+            bundle exec rails db:rollback
+            echo "Migration down done"
+            ;;
+        status)
+            echo "Show the status of migrations..."
+            bundle exec rails db:migrate:status
+            ;;
+        *)
+            echo "Unknown command: $command"
+            ;;
+    esac
+}
+
+_do_command $@
