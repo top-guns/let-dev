@@ -66,7 +66,7 @@ _do_command() {
     local cmd_negative=""
     for patern in "${negative_paterns[@]}"; do
         [ -n "$cmd_negative" ] && cmd_negative="$cmd_negative |"
-        cmd_negative="$cmd_negative grep"
+        cmd_negative="$cmd_negative grep -i"
         if [ "$use_regexp" = true ]; then
             cmd_negative="$cmd_negative -E"
         else
@@ -80,7 +80,7 @@ _do_command() {
     local index=0
     for patern in "${positive_paterns[@]}"; do
         [ -n "$cmd_positive" ] && cmd_positive="$cmd_positive | "
-        cmd_positive="${cmd_positive}grep"
+        cmd_positive="${cmd_positive}grep -i"
         [ ! $index -eq $last_index ] && [ "$no_colors" = false ] && cmd_positive="$cmd_positive --color=always"
         if [ "$use_regexp" = true ]; then
             cmd_negative="$cmd_positive -E"
