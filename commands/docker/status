@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Docker containers status"
+
+COMMAND_HELP="\
+Docker containers status.
+Usage:
+    :docker:status
+"
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    docker ps --format "table {{.ID}}\t{{.Names}}\t{{.Image}}\t{{.Status}}"
+}
+
+_do_command $@

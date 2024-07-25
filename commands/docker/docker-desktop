@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Docker Desktop management"
+
+COMMAND_HELP="\
+Docker Desktop management.
+Usage:
+    :docker:start-docker-desktop [start|stop|status]
+Commands:
+    With no arguments, it displays the Docker Desktop status.
+    start: Start Docker Desktop
+    stop: Stop Docker Desktop
+    status: Display Docker Desktop status
+"
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    if [ "$1" = "start" ]; then
+        echo "Starting Docker Desktop..."
+        [ -n "$(pgrep Docker)" ] && echo "Docker Desktop is already running." && return
+        open -a Docker
+        # open /Applications/Docker.app
+        echo "Docker Desktop started."
+        return
+    fi
+
+    if [ "$1" = "stop" ]; then
+        echo "Stopping Docker Desktop..."
+        [ -z "$(pgrep Docker)" ] && echo "Docker Desktop is not running." && return
+        # osascript -e 'quit app "Docker"'
+        # killall Docker
+        osascript -e 'tell application "Docker Desktop" to quit'
+        echo "Docker Desktop stopped."
+        return
+    fi
+
+    if [ -z "$1" ] || [ "$1" = "status" ]; then
+        echo "Checking Docker Desktop status..."
+        if [ -n "$(pgrep Docker)" ]; then
+            echo "Docker Desktop is running."
+        else
+            echo "Docker Desktop is not running."
+        fi
+        return
+    fi
+
+    echo "Invalid command: $1"
+}
+
+_do_command $@
