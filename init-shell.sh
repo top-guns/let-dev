@@ -70,7 +70,8 @@ init_shell() {
 
     # Add commands to path
     # export PATH="$LETDEV_PROJECT_PATH/$LETDEV_PROFILE/commands:$LETDEV_USERS_PATH/$LETDEV_PROFILE/commands:$LETDEV_HOME/commands:$PATH"
-    export PATH="$LETDEV_PROJECT_PATH/$LETDEV_PROFILE/commands:$PATH"
+    # export PATH="$LETDEV_PROJECT_PATH/$LETDEV_PROFILE/commands:$PATH"
+    export PATH="$LETDEV_PROJECT_PATH/$LETDEV_PROFILE/path:$PATH"
 
     # Param value reader alias
     alias "${LETDEV_SYMBOL}?"=":ask"

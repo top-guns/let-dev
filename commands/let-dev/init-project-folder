@@ -17,6 +17,24 @@ _do_command() {
     script_dir="./.let-dev/$profile"
 
     mkdir -p "$script_dir/commands"
+    mkdir -p "$script_dir/path"
+
+    # Create example script
+    local script='
+#!/bin/bash
+
+# This is an example command script
+
+COMMAND_HELP="\\
+Example command to show how to create a command script.
+Usage:
+    : :example
+"
+
+echo "Hello, world!"
+'
+
+    echo -en "$script" > "$script_dir/commands/example"
 
     echo "let.dev initialized for profile $profile"
 }

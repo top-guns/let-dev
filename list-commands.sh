@@ -65,9 +65,11 @@ _get_list() {
                     | sed 's|^|:|' | sed 's|^::|:|'
             elif [ "$format" = "alias" ]; then
                 # Print as 'alias :dir:subdir:command="/.../dir/subdir/command"'
-                find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print | sed 's|^\./||' \
-                    | awk -F/ -v OFS=":" -v dir="$dir" '{path=$0; gsub("/", ":", path); print "alias "path"=\"source " dir "/" $0 "\""}' \
-                    | sed 's|^alias |alias :|' | sed 's|::|:|'
+                # find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print | sed 's|^\./||' \
+                #     | awk -F/ -v OFS=":" -v dir="$dir" '{path=$0; gsub("/", ":", path); print "alias "path"=\"source " dir "/" $0 "\""}' \
+                #     | sed 's|^alias |alias :|' | sed 's|::|:|'
+                find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print \
+                    | sed 's|^\./|:|' | sed 's|/|:|g' | sed 's|::|:|' | sed 's|^\(.*\)$|alias \1=": \1"|'
             elif [ "$format" = "raw" ]; then
                 find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print
             else
@@ -165,7 +167,9 @@ list_commands() {
         if [ -d "$dir" ]; then
             PROJECT_COMMAND_LIST=$(_get_list "$dir" $format)
             if [ "$format" = "command" ] || [ "$format" = "var" ]; then
-                PROJECT_COMMAND_LIST=$(echo "$PROJECT_COMMAND_LIST" | sed 's|^|: :project|')
+                # PROJECT_COMMAND_LIST=$(echo "$PROJECT_COMMAND_LIST" | sed 's|^|: :project|')
+                # PROJECT_COMMAND_LIST=$(echo "$PROJECT_COMMAND_LIST" | sed 's|$|\t\t -- project command|')
+                PROJECT_COMMAND_LIST=$(echo "$PROJECT_COMMAND_LIST" | sed 's|^|: |')
             fi
         fi
     fi
@@ -193,10 +197,10 @@ list_commands() {
 
     # Merge both command lists, user commands have higher priority
     local COMMAND_LIST=""
-    if [ -n "$PROJECT_COMMAND_LIST" ]; then
-        [ -n "$COMMAND_LIST" ] && COMMAND_LIST="$COMMAND_LIST\n"
-        COMMAND_LIST="$COMMAND_LIST$PROJECT_COMMAND_LIST"
-    fi
+    # if [ -n "$PROJECT_COMMAND_LIST" ]; then
+    #     [ -n "$COMMAND_LIST" ] && COMMAND_LIST="$COMMAND_LIST\n"
+    #     COMMAND_LIST="$COMMAND_LIST$PROJECT_COMMAND_LIST"
+    # fi
     if [ -n "$USER_COMMAND_LIST" ]; then
         [ -n "$COMMAND_LIST" ] && COMMAND_LIST="$COMMAND_LIST\n"
         COMMAND_LIST="$COMMAND_LIST$USER_COMMAND_LIST"
@@ -205,13 +209,14 @@ list_commands() {
         [ -n "$COMMAND_LIST" ] && COMMAND_LIST="$COMMAND_LIST\n"
         COMMAND_LIST="$COMMAND_LIST$SYS_COMMAND_LIST"
     fi
-    
-    # $(echo "$PROJECT_COMMAND_LIST" && echo "$USER_COMMAND_LIST" && echo "$SYS_COMMAND_LIST")
 
-    local result=`echo -e "$COMMAND_LIST" | sort | uniq`
+    if [ -n "$PROJECT_COMMAND_LIST" ]; then 
+        [ -z "$filter" ] && echo -e "$PROJECT_COMMAND_LIST" || echo -e "$PROJECT_COMMAND_LIST" | grep "$filter"
+    fi
 
-    [ -n "$filter" ] && result=`echo "$result" | grep "$filter"`
-    echo "$result"
+    if [ -n "$COMMAND_LIST" ]; then 
+        [ -z "$filter" ] && echo -e "$COMMAND_LIST" | sort | uniq || echo -e "$COMMAND_LIST" | grep "$filter" | sort | uniq
+    fi
 }
 
 list_commands $@
