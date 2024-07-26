@@ -53,8 +53,11 @@ _do_command() {
             --no-colors)
                 no_colors=true
                 ;;
-            !*)
+            -*)
                 negative_paterns+=("${1:1}")
+                ;;
+            +*)
+                positive_paterns+=("${1:1}")
                 ;;
             *)
                 positive_paterns+=("$1")
@@ -76,12 +79,16 @@ _do_command() {
     done
 
     local cmd_positive=""
-    local last_index=$((${#positive_paterns[@]} - 1))
-    local index=0
+    # local last_index=$((${#positive_paterns[@]} - 1))
+    # local index=0
     for patern in "${positive_paterns[@]}"; do
         [ -n "$cmd_positive" ] && cmd_positive="$cmd_positive | "
         cmd_positive="${cmd_positive}grep -i"
-        [ ! $index -eq $last_index ] && [ "$no_colors" = false ] && cmd_positive="$cmd_positive --color=always"
+
+        if  [ "$no_colors" = false ]; then
+            cmd_positive="$cmd_positive --color=always"
+        fi
+
         if [ "$use_regexp" = true ]; then
             cmd_negative="$cmd_positive -E"
         else
@@ -89,7 +96,7 @@ _do_command() {
         fi
 
         cmd_positive="$cmd_positive '$patern'"
-        index=$((index + 1))
+        # index=$((index + 1))
     done
     
     local cmd="$cmd_negative"

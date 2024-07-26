@@ -23,28 +23,61 @@ find_line_no() {
     grep -n "$str" $filename | cut -d: -f1
 }
 
+_add_line_no() {
+    local line="$@"
+
+    # get filename#method
+    local file_n_method=$(echo $line | sed 's|^.*\(app/controllers/[^ ]*\).*$|\1|')
+    IFS='#' read -r filename method <<< "$file_n_method"
+    local clean_method=$(echo "$method" | sed -E 's/\x1b\[[0-9;]*[a-zA-Z]//g')
+    filename="${filename}_controller.rb"
+    local clean_filename=$(echo "$filename" | sed -E 's/\x1b\[[0-9;]*[a-zA-Z]//g')
+
+    # Debug
+    # echo "line: $line"
+    # echo "filename: $filename, method: $method"
+    # echo "clean_filename: $clean_filename, clean_method: $clean_method"
+
+    local line_no=$(find_line_no $clean_filename "def $clean_method")
+
+    local last_col=""
+    if [ -z "$line_no" ]; then
+        last_col="  ($method, not found in file)"
+    else
+        last_col=":$line_no  ($method)"
+    fi
+
+    echo $line | sed "s| app/controllers/.*#.*$|\n        $filename$last_col|"
+}
+
+function process_input() {
+    while IFS= read -r line; do
+        echo "$line"
+    done
+}
+
 _do_command() {
     if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
         echo "$COMMAND_HELP"
         return
     fi
 
-    while IFS= read -r line; do
-        # get file#method
-        local file_n_method=$(echo $line | sed 's|^.* \(app/controllers/[^ ]*\).*$|\1|')
-        IFS='#' read -r file method <<< "$file_n_method"
-        # echo "file: $file, method: $method"
-        file="${file}_controller.rb"
-        local line_no=$(find_line_no $file "def $method")
-        local last_col=""
-        if [ -z "$line_no" ]; then
-            last_col=" - method '$method' (not found in file)"
-        else
-            last_col=":$line_no"
-        fi
-        echo $line | sed "s| app/controllers/.*#.*$|\n        $file$last_col|" #| :grep $@ # TODO remove the last grep!
-    done < <(bundle exec rails routes | :grep --no-colors $@ | sed -E 's/^.* (PUT|POST|DELETE|GET|PATCH|OPTIONS|HEAD) /\1 /' \
-        | sed 's|(.:format)  *| app/controllers/|')
+    # while IFS= read -r line; do
+    #     _add_line_no "$line"
+    # done < <(bundle exec rails routes | sed -E 's/^.* (PUT|POST|DELETE|GET|PATCH|OPTIONS|HEAD) /\1 /' \
+    #     | sed 's|(.:format)  *| app/controllers/|' | :grep $@)
+
+    bundle exec rails routes | sed -E 's/^.* (PUT|POST|DELETE|GET|PATCH|OPTIONS|HEAD) /\1 /' \
+        | sed 's|(.:format)  *| app/controllers/|' | :grep $@ \
+        | while IFS= read -r line; do _add_line_no "$line"; done
+
+        # With awk:
+        # | awk '{
+        #     filename = $1;
+        #     last_col = $NF;
+        #     sub(/ app\/controllers\/.*#.*$/, "\n        " filename last_col);
+        #     print;
+        # }'
     
 }
 
