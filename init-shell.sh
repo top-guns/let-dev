@@ -15,6 +15,17 @@ multiline_to_array() {
 }
 
 init_shell() {
+     # Set the global variables
+    export LETDEV_SYMBOL=':'
+    # export LETDEV_HOME=`dirname $SCRIPT_PATH`
+    export LETDEV_COMMANDS_PATH=`echo "$HOME/let-dev/commands"`
+    export LETDEV_USERS_PATH=`echo "$HOME/let-dev/profiles"`
+    export LETDEV_PROJECT_PATH=`echo "./.let-dev"`
+    export LETDEV_REPLACE_CD='true'
+
+    cur_dir=`pwd`
+    builtin cd $LETDEV_HOME
+
     local shell_name=$1
     shift
 
@@ -35,7 +46,7 @@ init_shell() {
     if $check_updates; then
         # Check if there are changes in the let-dev project
         git fetch
-        local changes_count=`(cd $LETDEV_HOME && git rev-list HEAD...FETCH_HEAD --count)`
+        local changes_count=`(builtin cd $LETDEV_HOME && git rev-list HEAD...FETCH_HEAD --count)`
         if [ $changes_count -gt 0 ]; then
             # Ask the user if he wants to update the project
             printf "There are $changes_count changes in the let-dev project. Do you want to update it? (Y/n) "
@@ -45,7 +56,7 @@ init_shell() {
                 echo "Skip project update"
             else
                 echo "Updating project..."
-                (cd $LETDEV_HOME && git pull)
+                (builtin cd $LETDEV_HOME && git pull)
                 # Start the script again to provide using new version of this script
                 echo "Project updated, restarting..."
                 "$SCRIPT_PATH" --no-update
@@ -54,37 +65,11 @@ init_shell() {
         fi
     fi
 
-
-    # Set the global variables
-    export LETDEV_SYMBOL=':'
-    # export LETDEV_HOME=`dirname $SCRIPT_PATH`
-    export LETDEV_COMMANDS_PATH=`echo "$HOME/let-dev/commands"`
-    export LETDEV_USERS_PATH=`echo "$HOME/let-dev/profiles"`
-    export LETDEV_PROJECT_PATH=`echo "./.let-dev"`
-
-    # Default command alias
-    alias "$LETDEV_SYMBOL"="source $LETDEV_HOME/default.sh"
-
-    # Shell command alias
-    # alias "$LETDEV_SYMBOL$LETDEV_SYMBOL"="$LETDEV_HOME/shell/start.sh"
-
     # Add commands to path
     # export PATH="$LETDEV_PROJECT_PATH/$LETDEV_PROFILE/commands:$LETDEV_USERS_PATH/$LETDEV_PROFILE/commands:$LETDEV_HOME/commands:$PATH"
     # export PATH="$LETDEV_PROJECT_PATH/$LETDEV_PROFILE/commands:$PATH"
+    export PATH="$LETDEV_HOME/path:$PATH"
     export PATH="$LETDEV_PROJECT_PATH/$LETDEV_PROFILE/path:$PATH"
-
-    # Param value reader alias
-    alias "${LETDEV_SYMBOL}?"=":ask"
-    # alias "${LETDEV_SYMBOL}u"=":ask"
-    # alias "${LETDEV_SYMBOL}user"=":ask"
-
-     # File value reader alias
-    alias "${LETDEV_SYMBOL}@"=":load"
-    # alias "${LETDEV_SYMBOL}file"=":load"
-
-    # Create alias for every command
-    local alias_commands=$($LETDEV_HOME/list-commands.sh --system --user --format=alias)
-    eval "$alias_commands"
 
     # Auto-completion
     if [ "$shell_name" = "bash" ]; then
@@ -115,29 +100,14 @@ init_shell() {
         # Disable special characters substitution (like * and ?)
         setopt NO_NOMATCH
     fi
+
+    builtin cd $cur_dir
+
+    # Create aliases
+    source $LETDEV_HOME/recreate-aliases.sh
+    letdev_recreate_all_aliases
 }
 
-:ask() {
-    local param_name=${1:-'parameter'}
-    local param
-    if [[ -n $ZSH_VERSION ]]; then
-        read "?Enter $param_name: " param
-    elif [[ -n $BASH_VERSION ]]; then
-        read -p "Enter $param_name: " param
-    else
-        echo "Error: Unsupported shell"
-        return
-    fi
-    echo "$(eval echo $param)"
-}
-
-:load() {
-    local file_name=$1
-    cat "$(eval echo $file_name)"
-}
-
-cur_dir=`pwd`
-cd $LETDEV_HOME
 
 shell_name=""
 # If there is no arguments, or the first argument is starts with '-', then use the current shell
@@ -149,5 +119,3 @@ else
 fi
 
 init_shell $shell_name $@
-
-cd $cur_dir

@@ -31,7 +31,7 @@ _get_list() {
 
     if [ -d "$dir" ]; then
         local cur_dir=`pwd`
-        cd "$dir"
+        builtin cd "$dir"
         dir=$(pwd) # To make it absolute
 
         # # If with description option is provided, use 'eval "command description"' to get description and return 'command:description' as a result
@@ -78,7 +78,7 @@ _get_list() {
             fi
         # fi
 
-        cd $cur_dir
+        builtin cd "$cur_dir"
     fi
 }
 
@@ -166,11 +166,11 @@ list_commands() {
         local dir=".let-dev/$LETDEV_PROFILE/commands"
         if [ -d "$dir" ]; then
             PROJECT_COMMAND_LIST=$(_get_list "$dir" $format)
-            if [ "$format" = "command" ] || [ "$format" = "var" ]; then
-                # PROJECT_COMMAND_LIST=$(echo "$PROJECT_COMMAND_LIST" | sed 's|^|: :project|')
-                # PROJECT_COMMAND_LIST=$(echo "$PROJECT_COMMAND_LIST" | sed 's|$|\t\t -- project command|')
-                PROJECT_COMMAND_LIST=$(echo "$PROJECT_COMMAND_LIST" | sed 's|^|: |')
-            fi
+            # if [ "$format" = "command" ] || [ "$format" = "var" ]; then
+            #     # PROJECT_COMMAND_LIST=$(echo "$PROJECT_COMMAND_LIST" | sed 's|^|: :project|')
+            #     # PROJECT_COMMAND_LIST=$(echo "$PROJECT_COMMAND_LIST" | sed 's|$|\t\t -- project command|')
+            #     PROJECT_COMMAND_LIST=$(echo "$PROJECT_COMMAND_LIST" | sed 's|^|: |')
+            # fi
         fi
     fi
 
