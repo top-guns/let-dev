@@ -1,0 +1,85 @@
+#!/bin/bash
+
+COMMAND_DESCRIPTION="Firewall management"
+
+COMMAND_HELP="\
+Firewall management
+Usage:
+    :net:firewall [status|start|stop|restart|enable|disable|config]
+"
+
+_do_config() {
+    local FILE_TO_OPEN="/etc/ufw/ufw.conf"
+
+    if [ ! -f "$FILE_TO_OPEN" ]; then
+        echo "$FILE_TO_OPEN was not found"
+        return
+    fi
+
+    local hash_before=$(sha256sum "$file")
+    : :config:firewall
+    local hash_after=$(sha256sum "$file")
+
+    if [[ "$hash_before" != "$hash_after" ]]; then
+        echo "Ufw configuration updated"
+
+        # Reload Ufw if it is running
+        if sudo systemctl is-active --quiet ufw; then
+            echo "Ufw service is running, reloading..."
+            sudo systemctl reload ufw
+            echo "Ufw service reloaded"
+        fi
+    else
+        echo "Ufw configuration was not changed"
+    fi
+}
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    # Check operating system: only support Ubuntu
+    if [ ! -f /etc/os-release ]; then
+        echo "Operating system not supported"
+        return
+    fi
+
+    if [ -z "$1" ]; then
+        echo "Command is required"
+        return
+    fi
+
+    local command=$1
+
+    case $command in
+        status)
+            sudo ufw status
+            ;;
+        start)
+            sudo ufw enable
+            ;;
+        stop)
+            sudo ufw disable
+            ;;
+        restart)
+            sudo ufw disable
+            sudo ufw enable
+            ;;
+        enable)
+            sudo ufw enable
+            ;;
+        disable)
+            sudo ufw disable
+            ;;
+        config)
+            _do_config
+            ;;
+        *)
+            echo "Invalid command"
+            ;;
+    esac
+}
+
+_do_command $@

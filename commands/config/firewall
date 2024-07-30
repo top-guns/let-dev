@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # set -euo pipefail
 
-COMMAND_DESCRIPTION="Edit nginx configuration"
+COMMAND_DESCRIPTION="Edit firewall configuration"
 COMMAND_HELP="\
-Open nginx service configuration file in the preferred text editor.
+Open firewall service configuration file in the preferred text editor.
 "
 
 _do_command() {
-    local FILE_TO_OPEN="/etc/nginx/nginx.conf"
+    local FILE_TO_OPEN="/etc/ufw/ufw.conf"
 
     source "$LETDEV_HOME/commands/config/.edit_config.sh"
     _edit_config "$FILE_TO_OPEN" $@

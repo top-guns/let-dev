@@ -18,7 +18,7 @@ _do_command() {
     fi
 
     if [ ! -f "$FILE_TO_OPEN" ]; then
-        echo "Nginx service is installed, but nginx.conf was not found"
+        echo "Nginx service is installed, but $FILE_TO_OPEN was not found"
         return
     fi
 
@@ -36,7 +36,7 @@ _do_command() {
             echo "Nginx service reloaded"
         fi
     else
-        echo "Nginx configuration not changed"
+        echo "Nginx configuration was not changed"
     fi
 }
 
