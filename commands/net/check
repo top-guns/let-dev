@@ -1,0 +1,56 @@
+#!/bin/bash
+
+COMMAND_DESCRIPTION="Check port availability"
+
+COMMAND_HELP="\
+Check port availability.
+Usage:
+    :net:check <host> <port>
+    :net:check <port> <host>
+    :net:check <port>
+    :net:check <host>:<port>
+    If host is not provided, localhost is assumed.
+Example:
+    :net:check 80 # Check if port 80 is open on localhost
+    :net:check google.com 443 # Check if port 443 is open on google.com
+    :net:check google.com:443 # Check if port 443 is open on google.com
+"
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local host="localhost"
+    local port=""
+
+    if [[ "$1" =~ ":" ]]; then
+        host=$(echo $1 | cut -d: -f1)
+        port=$(echo $1 | cut -d: -f2)
+    else
+        if [[ "$1" =~ "." ]]; then
+            host=$1
+            port=$2
+        else
+            port=$1
+            if [[ "$2" =~ "." ]]; then
+                host=$2
+            fi
+        fi
+    fi
+
+    if [[ -z "$port" ]]; then
+        echo "Port is required"
+        return
+    fi
+
+    if [[ -z "$host" ]]; then
+        echo "Host is required"
+        return
+    fi
+
+    nc -z -v $host $port
+}
+
+_do_command $@
