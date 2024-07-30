@@ -182,9 +182,9 @@ _do_command() {
     $cmd $file
     local hash_after=$(sha256sum "$file")
     if [[ "$hash_before" != "$hash_after" ]]; then
-        echo "The file was modified."
+        echo "The file was modified"
     else
-        echo "The file was not modified."
+        echo "The file was not modified"
     fi
 }
 
