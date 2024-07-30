@@ -6,6 +6,7 @@ COMMAND_HELP="\
 Firewall management
 Usage:
     :net:firewall [status|start|stop|restart|enable|disable|config]
+    If no command is provided, status will be used
 "
 
 _do_config() {
@@ -46,12 +47,9 @@ _do_command() {
         return
     fi
 
-    if [ -z "$1" ]; then
-        echo "Command is required"
-        return
-    fi
 
     local command=$1
+    [ -z "$command" ] && command="status"
 
     case $command in
         status)
