@@ -17,9 +17,9 @@ _do_config() {
         return
     fi
 
-    local hash_before=$(sha256sum "$file")
+    local hash_before=$(sha256sum "$FILE_TO_OPEN")
     : :config:firewall
-    local hash_after=$(sha256sum "$file")
+    local hash_after=$(sha256sum "$FILE_TO_OPEN")
 
     if [[ "$hash_before" != "$hash_after" ]]; then
         echo "Ufw configuration updated"

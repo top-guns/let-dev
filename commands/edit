@@ -50,7 +50,7 @@ _select_editor() {
     fi
 
     # If fzf is not installed, use the default select
-    echo "$prompt"
+    PS3="$prompt"
     select editor in "${editors[@]}"; do
         if [[ " ${editors[@]} " =~ " ${editor} " ]]; then
             echo $editor
