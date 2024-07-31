@@ -104,7 +104,20 @@ _do_command() {
                     echo "Tinyproxy status is unknown"
                 fi
             elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
-                sudo systemctl status tinyproxy
+                local res=$(sudo systemctl status tinyproxy)
+                if [[ $res == *"Active: active (running)"* ]]; then
+                    echo "Tinyproxy is running"
+                elif [[ $res == *"Active: inactive (dead)"* ]]; then
+                    echo "Tinyproxy is stopped"
+                elif [[ $res == *"Active: failed"* ]]; then
+                    echo "Tinyproxy is failed"
+                elif [ "$res" == *"could not be found"* ]; then
+                    echo "Tinyproxy is not installed"
+                elif [ -z $res ]; then
+                    echo "Tinyproxy is not installed"
+                else
+                    echo "Tinyproxy status is unknown"
+                fi
             else
                 echo "Unsupported OS"
                 return 1
