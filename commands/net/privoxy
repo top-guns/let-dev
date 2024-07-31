@@ -1,0 +1,111 @@
+#!/bin/bash
+
+COMMAND_DESCRIPTION="Privoxy management"
+
+COMMAND_HELP="\
+Privoxy management
+Usage:
+    :net:privoxy [status|start|stop|restart|enable|disable|config]
+    If no command is provided, status will be used
+"
+
+_do_config() {
+    local FILE_TO_OPEN=""
+    if [ "$(uname)" == "Darwin" ]; then
+        FILE_TO_OPEN="/usr/local/etc/privoxy/config"
+    elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+        FILE_TO_OPEN="/etc/privoxy/config"
+    else
+        echo "Unsupported OS"
+        return 1
+    fi
+
+    if [ ! -f "$FILE_TO_OPEN" ]; then
+        echo "$FILE_TO_OPEN was not found"
+        return
+    fi
+
+    local hash_before=$(sha256sum "$FILE_TO_OPEN")
+    source "$LETDEV_HOME/commands/config/.edit_config.sh"
+    _edit_config "$FILE_TO_OPEN" $@
+    local hash_after=$(sha256sum "$FILE_TO_OPEN")
+
+    if [[ "$hash_before" != "$hash_after" ]]; then
+        echo "Privoxy configuration changed"
+
+        # Reload Privoxy if it is running - depends on the OS
+        if [ "$(uname)" == "Darwin" ]; then
+            if pgrep -x "privoxy" > /dev/null; then
+                echo "Reloading Privoxy"
+                sudo launchctl kickstart -k system/org.macports.privoxy
+            fi
+        elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+            if pgrep -x "privoxy" > /dev/null; then
+                echo "Reloading Privoxy"
+                sudo /etc/init.d/privoxy reload
+            fi
+        fi
+    else
+        echo "Privoxy configuration was not changed"
+    fi
+}
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local command=$1
+    [ -z "$command" ] && command="status"
+
+    case $command in
+        status)
+            if pgrep -x "privoxy" > /dev/null; then
+                echo "Privoxy is running"
+            else
+                echo "Privoxy is not running"
+            fi
+            ;;
+        start)
+            if pgrep -x "privoxy" > /dev/null; then
+                echo "Privoxy is already running"
+            else
+                echo "Starting Privoxy"
+                sudo /etc/init.d/privoxy start
+            fi
+            ;;
+        stop)
+            if pgrep -x "privoxy" > /dev/null; then
+                echo "Stopping Privoxy"
+                sudo /etc/init.d/privoxy stop
+            else
+                echo "Privoxy is not running"
+            fi
+            ;;
+        restart)
+            if pgrep -x "privoxy" > /dev/null; then
+                echo "Restarting Privoxy"
+                sudo /etc/init.d/privoxy restart
+            else
+                echo "Privoxy is not running"
+            fi
+            ;;
+        enable)
+            echo "Enabling Privoxy"
+            sudo systemctl enable privoxy
+            ;;
+        disable)
+            echo "Disabling Privoxy"
+            sudo systemctl disable privoxy
+            ;;
+        config)
+            _do_config
+            ;;
+        *)
+            echo "Invalid command"
+            ;;
+    esac
+}
+
+_do_command "$@"

@@ -7,7 +7,16 @@ Open privoxy configuration file in the preferred text editor
 "
 
 _do_command() {
-    local FILE_TO_OPEN="/usr/local/etc/privoxy/config"
+    # Use file path depending on the OS
+    local FILE_TO_OPEN=""
+    if [ "$(uname)" == "Darwin" ]; then
+        FILE_TO_OPEN="/usr/local/etc/privoxy/config"
+    elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+        FILE_TO_OPEN="/etc/privoxy/config"
+    else
+        echo "Unsupported OS"
+        return 1
+    fi
 
     source "$LETDEV_HOME/commands/config/.edit_config.sh"
     _edit_config "$FILE_TO_OPEN" $@
