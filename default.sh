@@ -65,8 +65,7 @@ default_command() {
     # Resolve symbolic links
     # cmd=`readlink -f $cmd`
 
-    # echo "run '$cmd $@'"
-    eval . $cmd $@
+    source "$cmd" "$@"
 }
 
-default_command $@
+default_command "$@"

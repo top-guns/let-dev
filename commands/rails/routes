@@ -68,7 +68,7 @@ _do_command() {
     #     | sed 's|(.:format)  *| app/controllers/|' | :grep $@)
 
     bundle exec rails routes | sed -E 's/^.* (PUT|POST|DELETE|GET|PATCH|OPTIONS|HEAD) /\1 /' \
-        | sed 's|(.:format)  *| app/controllers/|' | :grep $@ \
+        | sed 's|(.:format)  *| app/controllers/|' | :grep "$@" \
         | while IFS= read -r line; do _add_line_no "$line"; done
 
         # With awk:
@@ -81,4 +81,4 @@ _do_command() {
     
 }
 
-_do_command $@
+_do_command "$@"
