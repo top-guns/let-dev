@@ -5,7 +5,7 @@ COMMAND_DESCRIPTION="Privoxy management"
 COMMAND_HELP="\
 Privoxy management
 Usage:
-    :net:privoxy [status|start|stop|restart|enable|disable|config]
+    :net:privoxy [status|start|stop|restart|enable|disable|config|install|uninstall]
     If no command is provided, status will be used
 "
 
@@ -47,6 +47,34 @@ _do_config() {
         fi
     else
         echo "Privoxy configuration was not changed"
+    fi
+}
+
+_do_install() {
+    if [ "$(uname)" == "Darwin" ]; then
+        echo "Installing Privoxy"
+        brew update
+        brew install privoxy
+    elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+        echo "Installing Privoxy"
+        sudo apt-get update
+        sudo apt-get install privoxy
+    else
+        echo "Unsupported OS"
+        return 1
+    fi
+}
+
+_do_uninstall() {
+    if [ "$(uname)" == "Darwin" ]; then
+        echo "Uninstalling Privoxy"
+        brew uninstall privoxy
+    elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+        echo "Uninstalling Privoxy"
+        sudo apt-get remove privoxy
+    else
+        echo "Unsupported OS"
+        return 1
     fi
 }
 
@@ -101,6 +129,12 @@ _do_command() {
             ;;
         config)
             _do_config
+            ;;
+        install)
+            _do_install
+            ;;
+        uninstall)
+            _do_uninstall
             ;;
         *)
             echo "Invalid command"
