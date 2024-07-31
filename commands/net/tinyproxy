@@ -1,0 +1,178 @@
+#!/bin/bash
+
+COMMAND_DESCRIPTION="Tinyproxy management"
+
+COMMAND_HELP="\
+Tinyproxy management.
+Usage:
+    :net:tinyproxy [status|start|stop|restart|enable|disable|config|install|uninstall]
+    If no command is provided, status will be used
+"
+
+_do_config() {
+    local FILE_TO_OPEN=""
+    if [ "$(uname)" == "Darwin" ]; then
+        FILE_TO_OPEN="/usr/local/etc/tinyproxy/tinyproxy.conf"
+    elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+        FILE_TO_OPEN="/etc/tinyproxy/tinyproxy.conf"
+    else
+        echo "Unsupported OS"
+        return 1
+    fi
+
+    if [ ! -f "$FILE_TO_OPEN" ]; then
+        echo "$FILE_TO_OPEN was not found"
+        return
+    fi
+
+    local hash_before=$(sha256sum "$FILE_TO_OPEN")
+    source "$LETDEV_HOME/commands/config/.edit_config.sh"
+    _edit_config "$FILE_TO_OPEN" $@
+    local hash_after=$(sha256sum "$FILE_TO_OPEN")
+
+    if [[ "$hash_before" != "$hash_after" ]]; then
+        echo "Tinyproxy configuration was changed"
+
+        # Reload Tinyproxy if it is running - depends on the OS
+        if [ "$(uname)" == "Darwin" ]; then
+            if pgrep -x "tinyproxy" > /dev/null; then
+                echo "Reloading Tinyproxy"
+                sudo launchctl kickstart -k system/org.macports.tinyproxy
+            fi
+        elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+            if pgrep -x "tinyproxy" > /dev/null; then
+                echo "Reloading Tinyproxy"
+                sudo /etc/init.d/tinyproxy reload
+            fi
+        fi
+    else
+        echo "Tinyproxy configuration was not changed"
+    fi
+}
+
+_do_install() {
+    if [ "$(uname)" == "Darwin" ]; then
+        echo "Installing Tinyproxy"
+        brew update
+        brew install tinyproxy
+    elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+        echo "Installing Tinyproxy"
+        sudo apt-get update
+        sudo apt-get install tinyproxy
+    else
+        echo "Unsupported OS"
+        return 1
+    fi
+}
+
+_do_uninstall() {
+    if [ "$(uname)" == "Darwin" ]; then
+        echo "Uninstalling Tinyproxy"
+        brew uninstall tinyproxy
+    elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+        echo "Uninstalling Tinyproxy"
+        sudo apt-get remove tinyproxy
+    else
+        echo "Unsupported OS"
+        return 1
+    fi
+}
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local command=$1
+    [ -z "$command" ] && command="status"
+
+    case $command in
+        status)
+            if [ "$(uname)" == "Darwin" ]; then
+                local res=$(brew services list | grep tinyproxy)
+                # if res contains the word 'started', then it is running
+                if [[ $res == *"started"* ]]; then
+                    echo "Tinyproxy is running"
+                elif [[ $res == *"stopped"* ]]; then
+                    echo "Tinyproxy is stopped"
+                elif [[ $res == *"none"* ]]; then
+                    echo "Tinyproxy is stopped"
+                elif [ -z $res ]; then
+                    echo "Tinyproxy is not installed"
+                else
+                    echo "Tinyproxy status is unknown"
+                fi
+            elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+                sudo systemctl status tinyproxy
+            else
+                echo "Unsupported OS"
+                return 1
+            fi
+            ;;
+        start)
+            if [ "$(uname)" == "Darwin" ]; then
+                brew services start tinyproxy
+            elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+                sudo systemctl start tinyproxy
+            else
+                echo "Unsupported OS"
+                return 1
+            fi
+            ;;
+        stop)
+            if [ "$(uname)" == "Darwin" ]; then
+                brew services stop tinyproxy
+            elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+                sudo systemctl stop tinyproxy
+            else
+                echo "Unsupported OS"
+                return 1
+            fi
+            ;;
+        restart)
+            if [ "$(uname)" == "Darwin" ]; then
+                brew services restart tinyproxy
+            elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+                sudo systemctl restart tinyproxy
+            else
+                echo "Unsupported OS"
+                return 1
+            fi
+            ;;
+        enable)
+            if [ "$(uname)" == "Darwin" ]; then
+                echo "Not supported on macOS"
+            elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+                sudo systemctl enable tinyproxy
+            else
+                echo "Unsupported OS"
+                return 1
+            fi
+            ;;
+        disable)
+            if [ "$(uname)" == "Darwin" ]; then
+                echo "Not supported on macOS"
+            elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+                sudo systemctl disable tinyproxy
+            else
+                echo "Unsupported OS"
+                return 1
+            fi
+            ;;
+        config)
+            _do_config
+            ;;
+        install)
+            _do_install
+            ;;
+        uninstall)
+            _do_uninstall
+            ;;
+        *)
+            echo "Invalid command"
+            ;;
+    esac
+}
+
+_do_command "$@"

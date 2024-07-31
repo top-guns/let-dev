@@ -3,7 +3,7 @@
 COMMAND_DESCRIPTION="Privoxy management"
 
 COMMAND_HELP="\
-Privoxy management
+Privoxy management.
 Usage:
     :net:privoxy [status|start|stop|restart|enable|disable|config|install|uninstall]
     If no command is provided, status will be used
