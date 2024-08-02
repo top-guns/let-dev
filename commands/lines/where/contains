@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Filter lines by a condition"
+
+COMMAND_HELP="\
+Filter lines by a condition.
+Usage:
+    :lines:where:contains <text>
+Arguments:
+    text: Text to search for
+Example:
+    :lines:where:contains 'hello|hi'
+"
+
+_do_command() {
+    # Show help on --help
+    if [[ "$1" == "--help" || "$1" == "help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local condition="$1"
+
+    while IFS= read -r line; do
+        if [[ "$line" == *"$condition"* ]]; then
+            echo "$line"
+        fi
+    done
+}
+
+_do_command "$@"

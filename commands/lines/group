@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Group stdin lines"
+
+COMMAND_HELP="\
+Group several lines of stdin into a single line.
+Usage:
+    :lines:group <n> [separator]
+Arguments:
+    n: Number of lines to group
+    separator: Separator between the grouped lines. 
+               Default is space
+Example:
+    :lines:group 2
+"
+
+_do_command() {
+    # Show help on --help
+    if [[ "$1" == "--help" || "$1" == "help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local group_size="$1"
+    local separator="$2"
+    [[ -z "$separator" ]] && separator=" "
+
+    if [[ -z "$group_size" ]]; then
+        echo "Number of lines is required"
+        return 1
+    fi
+    
+    if [[ ! "$group_size" =~ ^[0-9]+$ ]]; then
+        echo "Invalid number of lines: $group_size"
+        return 1
+    fi
+
+    local n=0
+    while IFS= read -r line; do
+        if [[ "$n" -eq "$group_size" ]]; then
+            echo ""
+            n=0
+        fi
+        [[ "$n" -gt 0 ]] && echo -n "$separator"
+        echo -n "$line"
+        n=$((n+1))
+    done
+}
+
+_do_command "$@"

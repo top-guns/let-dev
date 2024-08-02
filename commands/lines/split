@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Split stdin lines"
+
+COMMAND_HELP="\
+Split every line of stdin into multiple lines with a separator.
+Usage:
+    :lines:split [separator]
+Arguments:
+    separator: Separator between the grouped lines. 
+               Default is space
+Example:
+    :lines:split ' '
+"
+
+_do_command() {
+    # Show help on --help
+    if [[ "$1" == "--help" || "$1" == "help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local separator="$1"
+    [[ -z "$separator" ]] && separator=" "
+
+    while IFS= read -r line; do
+        echo "$line" | tr "$separator" '\n' | while IFS= read -r word; do
+            echo "$word"
+        done
+    done
+}
+
+_do_command "$@"

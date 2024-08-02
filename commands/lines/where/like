@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Remove lines that not match a regexp pattern"
+
+COMMAND_HELP="\
+Remove lines that not match a regexp pattern.
+Usage:
+    :lines:where:like <regexp>
+Arguments:
+    regexp: Regexp pattern to search for
+Example:
+    :lines:where:like '.+@gmail.com'
+"
+
+_do_command() {
+    # Show help on --help
+    if [[ "$1" == "--help" || "$1" == "help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local condition="$1"
+
+    while IFS= read -r line; do
+        if [[ "$line" =~ $condition ]]; then
+            echo "$line"
+        fi
+    done
+}
+
+_do_command "$@"
