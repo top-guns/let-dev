@@ -24,7 +24,7 @@ _do_command() {
         return
     fi
 
-    DELIM="--------------Connection closed. Waiting for new connection...---------------"
+    DELIM="--------------------- Connection closed. Waiting for new connection... ----------------------"
 
     # Check nc version
     nc_version=$(nc -h 2>&1 | grep 'Ncat version')
