@@ -1,31 +1,49 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# This script start process which listen the specified port 
-# and echo the received data to the output
+COMMAND_DESCRIPTION="Echo data received on a specified port"
 
-port=$1
+COMMAND_HELP="\
+Start a process which listens on the specified port and echoes the received data to the output.
+Usage:
+    :net:http:listener <port>
+Example:
+    :net:http:listener 8080
+"
 
-if [ -z "$port" ] || [ "$port" = "--hep" ] ; then
-    echo "Usage: $0 <port>"
-    return
-fi
+_do_command() {
 
-# Check nc version
-nc_version=$(nc -h 2>&1 | grep 'Ncat version')
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
 
-if [[ $nc_version ]]; then
-    # Ncat version
+    local port=$1
+
+    if [ -z "$port" ] || [ "$port" = "--hep" ] ; then
+        echo "Usage: $0 <port>"
+        return
+    fi
+
+    DELIM="--------------Connection closed. Waiting for new connection...---------------"
+
+    # Check nc version
+    nc_version=$(nc -h 2>&1 | grep 'Ncat version')
+
     while true; do
-        sudo nc -l -p $port -v | while read line; do
-            echo $line
-        done
-    done
-else
-    # Traditional nc version
-    while true; do
-        sudo nc -l $port -v | while read line; do
-            echo $line
-        done
-    done
-fi
+        if [[ $nc_version ]]; then
+            # Ncat version
+            sudo nc -l -p $port -v | while read line; do
+                echo $line
+            done
+        else
+            # Traditional nc version
+            sudo nc -l $port -v | while read line; do
+                echo $line
+            done
+        fi
 
+        echo "$DELIM"
+    done
+}
+
+_do_command "$@"
