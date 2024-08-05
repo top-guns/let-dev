@@ -15,13 +15,17 @@ nc_version=$(nc -h 2>&1 | grep 'Ncat version')
 
 if [[ $nc_version ]]; then
     # Ncat version
-    nc -l -p $port -v | while read line; do
-        echo $line
+    while true; do
+        sudo nc -l -p $port -v | while read line; do
+            echo $line
+        done
     done
 else
     # Traditional nc version
-    nc -l $port -v | while read line; do
-        echo $line
+    while true; do
+        sudo nc -l $port -v | while read line; do
+            echo $line
+        done
     done
 fi
 
