@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Send text data to the specified URL and print the response"
+
+COMMAND_HELP="\
+Simply send text data to the specified URL, as-is, and print the response.
+    Without any additional data, including headers.
+Usage:
+    :http:send <url> <text> - Send text data to the specified URL
+Example:
+    :net:http:send https://echo.free.beeceptor.com 'Hello, World!'
+"
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    URL=$1
+    [[ $URL == "echo" ]] && URL="https://echo.free.beeceptor.com"
+
+    TEXT=$2
+    [[ -z $TEXT ]] && TEXT="Hello, World!"
+    
+    curl -X POST -H "Content-Type: text/plain" -d "$TEXT" $URL
+}
+
+_do_command "$@"

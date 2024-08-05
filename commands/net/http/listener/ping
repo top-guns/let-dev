@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 
-COMMAND_DESCRIPTION="Print all data received on a specified port"
+COMMAND_DESCRIPTION="Rerutn data received on a specified port back to the sender"
 
 COMMAND_HELP="\
-Start a process which listens on the specified port and echoes the received data to the output.
+Start a process which listens on the specified port
+    and sends the received data back to the sender.
 Usage:
-    :net:http:listener:print <port>
+    :net:http:listener:ping <port>
 Example:
-    :net:http:listener:print 8080
+    :net:http:listener:ping 8080
 "
 
 _do_command() {
@@ -32,16 +33,14 @@ _do_command() {
         if [[ $nc_version ]]; then
             # Ncat version
             sudo nc -l -p $port -v | while read line; do
-                echo $line
+                echo $line | nc localhost $port
             done
         else
             # Traditional nc version
             sudo nc -l $port -v | while read line; do
-                echo $line
+                echo $line | nc localhost $port 
             done
         fi
-
-        echo "$DELIM"
     done
 }
 
