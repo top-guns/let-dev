@@ -1,0 +1,65 @@
+#!/bin/bash
+
+COMMAND_DESCRIPTION="Scan for open ports on a host"
+
+COMMAND_HELP="\
+Scan for open ports on a host.
+Usage:
+    :net:scan <host> [--start=start-port] [--end=end-port] [--timeout=timeout]
+Arguments:
+    --start=start-port: Start port for scanning. Default is 1.
+    --end=end-port: End port for scanning. Default is 65535.
+    --timeout=timeout: Timeout for each port scan, in seconds. Default is 0.2.
+Example:
+    :net:check google.com --start=80 --end=443 # Scan ports 80 to 443 on google.com
+"
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local host=''
+    local start_port=1
+    local end_port=65535
+    local timeout='0.2'
+
+    while [ "$1" != "" ]; do
+        case $1 in
+            --start=*)
+                start_port="${1#*=}"
+                ;;
+            --end=*)
+                end_port="${1#*=}"
+                ;;
+            --timeout=*)
+                timeout="${1#*=}"
+                ;;
+            *)
+                host=$1
+                ;;
+        esac
+        shift
+    done
+
+    if [[ -z "$host" ]]; then
+        echo "Host is required"
+        return
+    fi
+
+    local ports_found=0
+    for port in $(seq $start_port $end_port); do
+        echo -e -n "\r\033[KScanning port $port"
+
+        # nc -z -w1 "$host" "$port" &> /dev/null
+        timeout $timeout nc -z "$host" "$port" &> /dev/null
+        if [[ $? -eq 0 ]]; then 
+            [[ $ports_found -eq 0 ]] && echo -e "\r\033[KOpen ports:" && ports_found=1
+            echo -e "\r\033[K$port"
+        fi
+    done
+    [[ $ports_found -eq 0 ]] && echo -e "\r\033[KNo open ports found"
+}
+
+_do_command $@
