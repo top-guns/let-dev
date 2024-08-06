@@ -9,7 +9,7 @@ Usage:
 Arguments:
     --start=start-port: Start port for scanning. Default is 1.
     --end=end-port: End port for scanning. Default is 65535.
-    --timeout=timeout: Timeout for each port scan, in seconds. Default is 0.2.
+    --timeout=timeout: Timeout for each port scan, in seconds. Default is 0.5.
     --nmap: Use nmap for scanning.
     --nc: Use nc for scanning.
     --install: Install nmap if not already installed.
@@ -100,7 +100,11 @@ _scan_with_nc() {
             echo -e "\r\033[K$port"
         fi
     done
-    [[ $ports_found -eq 0 ]] && echo -e "\r\033[KNo open ports found"
+    if [[ $ports_found -eq 0 ]]; then
+        echo -e "\r\033[KNo open ports found"
+    else
+        echo -e "\r\033[K"
+    fi
 }
 
 _scan_with_nmap() {
@@ -127,7 +131,7 @@ _do_command() {
     local host=''
     local start_port=1
     local end_port=65535
-    local timeout='0.2'
+    local timeout='0.5'
     local install=0
     local uninstall=0
     local util=''
