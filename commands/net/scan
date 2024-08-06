@@ -10,43 +10,83 @@ Arguments:
     --start=start-port: Start port for scanning. Default is 1.
     --end=end-port: End port for scanning. Default is 65535.
     --timeout=timeout: Timeout for each port scan, in seconds. Default is 0.2.
+    --nmap: Use nmap for scanning.
+    --nc: Use nc for scanning.
+    --install: Install nmap if not already installed.
+    --uninstall: Uninstall nmap if installed.
 Example:
     :net:check google.com --start=80 --end=443 # Scan ports 80 to 443 on google.com
 "
 
-_do_command() {
-    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
-        echo "$COMMAND_HELP"
+# Check if nmap is installed and install it if not
+_do_install() {
+    if command -v nmap &> /dev/null; then
+        echo "nmap is already installed"
         return
     fi
 
-    local host=''
-    local start_port=1
-    local end_port=65535
-    local timeout='0.2'
+    # Check OS and install nmap
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        if command -v apt-get &> /dev/null; then
+            sudo apt-get install nmap
+        elif command -v yum &> /dev/null; then
+            sudo yum install nmap
+        else
+            echo "Could not install nmap. Please install it manually."
+        fi
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        if command -v brew &> /dev/null; then
+            brew install nmap
+        else
+            echo "Could not install nmap. Please install it manually."
+        fi
+    else
+        echo "Unknown OS. Could not install nmap. Please install it manually."
+    fi
+}
 
-    while [ "$1" != "" ]; do
-        case $1 in
-            --start=*)
-                start_port="${1#*=}"
-                ;;
-            --end=*)
-                end_port="${1#*=}"
-                ;;
-            --timeout=*)
-                timeout="${1#*=}"
-                ;;
-            *)
-                host=$1
-                ;;
-        esac
-        shift
-    done
-
-    if [[ -z "$host" ]]; then
-        echo "Host is required"
+_do_uninstall() {
+    if ! command -v nmap &> /dev/null; then
+        echo "nmap is not installed"
         return
     fi
+
+    # Check OS and uninstall nmap
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        if command -v apt-get &> /dev/null; then
+            sudo apt-get remove nmap
+        elif command -v yum &> /dev/null; then
+            sudo yum remove nmap
+        else
+            echo "Could not uninstall nmap. Please uninstall it manually."
+        fi
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        if command -v brew &> /dev/null; then
+            brew uninstall nmap
+        else
+            echo "Could not uninstall nmap. Please uninstall it manually."
+        fi
+    else
+        echo "Unknown OS. Could not uninstall nmap. Please uninstall it manually."
+    fi
+}
+
+_scan_with_nc() {
+    local host=$1
+    local start_port=$2
+    local end_port=$3
+    local timeout=$4
+
+    # Check if nc is installed
+    if ! command -v nc &> /dev/null; then
+        echo "nc is not installed"
+        return
+    fi
+
+    echo "Scanning ports $start_port-$end_port on $host using nc"
+    echo "It is recommended to install nmap for better performance"
+    echo "You can install nmap by running :net:scan --install"
+    echo ""
 
     local ports_found=0
     for port in $(seq $start_port $end_port); do
@@ -60,6 +100,95 @@ _do_command() {
         fi
     done
     [[ $ports_found -eq 0 ]] && echo -e "\r\033[KNo open ports found"
+}
+
+_scan_with_nmap() {
+    local host=$1
+    local start_port=$2
+    local end_port=$3
+
+    # Check if nmap is installed
+    if ! command -v nmap &> /dev/null; then
+        echo "nmap is not installed"
+        return
+    fi
+
+    echo "Scanning ports $start_port-$end_port on $host using nmap"
+    nmap -p $start_port-$end_port $host
+}
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local host=''
+    local start_port=1
+    local end_port=65535
+    local timeout='0.2'
+    local install=0
+    local uninstall=0
+    local util=''
+
+    while [ "$1" != "" ]; do
+        case $1 in
+            --start=*)
+                start_port="${1#*=}"
+                ;;
+            --end=*)
+                end_port="${1#*=}"
+                ;;
+            --timeout=*)
+                timeout="${1#*=}"
+                ;;
+            --nmap)
+                util='nmap'
+                ;;
+            --nc)
+                util='nc'
+                ;;
+            --install)
+                install=1
+                ;;
+            --uninstall)
+                uninstall=1
+                ;;
+            *)
+                host=$1
+                ;;
+        esac
+        shift
+    done
+
+    if [[ $install -eq 1 ]]; then
+        _do_install
+        [[ -z "$host" ]] && return
+    fi
+
+    if [[ $uninstall -eq 1 ]]; then
+        _do_uninstall
+        [[ -z "$host" ]] && return
+    fi
+
+    if [[ -z "$host" ]]; then
+        echo "Host is required"
+        return
+    fi
+
+    if [[ -z "$util" ]]; then
+        if command -v nmap &> /dev/null; then
+            util='nmap'
+        else
+            util='nc'
+        fi
+    fi
+
+    if [[ "$util" == "nmap" ]]; then
+        _scan_with_nmap $host $start_port $end_port
+    else
+        _scan_with_nc $host $start_port $end_port $timeout
+    fi
 }
 
 _do_command $@
