@@ -23,7 +23,9 @@ ECHO_ALL_FREE_LISTENER_PID_DIR="/tmp"
 # Make a list of ports in human readable format with grouping, like 80, 83, 85-90
 _format_port_list() {
     local ports=($@)
-    [ ${#ports[@]} -eq 0 ] && return
+    if [ ${#ports[@]} -eq 0 ]; then
+        return
+    fi
 
     local port_list=""
     local start_port=${ports[1]}
@@ -65,7 +67,9 @@ _start_handlers() {
         fi
     done
 
-    if [ ${#ports[@]} -eq 0 ] && return
+    if [ ${#ports[@]} -eq 0 ]; then
+        return
+    fi
     echo $(_format_port_list ${ports[@]})
 }
 
@@ -82,7 +86,9 @@ _stop_handlers() {
         fi
     done
 
-    if [ ${#ports[@]} -eq 0 ] && return
+    if [ ${#ports[@]} -eq 0 ]; then
+        return
+    fi
     echo $(_format_port_list ${ports[@]})
 }
 
@@ -97,7 +103,9 @@ _status_handlers() {
         fi
     done
 
-    if [ ${#ports[@]} -eq 0 ] && return
+    if [ ${#ports[@]} -eq 0 ]; then
+        return
+    fi
     echo $(_format_port_list ${ports[@]})
 }
 
