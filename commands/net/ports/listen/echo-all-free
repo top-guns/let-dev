@@ -137,15 +137,15 @@ _do_command() {
     done
 
     if [ "$command" = "start" ]; then
-        echo "Starting echo-listeners on ports $start_port-$end_port"
+        echo "Starting echo-listeners on ports $start_port - $end_port"
         local ports_list=$(_start_handlers $start_port $end_port)
         echo "Listening started on ports: $ports_list"
     elif [ "$command" = "stop" ]; then
-        echo "Stopping echo-listeners on ports $start_port-$end_port"
+        echo "Stopping echo-listeners on ports $start_port - $end_port"
         local ports_list=$(_stop_handlers $start_port $end_port)
         echo "Listeners stopped"
     elif [ "$command" = "status" ]; then
-        echo "Status of echo-listeners on ports $start_port-$end_port"
+        echo "Status of echo-listeners on ports $start_port - $end_port"
         local ports_list=$(_status_handlers $start_port $end_port)
         if [ -z "$ports_list" ]; then
             echo "No listeners are running"
