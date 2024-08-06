@@ -1,0 +1,160 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Start listening on all free ports"
+
+COMMAND_HELP="\
+Start a processes which listens all free ports and sends the received data back to the sender.
+Usage:
+    :net:http:listener:echo-all-free [start|stop|status] [--start=start-port] [--end=end-port]
+    If no command are provided, status is shown.
+Arguments:
+    start: Start listening on all free ports.
+    stop: Stop listening on all free ports.
+    status: Show the status of the listener.
+    --start=start-port: Start port. Default is 1.
+    --end=end-port: End port. Default is 65535. 
+Example:
+    :net:http:listener:echo-all-free # Show the status of the listener
+    :net:http:listener:echo-all-free --start=8000 --end=9000 # Listen on ports 8000 to 9000
+"
+
+ECHO_ALL_FREE_LISTENER_PID_DIR="/tmp"
+
+# Make a list of ports in human readable format with grouping, like 80, 83, 85-90
+_format_port_list() {
+    local ports=($@)
+    [ ${#ports[@]} -eq 0 ] && return
+
+    local port_list=""
+    local start_port=${ports[1]}
+    local end_port=${ports[1]}
+    for port in ${ports[@]:2}; do
+        if [ $((port - end_port)) -eq 1 ]; then
+            end_port=$port
+        else
+            if [ $start_port -eq $end_port ]; then
+                port_list+="$start_port, "
+            else
+                port_list+="$start_port-$end_port, "
+            fi
+            start_port=$port
+            end_port=$port
+        fi
+    done
+
+    if [ $start_port -eq $end_port ]; then
+        port_list+="$start_port"
+    else
+        port_list+="$start_port-$end_port"
+    fi
+
+    echo "$port_list"
+}
+
+_start_handlers() {
+    local start_port=$1
+    local end_port=$2
+
+    local ports=$()
+    for port in $(seq $start_port $end_port); do
+        if ! nc -z localhost $port &> /dev/null; then
+            # nc -l -p $port -k -e /bin/cat &
+            nc -l $port > /dev/null 2>&1 &
+            echo $! > "$ECHO_ALL_FREE_LISTENER_PID_DIR/nc_$port.pid"
+            ports+=($port)
+        fi
+    done
+
+    if [ ${#ports[@]} -eq 0 ] && return
+    echo $(_format_port_list ${ports[@]})
+}
+
+_stop_handlers() {
+    local start_port=$1
+    local end_port=$2
+
+    local ports=$()
+    for port in $(seq $start_port $end_port); do
+        if [ -f "$ECHO_ALL_FREE_LISTENER_PID_DIR/nc_$port.pid" ]; then
+            kill -9 $(cat "$ECHO_ALL_FREE_LISTENER_PID_DIR/nc_$port.pid") > /dev/null 2>&1
+            rm -f "$ECHO_ALL_FREE_LISTENER_PID_DIR/nc_$port.pid"
+            ports+=($port)
+        fi
+    done
+
+    if [ ${#ports[@]} -eq 0 ] && return
+    echo $(_format_port_list ${ports[@]})
+}
+
+_status_handlers() {
+    local start_port=$1
+    local end_port=$2
+
+    local ports=$()
+    for port in $(seq $start_port $end_port); do
+        if [ -f "$ECHO_ALL_FREE_LISTENER_PID_DIR/nc_$port.pid" ]; then
+            ports+=($port)
+        fi
+    done
+
+    if [ ${#ports[@]} -eq 0 ] && return
+    echo $(_format_port_list ${ports[@]})
+}
+
+_do_command() {
+        if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local command="status"
+    local start_port=1
+    local end_port=65535
+
+    while [ "$1" != "" ]; do
+        case $1 in
+            start)
+                command="start"
+                ;;
+            stop)
+                command="stop"
+                ;;
+            status)
+                command="status"
+                ;;
+            --start=*)
+                start_port="${1#*=}"
+                ;;
+            --end=*)
+                end_port="${1#*=}"
+                ;;
+            *)
+                echo "Invalid argument: $1"
+                return
+                ;;
+        esac
+        shift
+    done
+
+    if [ "$command" = "start" ]; then
+        echo "Starting echo-listeners on ports $start_port-$end_port"
+        local ports_list=$(_start_handlers $start_port $end_port)
+        echo "Listening started on ports: $ports_list"
+    elif [ "$command" = "stop" ]; then
+        echo "Stopping echo-listeners on ports $start_port-$end_port"
+        local ports_list=$(_stop_handlers $start_port $end_port)
+        echo "Listeners stopped"
+    elif [ "$command" = "status" ]; then
+        echo "Status of echo-listeners on ports $start_port-$end_port"
+        local ports_list=$(_status_handlers $start_port $end_port)
+        if [ -z "$ports_list" ]; then
+            echo "No listeners are running"
+        else
+            echo "Listening on ports: $ports_list"
+        fi
+    else
+        echo "Invalid command: $command"
+    fi
+}
+
+_do_command "$@"

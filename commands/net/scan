@@ -89,13 +89,14 @@ _scan_with_nc() {
     echo ""
 
     local ports_found=0
+    echo "Open ports:"
     for port in $(seq $start_port $end_port); do
-        echo -e -n "\r\033[KScanning port $port"
+        echo -e -n "\r\033[K$port"
 
         # nc -z -w1 "$host" "$port" &> /dev/null
         timeout $timeout nc -z "$host" "$port" &> /dev/null
         if [[ $? -eq 0 ]]; then 
-            [[ $ports_found -eq 0 ]] && echo -e "\r\033[KOpen ports:" && ports_found=1
+            [[ $ports_found -eq 0 ]] && ports_found=1
             echo -e "\r\033[K$port"
         fi
     done

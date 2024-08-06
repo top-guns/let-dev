@@ -50,7 +50,13 @@ _do_command() {
         return
     fi
 
-    nc -z -v $host $port
+    # nc -z -v $host $port
+    local result="closed"
+    if nc -z $host $port &> /dev/null; then
+        result="open"
+    fi
+
+    echo "$host:$port is $result"
 }
 
-_do_command $@
+_do_command "$@"
