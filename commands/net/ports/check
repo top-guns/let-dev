@@ -16,6 +16,97 @@ Example:
     :net:check google.com:443 # Check if port 443 is open on google.com
 "
 
+COMMAND_INFO="
+name
+    :net:check
+short_description
+    Check port availability
+description
+    Check port availability
+Arguments
+    host
+        Hostname or IP address
+        If host is not provided, localhost is assumed
+    port
+        Port number
+Example:
+    :net:check 80
+        Check if port 80 is open on localhost
+    :net:check google.com 443
+        Check if port 443 is open on google.com
+    :net:check google.com:443
+        Check if port 443 is open on google.com
+"
+
+# Use path inside COMMAND_INFO like 'Example/:net:check 80' to get value
+# Path is case insensitive
+_info_value_by_path() {
+    local info=$1
+    local path=$2
+
+    local in_value=false
+    local value_indent=""
+
+    local cur_path_lines=()
+
+    while IFS='=' read -r line; do
+        # Skip comments - start with spaces and #
+        if [[ "$line" =~ ^[[:space:]]*# ]]; then
+            continue
+        fi
+
+        # Get all spaces before line value
+        local indent=$(echo $line | sed -e 's/^\([[:space:]]*\).*/\1/')
+
+        # If we are in value - print it and return
+        if [ "$in_value" = true ]; then
+            [ -z "$value_indent" ] && value_indent=$indent
+
+            # If indent is equal or greater than value_indent or line is empty or contains only spaces, then it is part of value
+            if [ ${#indent} -ge ${#value_indent} ] || [ -z "$line" ] || [ -z "$(echo $line | xargs)" ]; then
+                # Remove value_indent spaces from the beginning of the line and all spaces from the end
+                echo $line | sed -e "s/^$value_indent//" | sed -e 's/[[:space:]]*$//'
+                continue
+            else
+                # We are out of value then return
+                return
+            fi
+        fi
+
+        # We are not in value, so we are finding the path
+
+        # Trim line
+        local value=$(echo $line | xargs)
+        # Skip empty lines
+        [ -z "$value" ] && continue
+
+        local prev_indent=$(echo ${cur_path_lines[-1]} | sed -e 's/^\([[:space:]]*\).*/\1/')
+
+        # If current indent is less than previous, then remove elements from cur_path_lines while current indent 
+        # is less than last element indent and add the current line to cur_path_lines
+        if [ ${#indent} -lt ${#prev_indent} ]; then
+            while [ ${#indent} -le ${#prev_indent} ]; do
+                unset cur_path_lines[-1]
+                prev_indent=$(echo ${cur_path_lines[-1]} | sed -e 's/^\([[:space:]]*\).*/\1/')
+            done
+            cur_path_lines+=($line)
+        elif [ ${#indent} -eq ${#prev_indent} ]; then
+            cur_path_lines[-1]=$line
+        else
+            cur_path_lines+=($line)
+        fi
+
+        # Concatenate all trunced elements of cur_path_lines with '/' separator to get parent path
+        local cur_path=$(IFS=/; echo "${cur_path_lines[*]}" | xargs)
+
+        if [ "$cur_path" = "$path" ]; then
+            # We found the path, start reading value
+            in_value=true
+            continue
+        fi
+    done < $info
+}
+
 _do_command() {
     if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
         echo "$COMMAND_HELP"
@@ -29,12 +120,12 @@ _do_command() {
         host=$(echo $1 | cut -d: -f1)
         port=$(echo $1 | cut -d: -f2)
     else
-        if [[ "$1" =~ "." ]]; then
+        if [[ "$1" =~ "\." ]]; then
             host=$1
             port=$2
         else
             port=$1
-            if [[ "$2" =~ "." ]]; then
+            if [[ "$1" =~ "\." ]]; then
                 host=$2
             fi
         fi

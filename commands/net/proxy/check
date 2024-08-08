@@ -1,0 +1,134 @@
+#!/bin/bash
+
+COMMAND_DESCRIPTION="Check proxy server status"
+
+COMMAND_HELP="\
+Check proxy server status.
+Usage:
+    :net:proxy:check <proxy-host> <proxy-port> [<login> <password>]
+    :net:proxy:check <proxy-port> [<login> <password>]
+
+    If host is not provided, localhost is assumed.
+Example:
+    :net:proxy:check 3128                           # Check proxy localhost:3128
+    :net:proxy:check my-proxy.com 8888              # Check proxy my-proxy.com:8888
+    :net:proxy:check my-proxy.com 1080 user pass    # Check proxy with authentication
+"
+
+declare -A http_status_codes=(
+    [100]="Continue"
+    [101]="Switching Protocols"
+    [200]="OK"
+    [201]="Created"
+    [202]="Accepted"
+    [203]="Non-Authoritative Information"
+    [204]="No Content"
+    [205]="Reset Content"
+    [206]="Partial Content"
+    [300]="Multiple Choices"
+    [301]="Moved Permanently"
+    [302]="Found"
+    [303]="See Other"
+    [304]="Not Modified"
+    [305]="Use Proxy"
+    [307]="Temporary Redirect"
+    [400]="Bad Request"
+    [401]="Unauthorized"
+    [402]="Payment Required"
+    [403]="Forbidden"
+    [404]="Not Found"
+    [405]="Method Not Allowed"
+    [406]="Not Acceptable"
+    [407]="Proxy Authentication Required"
+    [408]="Request Timeout"
+    [409]="Conflict"
+    [410]="Gone"
+    [411]="Length Required"
+    [412]="Precondition Failed"
+    [413]="Request Entity Too Large"
+    [414]="Request-URI Too Long"
+    [415]="Unsupported Media Type"
+    [416]="Requested Range Not Satisfiable"
+    [417]="Expectation Failed"
+    [500]="Internal Server Error"
+    [501]="Not Implemented"
+    [502]="Bad Gateway"
+    [503]="Service Unavailable"
+    [504]="Gateway Timeout"
+    [505]="HTTP Version Not Supported"
+)
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local host="localhost"
+    local port=""
+    local login=""
+    local password=""
+
+    if [[ "$1" =~ "\." ]]; then
+        host=$1
+        port=$2
+        login=$3
+        password=$4
+    else
+        port=$1
+        login=$2
+        password=$3
+    fi
+
+    if [[ -z "$port" ]]; then
+        echo "Port is required"
+        return
+    fi
+
+    if [[ -z "$host" ]]; then
+        echo "Host is required"
+        return
+    fi
+
+    if [[ -n "$login" ]] && [[ -z "$password" ]]; then
+        echo "Password is required"
+        return
+    fi
+
+    local url=""
+    if [[ -z "$login" ]]; then
+        url="http://$host:$port"
+    else
+        url="http://$login:$password@$host:$port"
+    fi
+
+    local result=$(curl -x $url -s -o /dev/null -w "%{http_code}" http://www.google.com)
+
+    if [[ "$result" == "200" ]]; then
+        echo "Proxy is working"
+    else
+        echo "Proxy is not working:"
+        
+        if nc -z $host $port &> /dev/null; then
+            echo "  - port $port is open"
+            local status_text=${http_status_codes[$result]}
+            if [[ -z "$status_text" ]]; then
+                status_text="$result"
+            else 
+                status_text="$result ($status_text)"
+            fi
+            echo "  - request to http://www.google.com failed"
+            echo "  - result status: $status_text"
+        else
+            echo "  - port $port is closed"
+            local host_reachable=$(ping -c 1 $host &> /dev/null)
+            if [[ "$host_reachable" == "0" ]]; then
+                echo "  - ping to $host successful"
+            else
+                echo "  - ping to $host failed"
+            fi
+        fi
+    fi
+}
+
+_do_command "$@"
