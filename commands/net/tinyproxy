@@ -5,8 +5,19 @@ COMMAND_DESCRIPTION="Tinyproxy management"
 COMMAND_HELP="\
 Tinyproxy management.
 Usage:
-    :net:tinyproxy [status|start|stop|restart|enable|disable|config|install|uninstall]
+    :net:tinyproxy [command]
     If no command is provided, status will be used
+Commands:
+    status
+    start
+    stop
+    restart
+    enable
+    disable
+    config
+    log
+    install
+    uninstall
 "
 
 _do_config() {
@@ -189,6 +200,16 @@ _do_command() {
             ;;
         uninstall)
             _do_uninstall
+            ;;
+        log)
+            if [ "$(uname)" == "Darwin" ]; then
+                echo "Not supported on macOS"
+            elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+                tail -f /var/log/tinyproxy/tinyproxy.log
+            else
+                echo "Unsupported OS"
+                return 1
+            fi
             ;;
         *)
             echo "Invalid command"
