@@ -16,6 +16,7 @@ Commands:
     disable
     config
     log
+    journal
     install
     uninstall
 "
@@ -206,6 +207,16 @@ _do_command() {
                 echo "Not supported on macOS"
             elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
                 tail -f /var/log/tinyproxy/tinyproxy.log
+            else
+                echo "Unsupported OS"
+                return 1
+            fi
+            ;;
+        journal)
+            if [ "$(uname)" == "Darwin" ]; then
+                echo "Not supported on macOS"
+            elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+                sudo journalctl -u tinyproxy -f
             else
                 echo "Unsupported OS"
                 return 1
