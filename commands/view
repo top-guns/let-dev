@@ -14,7 +14,7 @@ _install() {
   # Check the operating system
   if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     # Check if bat is installed
-    if ! command -v bat &> /dev/null; then
+    if [ ! command -v batcat &> /dev/null ] && [ ! command -v bat &> /dev/null ]; then
       # Install bat using the package manager
       sudo apt install bat
       echo "Bat installed successfully"
@@ -54,7 +54,7 @@ _do_command() {
     return
   fi
 
-  local cmd='bat'
+  local cmd=''
   local file="$1"
 
   # Check if the file exists
@@ -64,7 +64,11 @@ _do_command() {
   fi
 
   # Check if bat is installed
-  if ! command -v bat &> /dev/null; then
+  if command -v batcat &> /dev/null; then
+    cmd='batcat'
+  elif command -v bat &> /dev/null; then
+    cmd='bat'
+  else
     echo "Bat is not installed. Please, use ': :view --install' command to install it and view the file with colorized syntax highlighting"
     cmd='more'
   fi
