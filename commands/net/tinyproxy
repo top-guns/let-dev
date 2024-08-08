@@ -111,6 +111,8 @@ _do_command() {
                     echo "Tinyproxy is stopped"
                 elif [[ $res == *"Active: failed"* ]]; then
                     echo "Tinyproxy is failed"
+                    echo ""
+                    echo "$res"
                 elif [ "$res" == *"could not be found"* ]; then
                     echo "Tinyproxy is not installed"
                 elif [ -z $res ]; then
