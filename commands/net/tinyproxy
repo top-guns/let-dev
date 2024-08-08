@@ -112,7 +112,7 @@ _do_command() {
                 elif [[ $res == *"Active: failed"* ]]; then
                     echo "Tinyproxy is failed"
                     echo ""
-                    echo "$res"
+                    systemctl --no-pager status tinyproxy
                 elif [ "$res" == *"could not be found"* ]; then
                     echo "Tinyproxy is not installed"
                 elif [ -z $res ]; then
