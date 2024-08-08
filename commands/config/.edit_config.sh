@@ -13,10 +13,38 @@ _edit_config() {
         return
     fi
 
+    if [ "$2" = "path" ]; then
+        echo "$FILE_TO_OPEN"
+        return
+    fi
+
+    if [ "$2" = "cat" ]; then
+        if [ "$CAN_BE_CREATED" = "true" ]; then
+            echo "The file $FILE_TO_OPEN does not exist"
+        else
+            sudo cat "$FILE_TO_OPEN"
+        fi
+        return
+    fi
+
+    if [ "$2" = "view" ]; then
+        if [ "$CAN_BE_CREATED" = "true" ]; then
+            echo "The file $FILE_TO_OPEN does not exist"
+        else
+            sudo "$LETDEV_HOME/commands/view" "$FILE_TO_OPEN"
+        fi
+        return
+    fi
+
+    if [ ! "$2" = "edit" ]; then
+        echo "Unknown command $2"
+        return
+    fi
+
     # Check if the file exists
     if [ ! -f "$FILE_TO_OPEN" ]; then
         if [ "$CAN_BE_CREATED" = "true" ]; then
-            echo "The $FILE_TO_OPEN file does not exist. Creating it..."
+            echo "The file $FILE_TO_OPEN does not exist. Creating it..."
             touch "$FILE_TO_OPEN"
         else
             echo "File $FILE_TO_OPEN is not found"
