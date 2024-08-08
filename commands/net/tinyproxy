@@ -107,8 +107,12 @@ _do_command() {
                 local res=$(sudo systemctl status tinyproxy)
                 if [[ $res == *"Active: active (running)"* ]]; then
                     echo "Tinyproxy is running"
+                    echo ""
+                    systemctl --no-pager status tinyproxy
                 elif [[ $res == *"Active: inactive (dead)"* ]]; then
                     echo "Tinyproxy is stopped"
+                    echo ""
+                    systemctl --no-pager status tinyproxy
                 elif [[ $res == *"Active: failed"* ]]; then
                     echo "Tinyproxy is failed"
                     echo ""
@@ -119,6 +123,8 @@ _do_command() {
                     echo "Tinyproxy is not installed"
                 else
                     echo "Tinyproxy status is unknown"
+                    echo ""
+                    systemctl --no-pager status tinyproxy
                 fi
             else
                 echo "Unsupported OS"
