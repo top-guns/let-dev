@@ -8,17 +8,20 @@ _edit_config() {
     local FILE_NAME=$(basename $FILE_TO_OPEN)
     local CURRENT_COMMAND=$(basename $0)
 
-    if [ "$2" = "--help" ] || [ "$2" = "help" ]; then
+    local command=$2
+    [ -z "$command" ] && command='edit'
+
+    if [ "$command" = "--help" ] || [ "$command" = "help" ]; then
         echo "$COMMAND_HELP"
         return
     fi
 
-    if [ "$2" = "path" ]; then
+    if [ "$command" = "path" ]; then
         echo "$FILE_TO_OPEN"
         return
     fi
 
-    if [ "$2" = "cat" ]; then
+    if [ "$command" = "cat" ]; then
         if [ "$CAN_BE_CREATED" = "true" ]; then
             echo "The file $FILE_TO_OPEN does not exist"
         else
@@ -27,7 +30,7 @@ _edit_config() {
         return
     fi
 
-    if [ "$2" = "view" ]; then
+    if [ "$command" = "view" ]; then
         if [ "$CAN_BE_CREATED" = "true" ]; then
             echo "The file $FILE_TO_OPEN does not exist"
         else
@@ -36,8 +39,8 @@ _edit_config() {
         return
     fi
 
-    if [ ! "$2" = "edit" ]; then
-        echo "Unknown command $2"
+    if [ ! "$command" = "edit" ]; then
+        echo "Unknown command '$command'"
         return
     fi
 
