@@ -1,21 +1,19 @@
 #!/usr/bin/env bash
 
-COMMAND_DESCRIPTION="Make replacements in a string with regular expressions"
+COMMAND_DESCRIPTION="Find substring in a string with regular expressions"
 
 COMMAND_HELP="\
-Make replacements in a string with regular expressions.
+Find substring in a string with regular expressions.
 Usage:
-    :string:replace <pattern> <replacement> <text....> 
+    :string:find <pattern> <text....> 
 Arguments:
     text:         The string to make replacements in.
     pattern:      The regular expression pattern to search for.
-    replacement:  The replacement expression. 
-                  Use \\1, \\2, etc. to refer to the matched groups.
 Options:
     --case-insensitive, -i: Make the search case-insensitive.
 Example:
-    :string:replace '(hello|hi).*' '\\1 to all' hello, world!
-    Output: 'hello to all'
+    :string:find '(hello|hi).*' hello, world!
+    Output: 'hello'
 "
 
 _do_command() {
@@ -25,8 +23,6 @@ _do_command() {
     fi
 
     local pattern="$1"
-    shift
-    local replacement="$1"
     shift
     local text=''
     local case_insensitive=false
@@ -55,9 +51,9 @@ _do_command() {
     fi
 
     if [ "$case_insensitive" = true ]; then
-        echo "$text" | sed -E "s/$pattern/$replacement/I"
+        echo "$text" | grep -o -E "$pattern" | head -n 1
     else
-        echo "$text" | sed -E "s/$pattern/$replacement/"
+        echo "$text" | grep -o -E "$pattern" | head -n 1
     fi
 }
 
