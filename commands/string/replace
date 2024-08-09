@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Make replacements in a string with regular expressions"
+
+COMMAND_HELP="\
+Make replacements in a string with regular expressions.
+Usage:
+    :string:replace <pattern> [replacement] <text> 
+    If replacement is not provided, it is assumed to be an empty string.
+Arguments:
+    text:         The string to make replacements in.
+    pattern:      The regular expression pattern to search for.
+    replacement:  The replacement expression. 
+                  Use \\1, \\2, etc. to refer to the matched groups.
+Options:
+    --case-insensitive, -i: Make the search case-insensitive.
+Example:
+    :string:replace '(hello|hi).*' '\\1 to all' 'hello, world!'
+    Output: 'hello to all'
+"
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local text=''
+    local pattern=''
+    local replacement=''
+    local case_insensitive=false
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --case-insensitive | -i)
+                case_insensitive=true
+                shift
+                ;;
+            *)
+                if [ -z "$pattern" ]; then
+                    pattern=$1
+                elif [ -z "$replacement" ]; then
+                    replacement=$1
+                elif [ -z "$text" ]; then
+                    text=$1
+                fi
+                shift
+                ;;
+        esac
+    done
+
+    [ -z "$text" ] && text=$replacement && replacement=''
+
+    if [ -z "$text" ]; then
+        echo "Text is not provided"
+        return
+    fi
+
+    if [ -z "$pattern" ]; then
+        echo "Pattern is not provided"
+        return
+    fi
+
+    if [ "$case_insensitive" = true ]; then
+        echo "$text" | sed -E "s/$pattern/$replacement/I"
+    else
+        echo "$text" | sed -E "s/$pattern/$replacement/"
+    fi
+}
+
+_do_command "$@"
