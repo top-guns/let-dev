@@ -6,8 +6,12 @@ COMMAND_HELP="\
 Edit git settings for the current project repository.
 "
 
+_find_git_root() {
+    git rev-parse --show-toplevel
+}
+
 _do_command() {
-    local FILE_TO_OPEN="./.git/config"
+    local FILE_TO_OPEN="$(_find_git_root)/.git/config"
 
     source "$LETDEV_HOME/commands/config/.edit_config.sh"
     _edit_config "$FILE_TO_OPEN" $@
