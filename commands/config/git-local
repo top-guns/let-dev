@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+
+COMMAND_DESCRIPTION="Edit git settings for the current project repository"
+COMMAND_HELP="\
+Edit git settings for the current project repository.
+"
+
+_do_command() {
+    local FILE_TO_OPEN="./.git/config"
+
+    source "$LETDEV_HOME/commands/config/.edit_config.sh"
+    _edit_config "$FILE_TO_OPEN" $@
+    return $?
+}
+
+_do_command "$@"

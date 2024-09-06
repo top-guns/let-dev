@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+
+COMMAND_DESCRIPTION="Edit global git settings"
+COMMAND_HELP="\
+Edit global git settings for the current user.
+"
+
+_do_command() {
+    local FILE_TO_OPEN="$HOME/.gitconfig"
+
+    source "$LETDEV_HOME/commands/config/.edit_config.sh"
+    _edit_config "$FILE_TO_OPEN" $@
+    return $?
+}
+
+_do_command "$@"
