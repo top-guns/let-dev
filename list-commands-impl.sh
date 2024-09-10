@@ -218,5 +218,3 @@ list_commands() {
         [ -z "$filter" ] && echo -e "$COMMAND_LIST" | sort | uniq || echo -e "$COMMAND_LIST" | grep "$filter" | sort | uniq
     fi
 }
-
-list_commands $@
