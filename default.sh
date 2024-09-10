@@ -13,8 +13,14 @@ default_command() {
         return
     fi
 
+    # Add command to the history
+    put_command_to_history "$@"
+
     local cmd=`echo "$1"`
     shift
+    if [ -z "$cmd" ]; then
+        return
+    fi
     # echo "cmd: $cmd"
     
     # # Remove ': ' from the beginning of the command

@@ -20,7 +20,7 @@ _do_command() {
     #     xargs -I{} awk -F= '/DESCRIPTION=/ {gsub(/['"'"'\x22]/, "", $2); print FILENAME " - " $2}' {}
 
     local command="$1"
-    command=$(echo "$command" | sed 's/^: //')
+    command=$(echo "$command" | sed 's/^: //' | sed 's/ .*//')
     local relative_path=$(echo "$command" | sed 's|:|/|g')
     local variable_name=$2
     local file=$($LETDEV_HOME/get-command-script-path.sh "$command")

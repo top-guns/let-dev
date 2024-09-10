@@ -106,6 +106,9 @@ init_shell() {
     # Create aliases
     source $LETDEV_HOME/recreate-aliases.sh
     letdev_recreate_all_aliases
+
+    # Load commands history engine
+    source $LETDEV_HOME/commands_history.sh
 }
 
 
