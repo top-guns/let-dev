@@ -7,7 +7,9 @@
 #     COMPREPLY=($(compgen -W "$(echo "$cmds" | fzf --reverse --inline-info --tac --preview)" -- "$cur"))
 # }
 
-_letdev_tab_complete() {
+_letdev_menu_handler() {
+    local command_provider=$1
+    
     if [[ -n "$READLINE_LINE" ]]; then
         local words=($READLINE_LINE)
         local cur_word_index=$(
@@ -22,7 +24,7 @@ _letdev_tab_complete() {
         local symbol_before_cursor=${READLINE_LINE:READLINE_POINT-1:1}
         if [[ "$symbol_before_cursor" != " " ]]; then
             if [[ "$cur" =~ ^: ]]; then
-                local cmds=$($LETDEV_HOME/list-commands.sh --format=command)
+                local cmds=$($command_provider)
                 if [[ $cur_word_index -eq 1 ]]; then
                     # Command completion
                     # $LETDEV_HOME/list-commands.sh | sed "s|:|$LETDEV_HOME/commands/|" | fzf --reverse --inline-info --tac --preview="$LETDEV_HOME/get-command-variable.sh {} COMMAND_HELP"
@@ -51,9 +53,22 @@ _letdev_tab_complete() {
     fzf_bash_completion
 }
 
+
+_letdev_tab_handler() {
+    _letdev_menu_handler "list_commands --format=command"
+}
+
+_letdev_shift_tab_handler() {
+    _letdev_menu_handler "get_history_commands"
+}
+
+# export -f _letdev_shift_tab_handler
+
 _letdev_init_completion() {
     # complete -F _letdev_complete :
-    bind -x '"\t": _letdev_tab_complete'
+    bind -x '"\t": _letdev_tab_handler'
+
+    bind -x '"\e[Z": _letdev_shift_tab_handler'
 }
 
 _letdev_init_completion

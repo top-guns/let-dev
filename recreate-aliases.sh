@@ -53,7 +53,7 @@ letdev_recreate_all_aliases() {
 
     # Create alias for every command
     # local alias_commands=$($LETDEV_HOME/list-commands.sh --system --user --format=alias)
-    local alias_commands=$($LETDEV_HOME/list-commands.sh --system --user --project --format=alias)
+    local alias_commands=$(list_commands --system --user --project --format=alias)
     eval "$alias_commands"
     export LETDEV_LAST_PROJECT_PATH="$project_dir"
 
@@ -79,7 +79,7 @@ letdev_remove_project_aliases() {
     local cur_dir="$PWD"
     builtin cd "$LETDEV_LAST_PROJECT_PATH"
 
-    local unalias_commands=$($LETDEV_HOME/list-commands.sh --project --format=command | sed 's/^/unalias /')
+    local unalias_commands=$(list_commands --project --format=command | sed 's/^/unalias /')
     eval "$unalias_commands"
 
     builtin cd "$cur_dir"
@@ -92,7 +92,7 @@ letdev_recreate_project_aliases() {
     letdev_remove_project_aliases
 
     # Create alias for every command
-    local alias_commands=$($LETDEV_HOME/list-commands.sh --project --format=alias)
+    local alias_commands=$(list_commands --project --format=alias)
     eval "$alias_commands"
 
     export LETDEV_LAST_PROJECT_PATH="$PWD"

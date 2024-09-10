@@ -71,6 +71,12 @@ init_shell() {
     export PATH="$LETDEV_HOME/path:$PATH"
     export PATH="$LETDEV_PROJECT_PATH/$LETDEV_PROFILE/path:$PATH"
 
+    # Load let.dev libraries
+    # Load the functions for working with the commands list
+    source "$LETDEV_HOME/list_commands_impl.sh"
+    # Load commands history engine
+    source "$LETDEV_HOME/commands_history.sh"
+
     # Auto-completion
     if [ "$shell_name" = "bash" ]; then
         source $LETDEV_HOME/init-completion-bash.sh
@@ -106,9 +112,6 @@ init_shell() {
     # Create aliases
     source $LETDEV_HOME/recreate-aliases.sh
     letdev_recreate_all_aliases
-
-    # Load commands history engine
-    source $LETDEV_HOME/commands_history.sh
 }
 
 
