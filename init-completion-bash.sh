@@ -8,6 +8,10 @@
 # }
 
 _letdev_menu_handler() {
+    local order=$1 # normal, reversed
+    shift
+    [[ $order == "reversed" ]] && order="--tac" || order=""
+
     local command_provider=$1
     
     if [[ -n "$READLINE_LINE" ]]; then
@@ -28,7 +32,7 @@ _letdev_menu_handler() {
                 if [[ $cur_word_index -eq 1 ]]; then
                     # Command completion
                     # $LETDEV_HOME/list-commands.sh | sed "s|:|$LETDEV_HOME/commands/|" | fzf --reverse --inline-info --tac --preview="$LETDEV_HOME/get-command-variable.sh {} COMMAND_HELP"
-                    local selected=$(echo "$cmds" | fzf --reverse --no-sort --inline-info \
+                    local selected=$(echo "$cmds" | fzf --no-sort --reverse $order --inline-info \
                         --query=": $cur" --preview="$LETDEV_HOME/get-command-variable.sh {} COMMAND_HELP")
                     if [[ -n $selected ]]; then
                         READLINE_LINE="$selected"
@@ -55,11 +59,11 @@ _letdev_menu_handler() {
 
 
 _letdev_tab_handler() {
-    _letdev_menu_handler "list_commands --format=command"
+    _letdev_menu_handler "normal" "list_commands --format=command"
 }
 
 _letdev_shift_tab_handler() {
-    _letdev_menu_handler "get_history_commands"
+    _letdev_menu_handler "reversed" "get_history_commands"
 }
 
 # export -f _letdev_shift_tab_handler

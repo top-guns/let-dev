@@ -27,7 +27,6 @@
 #   fi
 # }
 
-
 # _custom_tab_handler() {
 #   if [[ $LBUFFER == :* ]]; then
 #     local command=${LBUFFER#:}
@@ -98,42 +97,43 @@
 #     'stop:Stop the application'
 #     'status:Show the status of the application'
 #   )
-    
+
 #   _describe -t commands 'letdev_command commands' commands_with_prefix
 # }
 
-
 _letdev_menu_handler() {
-  if [[ $LBUFFER =~ .*:[^[:space:]]*$ ]]; then
-    local command_list=$($@)
-    local -a commands
-    multiline_to_array "$command_list" commands
+    local order=$1 # normal, reversed
+    shift
+    [[ $order == "reversed" ]] && order="--tac" || order=""
 
-    # --reverse --layout=reverse-list --no-sort --inline-info --tac
-    local selected=$(printf '%s\n' "${commands[@]}" | fzf --reverse --no-sort --inline-info \
-        --query="${LBUFFER#*:}" --preview="$LETDEV_HOME/get-command-variable.sh {} COMMAND_HELP")
-    if [[ -n $selected ]]; then
-        LBUFFER="${LBUFFER%:*}$selected"
-        CURSOR=${#LBUFFER}
-    fi
-  else
-    if whence -w fzf-tab-complete > /dev/null; then
-        fzf-tab-complete $@
+    if [[ $LBUFFER =~ .*:[^[:space:]]*$ ]]; then
+        local command_list=$($@)
+        local -a commands
+        multiline_to_array "$command_list" commands
+
+        # --reverse --layout=reverse-list --no-sort --inline-info --tac
+        local selected=$(printf '%s\n' "${commands[@]}" | fzf --no-sort --reverse $order --inline-info \
+            --query="${LBUFFER#*:}" --preview="$LETDEV_HOME/get-command-variable.sh {} COMMAND_HELP")
+        if [[ -n $selected ]]; then
+            LBUFFER="${LBUFFER%:*}$selected"
+            CURSOR=${#LBUFFER}
+        fi
     else
-        zle expand-or-complete $@
+        if whence -w fzf-tab-complete >/dev/null; then
+            fzf-tab-complete $@
+        else
+            zle expand-or-complete $@
+        fi
     fi
-  fi
 }
 
-
 _letdev_tab_handler() {
-    _letdev_menu_handler "list_commands" "--format=command"
+    _letdev_menu_handler "normal" "list_commands" "--format=command"
 }
 
 _letdev_shift_tab_handler() {
-    _letdev_menu_handler "get_history_commands"
+    _letdev_menu_handler "reversed" "get_history_commands"
 }
-
 
 _letdev_init_completion() {
     # alias ld="letdev_command"
@@ -146,7 +146,6 @@ _letdev_init_completion() {
     # Add letdev_command to the completion list
     # compdef _letdev_command letdev_command
     # compdef _letdev_command :*
-
 
     zle -N _letdev_shift_tab_handler
     bindkey "^[[Z" _letdev_shift_tab_handler
