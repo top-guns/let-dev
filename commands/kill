@@ -1,0 +1,52 @@
+#!/bin/bash
+
+COMMAND_DESCRIPTION="Kill process by pid, pattern or marker"
+
+COMMAND_HELP="\
+Kill process by pid, pattern or marker.
+Usage:
+    :kill <pid>
+    :kill <pattern> 
+    :kill <marker>
+"
+
+_do_command() {
+    # Show help on --help
+    [[ "$1" == "--help" || "$1" == "help" ]] && echo "$COMMAND_HELP" && return
+
+    local pattern=$1
+    [ -z "$pattern" ] && echo "Please provide a pid, pattern or marker" && return
+
+    if [[ $pattern =~ ^[0-9]+$ ]]; then
+        if ps -p $pattern > /dev/null; then
+            kill -9 $pattern
+            echo "Process killed"
+        else
+            echo "No process found for pid: $pattern"
+        fi
+    else
+        # Kill all processes that match the pattern
+        local pids=$(ps aux | grep $pattern | grep -v grep | awk '{print $2}')
+
+        [ -z "$pids" ] && echo "No process found for pattern: '$pattern'" && return
+
+        # if many processes found, ask user to confirm
+        local process_count=$(echo "$pids" | wc -l | tr -d ' ')
+        if [ $process_count -gt 1 ]; then
+            echo "Found multiple processes: $(echo "$pids" | xargs | sed 's/ /, /g')"
+            :confirm "Do you want to kill all these processes?" || return
+        fi
+
+        for pid in $(echo "$pids"); do
+            kill -9 $pid
+        done
+        
+        if [ $process_count -gt 1 ]; then
+            echo "$process_count processes killed"
+        else
+            echo "Process killed"
+        fi
+    fi
+}
+
+_do_command $@
