@@ -8,12 +8,6 @@
 # }
 
 _letdev_menu_handler() {
-    local order=$1 # normal, reversed
-    shift
-    [[ $order == "reversed" ]] && order="--tac" || order=""
-
-    local command_provider=$1
-    
     if [[ -n "$READLINE_LINE" ]]; then
         local words=($READLINE_LINE)
         local cur_word_index=$(
@@ -28,12 +22,18 @@ _letdev_menu_handler() {
         local symbol_before_cursor=${READLINE_LINE:READLINE_POINT-1:1}
         if [[ "$symbol_before_cursor" != " " ]]; then
             if [[ "$cur" =~ ^: ]]; then
-                local cmds=$($command_provider)
+                letdev_storage_set ldm ""
                 if [[ $cur_word_index -eq 1 ]]; then
                     # Command completion
                     # $LETDEV_HOME/list-commands.sh | sed "s|:|$LETDEV_HOME/commands/|" | fzf --reverse --inline-info --tac --preview="$LETDEV_HOME/get-command-variable.sh {} COMMAND_HELP"
-                    local selected=$(echo "$cmds" | fzf --no-sort --reverse $order --inline-info \
-                        --query=": $cur" --preview="$LETDEV_HOME/get-command-variable.sh {} COMMAND_HELP")
+                    local selected=$($LETDEV_HOME/completion-output.sh | fzf \
+                        --no-sort \
+                        --reverse \
+                        --inline-info \
+                        --query=": $cur" \
+                        --preview="$LETDEV_HOME/get-command-variable.sh {} COMMAND_HELP" \
+                        --bind "tab:reload( LETDEV_HOME='$LETDEV_HOME' $LETDEV_HOME/completion-output.sh )" \
+                    )
                     if [[ -n $selected ]]; then
                         READLINE_LINE="$selected"
                         READLINE_POINT=$((${#selected}))
@@ -41,7 +41,15 @@ _letdev_menu_handler() {
                     return 0
                 else
                     # Arguments completion
-                    local selected=$(echo "$cmds" | fzf --reverse --no-sort --inline-info --query="$cur")
+                    # TODO: Implement arguments completion
+                    local selected=$($LETDEV_HOME/completion-output.sh | fzf \
+                        --no-sort \
+                        --reverse \
+                        --inline-info \
+                        --query=": $cur" \
+                        --preview="$LETDEV_HOME/get-command-variable.sh {} COMMAND_HELP" \
+                        --bind "tab:reload( LETDEV_HOME='$LETDEV_HOME' $LETDEV_HOME/completion-output.sh )" \
+                    )
                     if [[ -n $selected ]]; then
                         local cur_length=${#cur}
                         READLINE_LINE=${READLINE_LINE:0:$((READLINE_POINT - cur_length))}$selected${READLINE_LINE:$READLINE_POINT}
@@ -59,20 +67,23 @@ _letdev_menu_handler() {
 
 
 _letdev_tab_handler() {
-    _letdev_menu_handler "normal" "list_commands --format=command"
+    _letdev_menu_handler "$@"
 }
 
-_letdev_shift_tab_handler() {
-    _letdev_menu_handler "reversed" "get_history_commands"
-}
+# _letdev_shift_tab_handler() {
+#     _letdev_menu_handler "reversed" "get_history_commands"
+# }
 
 # export -f _letdev_shift_tab_handler
 
 _letdev_init_completion() {
     # complete -F _letdev_complete :
+
+    # Bind tab key 
     bind -x '"\t": _letdev_tab_handler'
 
-    bind -x '"\e[Z": _letdev_shift_tab_handler'
+    # Bind shift-tab key 
+    # bind -x '"\e[Z": _letdev_shift_tab_handler'
 }
 
 _letdev_init_completion

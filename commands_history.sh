@@ -41,7 +41,7 @@ get_history_commands() {
 
     # Command - is the first line of the separator
     # find all lines immediately following the separator
-    commands=$(grep -A 1 "$BLOCK_SEPARATOR" "$HISTORY_FILE" | grep -v "$BLOCK_SEPARATOR" | grep -v -- "^--$" | grep -E "$filter")
+    commands=$(grep -A 1 "$BLOCK_SEPARATOR" "$HISTORY_FILE" | grep -v "$BLOCK_SEPARATOR" | grep -v -- "^--$" | grep -E "$filter" | tac)
 
     [ -n "$commands" ] && echo "$commands"
 }

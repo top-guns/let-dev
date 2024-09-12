@@ -72,6 +72,9 @@ init_shell() {
     export PATH="$LETDEV_PROJECT_PATH/$LETDEV_PROFILE/path:$PATH"
 
     # Load let.dev libraries
+    # Load the functions for working with the storage
+    source "$LETDEV_HOME/storage.sh"
+    letdev_storage_started || letdev_storage_start
     # Load the functions for working with the commands list
     source "$LETDEV_HOME/list_commands_impl.sh"
     # Load commands history engine

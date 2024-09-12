@@ -101,19 +101,19 @@
 #   _describe -t commands 'letdev_command commands' commands_with_prefix
 # }
 
+
 _letdev_menu_handler() {
-    local order=$1 # normal, reversed
-    shift
-    [[ $order == "reversed" ]] && order="--tac" || order=""
-
     if [[ $LBUFFER =~ .*:[^[:space:]]*$ ]]; then
-        local command_list=$($@)
-        local -a commands
-        multiline_to_array "$command_list" commands
-
         # --reverse --layout=reverse-list --no-sort --inline-info --tac
-        local selected=$(printf '%s\n' "${commands[@]}" | fzf --no-sort --reverse $order --inline-info \
-            --query="${LBUFFER#*:}" --preview="$LETDEV_HOME/get-command-variable.sh {} COMMAND_HELP")
+        letdev_storage_set ldm ""
+        local selected=$($LETDEV_HOME/completion-output.sh | fzf \
+            --no-sort \
+            --reverse \
+            --inline-info \
+            --query="${LBUFFER#*:}" \
+            --preview="$LETDEV_HOME/get-command-variable.sh {} COMMAND_HELP" \
+            --bind "tab:reload( LETDEV_HOME='$LETDEV_HOME' $LETDEV_HOME/completion-output.sh )" \
+        )
         if [[ -n $selected ]]; then
             LBUFFER="${LBUFFER%:*}$selected"
             CURSOR=${#LBUFFER}
@@ -128,18 +128,19 @@ _letdev_menu_handler() {
 }
 
 _letdev_tab_handler() {
-    _letdev_menu_handler "normal" "list_commands" "--format=command"
+    # _letdev_menu_handler "normal" "list_commands" "--format=command"
+    _letdev_menu_handler "$@"
 }
 
-_letdev_shift_tab_handler() {
-    _letdev_menu_handler "reversed" "get_history_commands"
-}
+# _letdev_shift_tab_handler() {
+#     _letdev_menu_handler "reversed" "get_history_commands"
+# }
 
 _letdev_init_completion() {
     # alias ld="letdev_command"
     # compdef _letdev_command letdev_command
 
-    # Bind tab key to custom handler
+    # Bind tab key
     zle -N _letdev_tab_handler
     bindkey "^I" _letdev_tab_handler
 
@@ -147,8 +148,9 @@ _letdev_init_completion() {
     # compdef _letdev_command letdev_command
     # compdef _letdev_command :*
 
-    zle -N _letdev_shift_tab_handler
-    bindkey "^[[Z" _letdev_shift_tab_handler
+    # Bind shift-tab key 
+    # zle -N _letdev_shift_tab_handler
+    # bindkey "^[[Z" _letdev_shift_tab_handler
 }
 
 _letdev_init_completion
