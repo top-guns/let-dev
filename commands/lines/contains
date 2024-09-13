@@ -1,0 +1,27 @@
+#!/bin/bash
+
+COMMAND_DESCRIPTION="Is lines contains a regular expression"
+
+COMMAND_HELP="\
+Is one of the lines contains a regular expression.
+Returns 0 if found, 1 otherwise.
+Usage:
+    :lines:contains <regexpr>
+Arguments:
+    regexpr: Regular expression to search for
+Example:
+    :lines:contains 'hello|hi'
+    echo 'hello' | :lines:contains 'hello' && echo 'Found' || echo 'Not found'
+"
+
+_do_command() {
+    # Show help on --help
+    if [[ "$1" == "--help" || "$1" == "help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    grep -qE "$@"
+}
+
+_do_command "$@"

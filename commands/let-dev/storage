@@ -1,0 +1,118 @@
+#!/bin/bash
+
+COMMAND_DESCRIPTION="Simple key-value storage"
+
+COMMAND_HELP="\
+Simple key-value storage implementation.
+
+Usage: 
+    :let-dev:storage get <key> [default-value]      - get the value of the key or default value if not found
+    :let-dev:storage set <key> [new-value]          - set new value for the key or remove the key
+    :let-dev:storage has <key>                      - check if the key exists, return 'true' or 'false' 
+
+    :let-dev:storage [status]                       - check the status of the storage, default command
+    :let-dev:storage start                          - start the storage
+    :let-dev:storage stop                           - stop the storage
+    :let-dev:storage restart                        - restart the storage
+    :let-dev:storage pid                            - get the process ID of the storage
+
+    :let-dev:storage help                           - display this help
+
+Arguments:
+    key: the key to store or retrieve
+    new-value: the new value to store
+    default-value: the default value to return if the key is not found
+
+Example:
+    :let-dev:storage get my-key # get the value of the key or empty string if not found
+    :let-dev:storage get my-key default-value # get the value of the key or default value if not found
+
+    :let-dev:storage set my-key new-value # set new value for the key
+    :let-dev:storage set my-key # remove the key
+
+    :let-dev:storage has my-key # check if the key exists
+"
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local command=$1
+    [ -z "$command" ] && command="status"
+
+    case $command in
+        status)
+            letdev_storage_status
+            ;;
+        start)
+            if letdev_storage_started; then
+                echo "Storage is already started"
+            else
+                letdev_storage_start
+                echo "Storage has been started"
+            fi
+            ;;
+        stop)
+            letdev_storage_stop
+            echo "Storage has been stopped and all resources have been released"
+            ;;
+        restart)
+            letdev_storage_stop
+            letdev_storage_start
+            echo "Storage has been restarted"
+            ;;
+        pid)
+            letdev_storage_pid
+            ;;
+        get)
+            if letdev_storage_started; then
+                if [ -z "$2" ]; then
+                    echo "Missing key" >&2
+                    return 1
+                fi
+                local value=$(letdev_storage_get "$2")
+                if [ $# -eq 2 ]; then
+                   letdev_storage_has "$2" && echo "$value"
+                else
+                    letdev_storage_has "$2" && echo "$value" || echo "$3"
+                fi
+            else
+                echo "Storage is not started" >&2
+            fi
+            ;;
+        set)
+            if letdev_storage_started; then
+                if [ -z "$2" ]; then
+                    echo "Missing key" >&2
+                    return 1
+                fi
+                if [ $# -lt 3 ]; then
+                    letdev_storage_remove "$2"
+                else
+                    letdev_storage_set "$2" "$3"
+                fi
+            else
+                echo "Storage is not started"
+            fi
+            ;;
+        has)
+            if letdev_storage_started; then
+                if [ -z "$2" ]; then
+                    echo "Missing key"
+                    return 1
+                fi
+                letdev_storage_has "$2"
+            else
+                echo "Storage is not available"
+            fi
+            ;;
+        *)
+            echo "Invalid command: $command" >&2
+            return 1
+            ;;
+    esac
+}
+
+_do_command "$@"
