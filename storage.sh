@@ -12,6 +12,7 @@ LETDEV_STORAGE_PIPE_OUT="/tmp/letdev_storage_pipe_out"
 # Get the value associated with a key
 letdev_storage_get() {
     local key=$1
+    letdev_storage_has $key || return
     echo "get $key" >$LETDEV_STORAGE_PIPE_IN
     cat <$LETDEV_STORAGE_PIPE_OUT
 }
@@ -27,7 +28,8 @@ letdev_storage_set() {
 letdev_storage_has() {
     local key=$1
     echo "has $key" >$LETDEV_STORAGE_PIPE_IN
-    cat <$LETDEV_STORAGE_PIPE_OUT
+    local result=$(cat <$LETDEV_STORAGE_PIPE_OUT)
+    [ "$result" = "true" ]
 }
 
 # Remove the value associated with a key
@@ -84,15 +86,18 @@ _letdev_storage_listener() {
 
 # Start the listener in the background
 letdev_storage_start() {
-    (_letdev_storage_listener &)
+    letdev_storage_started || letdev_marked_process_start letdev_storage_listener _letdev_storage_listener
 }
 
 # Stop the listener and remove the named pipes
 letdev_storage_stop() {
     # Send the exit command to the listener if it is running
-    if [ -p $LETDEV_STORAGE_PIPE_IN ]; then
-        echo "exit" >$LETDEV_STORAGE_PIPE_IN
-    fi
+    # if [ -p $LETDEV_STORAGE_PIPE_IN ]; then
+    #     echo "exit" >$LETDEV_STORAGE_PIPE_IN
+    # fi
+
+    # Kill the listener process if it is running
+    letdev_marked_process_kill letdev_storage_listener
         
     # Clean up the named pipes if they exist
     [ -p $LETDEV_STORAGE_PIPE_IN ] && rm $LETDEV_STORAGE_PIPE_IN
@@ -106,7 +111,7 @@ letdev_storage_restart() {
 
 # Check if the listener is running
 letdev_storage_started() {
-    [ -p $LETDEV_STORAGE_PIPE_IN ]
+    letdev_marked_process_started letdev_storage_listener
 }
 
 letdev_storage_status() {
@@ -115,4 +120,9 @@ letdev_storage_status() {
     else
         echo "stopped"
     fi
+}
+
+letdev_storage_pid() {
+    local pid=$(letdev_marked_process_pid letdev_storage_listener)
+    [ -n "$pid" ] && echo $pid
 }

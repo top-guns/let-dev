@@ -26,16 +26,9 @@ init_shell() {
     cur_dir=`pwd`
     builtin cd $LETDEV_HOME
 
-    local shell_name=$1
-    shift
-
     # Get the absolute path of the current script
     local SCRIPT_PATH=''
     [ -n "${BASH_SOURCE[0]}" ] && SCRIPT_PATH="${BASH_SOURCE[0]}" || SCRIPT_PATH="$0"
-
-    # Check is the script run in interactive mode
-    local interactive_mode=false
-    [ -t 0 ] && interactive_mode=true
 
     # Check if the user wants to update the project
     local check_updates=$interactive_mode
@@ -72,19 +65,34 @@ init_shell() {
     export PATH="$LETDEV_PROJECT_PATH/$LETDEV_PROFILE/path:$PATH"
 
     # Load let.dev libraries
+    # Load marked processes engine
+    source "$LETDEV_HOME/marked_process.sh"
     # Load the functions for working with the storage
     source "$LETDEV_HOME/storage.sh"
-    letdev_storage_started || letdev_storage_start
+    letdev_storage_started || [ "$interactive_mode" = true ] && letdev_storage_start
     # Load the functions for working with the commands list
     source "$LETDEV_HOME/list_commands_impl.sh"
     # Load commands history engine
     source "$LETDEV_HOME/commands_history.sh"
 
     # Auto-completion
-    if [ "$shell_name" = "bash" ]; then
-        source $LETDEV_HOME/init-completion-bash.sh
-    elif [ "$shell_name" = "zsh" ]; then
-        source $LETDEV_HOME/init-completion-zsh.sh
+    if [ "$interactive_mode" = true ]; then
+        if [ "$shell_name" = "bash" ]; then
+            # if set -o | grep -qE '^(emac|vi)[^\w]+on$'; then
+                # echo "Init completion for bash"
+                source $LETDEV_HOME/init-completion-bash.sh
+            # fi
+        elif [ "$shell_name" = "zsh" ]; then
+            # echo "Init completion for zsh"
+            source $LETDEV_HOME/init-completion-zsh.sh
+        else 
+            echo "Unsupported shell: $shell_name"
+            echo "Supported shells: bash, zsh"
+            echo "Skip completion initialization"
+        fi
+    else 
+        # echo "Skip completion initialization"
+        true
     fi
 
     # Bindings
@@ -121,10 +129,22 @@ init_shell() {
 shell_name=""
 # If there is no arguments, or the first argument is starts with '-', then use the current shell
 if [ $# -eq 0 ] || [[ $1 == -* ]]; then
-    shell_name=`basename $SHELL`
+    # shell_name=`basename $SHELL`
+
+    # If $0 contains 'zsh', then the current shell is zsh, otherwise it is bash
+    shell_name=`[[ $0 == *zsh* ]] && echo "zsh" || echo "bash"`
 else 
     shell_name=$1
     shift
 fi
 
-init_shell $shell_name $@
+interactive_mode=false
+if [ $# -eq 0 ] || [[ $1 == -* ]]; then
+    [ -t 0 ] && interactive_mode=true
+else
+    interactive_mode=$1
+    shift
+fi
+
+
+init_shell "$@"

@@ -27,7 +27,7 @@ install() {
     echo '# Add let-dev aliases. Should be the last lines!!!' >> $rc_file
     echo "export LETDEV_HOME='$LETDEV_HOME'" >> $rc_file
     echo "export LETDEV_PROFILE='$LETDEV_PROFILE'" >> $rc_file
-    echo "[ -d \"\$LETDEV_HOME\" ] && source \"\$LETDEV_HOME/init-shell.sh\" $shell_name $auto_update" >> $rc_file
+    echo "[ -d \"\$LETDEV_HOME\" ] && source \"\$LETDEV_HOME/init-shell.sh\" $shell_name true $auto_update" >> $rc_file
 
     echo "successfully"
 }
