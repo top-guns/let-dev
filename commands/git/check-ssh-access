@@ -7,7 +7,7 @@ Check SSH access to GitHub with the default user in the current directory.
 Display used username if the access is successful.
 
 Usage: 
-    :git:check-ssh-access
+    :git:check-ssh-access [url]
 "
 
 _do_command() {
@@ -16,7 +16,10 @@ _do_command() {
         return
     fi
 
-    ssh -T git@github.com
+    local url="$1"
+    [ -z "$url" ] && url="github.com"
+
+    ssh -T git@$url
 }
 
 _do_command $@
