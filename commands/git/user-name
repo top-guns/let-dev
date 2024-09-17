@@ -1,0 +1,30 @@
+#!/bin/bash
+
+COMMAND_DESCRIPTION="Manage the git user name of the current repository."
+
+COMMAND_HELP="\
+Manage the local git user name of the current repository.
+
+Usage: 
+    :git:user-name <git-user-name>
+Example:
+    :git:user-name                   # Display the current git user name
+    :git:user-name my_github_user    # Update the git user name
+"
+
+_do_command() {
+    if [[ "$1" == "--help" || "$1" == "help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local new_value="$1"
+    
+    if [ -z "$new_value" ]; then
+        git config user.name
+    else
+        git config user.name "$new_value"
+    fi
+}
+
+_do_command $@

@@ -1,0 +1,30 @@
+#!/bin/bash
+
+COMMAND_DESCRIPTION="Manage the origin of the current repository."
+
+COMMAND_HELP="\
+Manage the origin of the current repository.
+
+Usage: 
+    :git:origin <url>
+Example:
+    :git:origin                                             # Display the current origin
+    :git:origin git@github.com:my_company/my_project.git    # Set the origin to the specified URL
+"
+
+_do_command() {
+    if [[ "$1" == "--help" || "$1" == "help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local url="$1"
+    
+    if [ -z "$url" ]; then
+        git remote get-url origin
+    else
+        git remote set-url origin $url
+    fi
+}
+
+_do_command $@

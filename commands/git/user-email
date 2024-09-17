@@ -1,0 +1,30 @@
+#!/bin/bash
+
+COMMAND_DESCRIPTION="Manage the git user email of the current repository."
+
+COMMAND_HELP="\
+Manage the local git user email of the current repository.
+
+Usage: 
+    :git:user-email <git-user-email>
+Example:
+    :git:user-email                   # Display the current git user email
+    :git:user-email my_github_user    # Update the git user email
+"
+
+_do_command() {
+    if [[ "$1" == "--help" || "$1" == "help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local new_value="$1"
+    
+    if [ -z "$new_value" ]; then
+        git config user.email
+    else
+        git config user.email "$new_value"
+    fi
+}
+
+_do_command $@
