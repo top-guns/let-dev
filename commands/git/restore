@@ -10,7 +10,7 @@ If no files are specified, all changes in the working directory will be reset.
 "
 
 _do_command() {
-    if [[ "$1" = "--help" ]]; then
+    if [[ "$1" == "--help" || "$1" == "help" ]]; then
         echo "$COMMAND_HELP"
         return
     fi

@@ -9,7 +9,7 @@ Usage:
 "
 
 _do_command() {
-    if [[ "$1" = "--help" ]]; then
+    if [[ "$1" == "--help" || "$1" == "help" ]]; then
         echo "$COMMAND_HELP"
         return
     fi

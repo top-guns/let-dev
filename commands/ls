@@ -17,12 +17,15 @@ Example:
 
 function _do_command {
     # Show help on --help
-    if [[ "$#" -eq 0 || "$1" == "--help" || "$1" == "help" ]]; then
+    if [[ "$1" == "--help" || "$1" == "help" ]]; then
         echo "$COMMAND_HELP"
         return
     fi
 
     LLS_PATH=$1
+    if [ -z "$LLS_PATH" ]; then
+        LLS_PATH="."
+    fi
 
     HEADER="Per Perms       N Owner Group   Size Modified     Name"
     n=0
