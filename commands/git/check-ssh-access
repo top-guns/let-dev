@@ -39,6 +39,9 @@ _do_command() {
         if [ -z "$url" ]; then
             echo "No origin is set for the current repository"
             return
+        else
+            # Extract domain from the 'git@main.github.com:top-guns/let-dev.git'
+            url=$(echo $url | sed -E 's/:.*//')
         fi
     fi
 
