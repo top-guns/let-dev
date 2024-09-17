@@ -3,11 +3,26 @@
 COMMAND_DESCRIPTION="Check SSH access to GitHub."
 
 COMMAND_HELP="\
-Check SSH access to GitHub with the default user in the current directory.
-Display used username if the access is successful.
+Check SSH access to GitHub.
+
+You can specify the URL to check the access.
+Use 'origin' as the URL if you want to check the access to the origin of the current repository.
+If not specified, it will use git@github.com.
+
+Display used user name if the access is successful.
 
 Usage: 
-    :git:check-ssh-access [url]
+    :git:check-ssh-access [ url | origin ]
+
+Example:
+    # Check the SSH access to the default URL (git@github.com)
+    :git:check-ssh-access
+
+    # Check the SSH access to the origin of the current repository
+    :git:check-ssh-access origin
+
+    # Check the SSH access to the specified URL                                     
+    :git:check-ssh-access git@github.com:my-company/my-project.git
 "
 
 _do_command() {
@@ -17,9 +32,19 @@ _do_command() {
     fi
 
     local url="$1"
-    [ -z "$url" ] && url="github.com"
+    if [ -z "$url" ]; then
+        url="git@github.com"
+    elif [ "$url" == "origin" ]; then
+        url=$(git remote get-url origin 2>/dev/null)
+        if [ -z "$url" ]; then
+            echo "No origin is set for the current repository"
+            return
+        fi
+    fi
 
-    ssh -T git@$url
+    echo "Checking SSH access to '$url'"
+    ssh -T $url
+    # [ $? -eq 0 ] && echo "SSH access is successful" || echo "SSH access is failed"
 }
 
 _do_command $@
