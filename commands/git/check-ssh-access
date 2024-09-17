@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Check SSH access to GitHub."
+
+COMMAND_HELP="\
+Check SSH access to GitHub with the default user in the current directory.
+Display used username if the access is successful.
+
+Usage: 
+    :git:check-ssh-access
+"
+
+_do_command() {
+    if [[ "$1" == "--help" || "$1" == "help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    ssh -T git@github.com
+}
+
+_do_command $@
