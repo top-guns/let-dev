@@ -14,7 +14,7 @@ get_shell_config_file() {
     echo $rc_file
 }
 
-install() {
+shell_integration() {
     # Get the default shell name (bash, zsh, etc.)
     local shell_name=$1
     local auto_update=$2
@@ -23,11 +23,17 @@ install() {
 
     local rc_file=$(get_shell_config_file $shell_name)
 
-    echo '' >> $rc_file
-    echo '# Add let-dev aliases. Should be the last lines!!!' >> $rc_file
-    echo "export LETDEV_HOME='$LETDEV_HOME'" >> $rc_file
-    echo "export LETDEV_PROFILE='$LETDEV_PROFILE'" >> $rc_file
-    echo "[ -d \"\$LETDEV_HOME\" ] && source \"\$LETDEV_HOME/init-shell.sh\" $shell_name true $auto_update" >> $rc_file
+    # Check if aliases are already added
+    if grep -q "let-dev" $rc_file; then
+        echo "let-dev aliases are already added to $rc_file"
+    else
+        echo "Add let-dev aliases to $rc_file"
+        echo '' >> $rc_file
+        echo '# Add let-dev aliases. Should be the last lines!!!' >> $rc_file
+        echo "export LETDEV_HOME='$LETDEV_HOME'" >> $rc_file
+        echo "export LETDEV_PROFILE='$LETDEV_PROFILE'" >> $rc_file
+        echo "[ -d \"\$LETDEV_HOME\" ] && source \"\$LETDEV_HOME/init-shell.sh\" $shell_name true $auto_update" >> $rc_file
+    fi
 
     echo "successfully"
 }
@@ -71,14 +77,29 @@ LETDEV_PROFILE=""
 if [ -z "$LETDEV_PROFILE" ]; then
     echo "Profile is required"
 else
-    echo "Install let-dev auto-completion"
-    source $LETDEV_HOME/commands/install/fzf-completion-in-bash $shell_name
-    echo "Installation of let-dev auto-completion has been completed."
+    # Create profile directory structure if it does not exist 
+    if [ -d "$LETDEV_HOME/profiles/$LETDEV_PROFILE/commands" ]; then
+        echo "Profile directory structure already exists"
+    else
+        echo "Create profile directory structure"
+        mkdir -p "$LETDEV_HOME/profiles/$LETDEV_PROFILE/commands"
+    fi
+    echo ''
+
+    # Add fzf completion to the shell if it is not added and shell is bash
+    if [ "$shell_name" == "bash" ]; then
+        if grep -q "fzf" $HOME/.bashrc; then
+            echo "fzf completion is already added to $HOME/.bashrc"
+        else
+            echo "Add fzf completion to $HOME/.bashrc"
+            source $LETDEV_HOME/commands/install/fzf-completion-in-bash $shell_name
+        fi
+    fi
     echo ""
 
     echo "Install let-dev"
 
-    install $shell_name $auto_update
+    shell_integration $shell_name $auto_update
     reload_shell $shell_name
 
     echo ""
