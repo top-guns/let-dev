@@ -5,16 +5,20 @@ COMMAND_DESCRIPTION="Ask user for input."
 COMMAND_HELP="\
 Ask user for input.
 Usage:
-    :ask <message>
+    :ask <message> [default_value]
 Example:
-    :ask 'What is your name?'
+    :ask 'What is your name?' 'John Doe'
 "
 
 _do_command() {
     # Show help on --help
     [[ "$1" == "--help" || "$1" == "help" ]] && echo "$COMMAND_HELP" && return
 
-    local message="$@"
+    local message="$1"
+    [[ -z $message ]] && echo "Error: Message is required" && return
+
+    local default_value="$2"
+    [[ -n $default_value ]] && message="$message [$default_value]"
     
     local value
     if [[ -n $ZSH_VERSION ]]; then
@@ -27,6 +31,8 @@ _do_command() {
         echo "Error: Unsupported shell"
         return
     fi
+
+    [[ -z $value ]] && value="$default_value"
    
     echo $value
 }
