@@ -44,7 +44,9 @@ letdev_marked_process_kill() {
         local message="Do you want to kill all these processes? [y/n]: "
         local result
         if [[ $SHELL == *"zsh"* ]]; then
-            vared -p "$message" 'result'
+            # vared -p "$message" 'result'
+            echo -n "$message"
+            read -r result
         else
             read -p "$message" result
         fi
