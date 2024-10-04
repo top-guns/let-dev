@@ -17,7 +17,7 @@ _do_command() {
     [ -z "$location" ] && location="$PWD"
 
     script_name="$alias_name"
-    script_path="$LETDEV_HOME/profiles/$LETDEV_PROFILE/cd/$script_name"
+    script_path="$LETDEV_HOME/profiles/$LETDEV_PROFILE/commands/cd/$script_name"
 
     echo "Add alias ':cd:$alias_name' which will change directory to '$location'"
 
@@ -32,7 +32,7 @@ _do_command() {
     echo "" >>"$script_path"
     echo "cd $location" >>"$script_path"
 
-    eval ::reload
+    # eval :let-dev:reload
 }
 
 _do_command "$@"
