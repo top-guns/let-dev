@@ -5,7 +5,7 @@ COMMAND_DESCRIPTION="Create new let-dev command"
 COMMAND_HELP="\
 Create new command in the current project or globally in the current profile.
 Usage:
-    :let-dev:new-command [command]
+    :letdev:new-command [command]
 "
 
 _do_command() {

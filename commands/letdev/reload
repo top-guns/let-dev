@@ -5,12 +5,12 @@ COMMAND_DESCRIPTION="Reload LetDev shell settings"
 COMMAND_HELP="\
 Reload LetDev shell settings.
 Usage: 
-    :let-dev:reload
+    :letdev:reload
 "
 
 _do_command() {
     source $LETDEV_HOME/init-shell.sh
-    echo "let-dev shell settings reloaded"
+    echo "letdev shell settings reloaded"
 }
 
 _do_command "$@"
