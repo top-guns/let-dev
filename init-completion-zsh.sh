@@ -109,6 +109,7 @@ _letdev_menu_handler() {
         local selected=$($LETDEV_HOME/completion-output.sh | fzf \
             --no-sort \
             --reverse \
+            --exact \
             --inline-info \
             --query="${LBUFFER#*:}" \
             --preview="$LETDEV_HOME/get-command-variable.sh {} COMMAND_HELP" \

@@ -29,6 +29,7 @@ _letdev_menu_handler() {
                     local selected=$($LETDEV_HOME/completion-output.sh | fzf \
                         --no-sort \
                         --reverse \
+                        --exact \
                         --inline-info \
                         --query=": $cur" \
                         --preview="$LETDEV_HOME/get-command-variable.sh {} COMMAND_HELP" \
@@ -45,6 +46,7 @@ _letdev_menu_handler() {
                     local selected=$($LETDEV_HOME/completion-output.sh | fzf \
                         --no-sort \
                         --reverse \
+                        --exact \
                         --inline-info \
                         --query=": $cur" \
                         --preview="$LETDEV_HOME/get-command-variable.sh {} COMMAND_HELP" \
