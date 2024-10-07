@@ -69,6 +69,9 @@ letdev_recreate_all_aliases() {
     # Alias for the default command
     alias "$LETDEV_SYMBOL"="source $LETDEV_HOME/default.sh"
 
+    # Alias for the project-dir command
+    alias "${LETDEV_SYMBOL}project-dir"='bash -c "cd $(dirname ${BASH_SOURCE:-$0})/../../.. && pwd"'
+
     # Alias for the cd command
     [ "$LETDEV_REPLACE_CD" = 'true' ] && _restore_cd_alias
 }
