@@ -1,12 +1,5 @@
 #!/bin/bash
 
-function preprocess_command {
-    # Здесь вы можете анализировать и изменять команду
-    # Например, заменить все вхождения 'foo' на 'bar'
-    echo "preprocess_command: '$READLINE_LINE'"
-    READLINE_LINE=${READLINE_LINE//foo/bar}
-}
-
 default_command() {
     if [ "$#" -eq 0 ]; then
         $LETDEV_HOME/shell/start.sh
@@ -38,33 +31,19 @@ default_command() {
         cmd=$(echo "$cmd" | sed "s/^://")
         # Replace colons with slashes
         cmd=`echo "$cmd" | tr ":" "/"`
-        # If it starts with project/ then 
-        if [[ "$cmd" == "project/"* ]]; then
-            # Remove project/ from the command
-            cmd=$(echo "$cmd" | sed "s/^project\///")
-            # Add the project directory to the command
-            if [ -f ".let-dev/$LETDEV_PROFILE/commands/$cmd" ]; then
-                cmd=`echo ".let-dev/$LETDEV_PROFILE/commands/$cmd"`
-            elif [ -f ".let-dev/$LETDEV_PROFILE/commands/:$cmd" ]; then
-                cmd=`echo ".let-dev/$LETDEV_PROFILE/commands/:$cmd"`
-            else 
-                echo "Project command '$cmd' not found"
-                return
-            fi
-        else
-            # Add the home directory to the command
-            if [ -f ".let-dev/$LETDEV_PROFILE/commands/$cmd" ]; then
-                cmd=`echo ".let-dev/$LETDEV_PROFILE/commands/$cmd"`
-            elif [ -f ".let-dev/$LETDEV_PROFILE/commands/:$cmd" ]; then
-                cmd=`echo ".let-dev/$LETDEV_PROFILE/commands/:$cmd"`
-            elif [ -f "$LETDEV_HOME/profiles/$LETDEV_PROFILE/commands/$cmd" ]; then
-                cmd=`echo "$LETDEV_HOME/profiles/$LETDEV_PROFILE/commands/$cmd"`
-            elif [ -f "$LETDEV_HOME/commands/$cmd" ]; then
-                cmd=`echo "$LETDEV_HOME/commands/$cmd"`
-            else 
-                echo "Command '$cmd' not found"
-                return
-            fi
+
+        local project_command=$(list_commands --project --format=fullpath | grep "$cmd$")
+
+        # Add the home directory to the command
+        if [ -n "$project_command" ]; then
+            cmd=`echo "$project_command"`
+        elif [ -f "$LETDEV_HOME/profiles/$LETDEV_PROFILE/commands/$cmd" ]; then
+            cmd=`echo "$LETDEV_HOME/profiles/$LETDEV_PROFILE/commands/$cmd"`
+        elif [ -f "$LETDEV_HOME/commands/$cmd" ]; then
+            cmd=`echo "$LETDEV_HOME/commands/$cmd"`
+        else 
+            echo "Command '$cmd' not found"
+            return
         fi
     fi
 

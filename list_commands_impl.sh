@@ -82,6 +82,34 @@ _get_list() {
     fi
 }
 
+_collect_commands_recursive() {
+    local cur_dir="$1"
+    local sub_dir="$2"
+    local format="$3"
+    local command_list=""
+
+    # Start from the specified directory and iterate up to the root directory
+    while [ -d "$cur_dir" ]; do
+        if [ -d "$cur_dir/$sub_dir" ]; then
+            local commands=$(_get_list "$cur_dir/$sub_dir" "$format")
+            # Iterate over the commands and add them to the command_list if it is not already present
+            while IFS= read -r command; do
+                if ! echo "$command_list" | grep -q "$command"; then
+                    [ -n "$command_list" ] && command_list="$command_list\n"
+                    command_list="$command_list$command"
+                fi
+            done <<< "$commands"
+        fi
+
+        local parent_dir=$(dirname "$cur_dir")  # Get the parent directory
+        # If we reached the root directory or the parent directory is empty, stop iterating
+        [ "$parent_dir" = "$cur_dir" ] && break
+        cur_dir="$parent_dir"  # Update the start directory to the parent directory
+    done
+
+    echo -e "$command_list"
+}
+
 list_commands() {
     if [[ "$1" = "--help" ]]; then
         echo "List all available commands in the system, user and project contexts."
@@ -163,15 +191,13 @@ list_commands() {
     # Get project commands
     local PROJECT_COMMAND_LIST=""
     if $include_project; then
-        local dir=".let-dev/$LETDEV_PROFILE/commands"
-        if [ -d "$dir" ]; then
-            PROJECT_COMMAND_LIST=$(_get_list "$dir" $format)
-            # if [ "$format" = "command" ] || [ "$format" = "var" ]; then
-            #     # PROJECT_COMMAND_LIST=$(echo "$PROJECT_COMMAND_LIST" | sed 's|^|: :project|')
-            #     # PROJECT_COMMAND_LIST=$(echo "$PROJECT_COMMAND_LIST" | sed 's|$|\t\t -- project command|')
-            #     PROJECT_COMMAND_LIST=$(echo "$PROJECT_COMMAND_LIST" | sed 's|^|: |')
-            # fi
-        fi
+        #PROJECT_COMMAND_LIST=$(_get_list "$dir" $format)
+        PROJECT_COMMAND_LIST=$(_collect_commands_recursive "$(pwd)" ".let-dev/$LETDEV_PROFILE/commands" "$format")
+        # if [ "$format" = "command" ] || [ "$format" = "var" ]; then
+        #     # PROJECT_COMMAND_LIST=$(echo "$PROJECT_COMMAND_LIST" | sed 's|^|: :project|')
+        #     # PROJECT_COMMAND_LIST=$(echo "$PROJECT_COMMAND_LIST" | sed 's|$|\t\t -- project command|')
+        #     PROJECT_COMMAND_LIST=$(echo "$PROJECT_COMMAND_LIST" | sed 's|^|: |')
+        # fi
     fi
 
     # Get system commands
