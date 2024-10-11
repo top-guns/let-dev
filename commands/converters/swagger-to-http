@@ -1,0 +1,140 @@
+#!/bin/bash
+
+COMMAND_DESCRIPTION="Convert swagger.json to .http file."
+
+COMMAND_HELP="\
+Convert swagger.json to .http file.
+
+Usage: 
+    :converters:swagger-to-http <url> [header1] [header2] ...
+
+Arguments:
+    url: If the url argument is ending with .json, it will be treated as a url of the source swagger.json file,
+         the swagger.json file will be fetched from the url and base url will be extracted from the url.
+         If the url argument is not ending with .json, it will be treated as the base url for constructing requests,
+         and the swagger.json file will be fetched from the input stream.
+    header1, header2, ...: Additional HTTP headers to include to all requests
+
+Example:
+    # Generate .http file from swagger.json url and add two headers to all generated request
+    :converters:swagger-to-http http://example.com/swagger/v1/swagger.json 'Content-Type: application/json' 'Authorization: Bearer {{token}}'
+
+    # Generate .http file from logger swagger.json file with the specified base url
+    :converters:swagger-to-http https://example.com/api < ./swagger.json
+"
+
+
+_do_command() {
+    if [[ "$1" == "--help" || "$1" == "help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local input_url=""
+    local input_headers=()
+    local verbose=false
+
+    # Parse arguments
+    while [ "$1" != "" ]; do
+        case $1 in
+            --verbose | -v)
+                verbose=true
+                ;;
+            *)
+                [ -z "$input_url" ] && input_url="$1" || input_headers+=("$1")
+                ;;
+        esac
+        shift
+    done
+
+    local base_url=$(echo "$input_url" | sed -E 's|(https?://[^/]+).*|\1|')
+
+    local swagger_json
+    # Check if the url ends with .json
+    if [[ "$input_url" =~ .*\.json$ ]]; then
+        # Read the swagger json contents from the specified url
+        [ "$verbose" = true ] && echo "Fetching swagger.json from $input_url ..." >&2
+        swagger_json=$(curl -s "$input_url")
+        [ "$?" -ne 0 ] && echo "Failed to fetch swagger.json from $input_url" && return 1
+        [ "$verbose" = true ] && echo "Done" >&2
+    else
+        # Read the input from stdin
+        [ "$verbose" = true ] && echo "Reading swagger.json from stdin ..." >&2
+        swagger_json=$(cat)
+        [ "$?" -ne 0 ] && echo "Failed to read swagger.json from stdin" && return 1
+        [ "$verbose" = true ] && echo "Done" >&2
+    fi
+
+    # Begin constructing the .http file content
+    local content="\
+##########################################################################################################################
+# Settings
+
+@base_url = $base_url
+
+##########################################################################################################################
+# API
+
+"
+
+    [ "$verbose" = true ] && echo "Converting swagger json from to http file..." >&2
+
+    # Parse JSON to generate HTTP requests
+    local api_paths=$(echo "$swagger_json" | jq -r '.paths | select(. != null) | keys[]')
+
+    for api_path in $(echo "$api_paths" | sort -u); do
+        [ "$verbose" = true ] && echo "  $api_path" >&2
+        local methods=$(echo "$swagger_json" | jq -r ".paths[\"$api_path\"] | select(. != null) | keys[]")
+
+        for method in $(echo "$methods" | sort -u); do
+            [ "$verbose" = true ] && echo "    $method" >&2
+
+            local operation_summary=$(echo "$swagger_json" | jq -r ".paths[\"$api_path\"][\"$method\"].summary // \"\"")
+            local operation_id=$(echo "$swagger_json" | jq -r ".paths[\"$api_path\"][\"$method\"].operationId // \"\"")
+
+            # Default request name if summary and operationId are missing
+            local request_name="${operation_summary:-$operation_id}"
+            if [ -z "$request_name" ]; then
+                request_name="$(echo "$method" | tr '[:lower:]' '[:upper:]') $api_path"
+            fi
+
+            # Construct the HTTP request for each operation
+            content+="### $request_name\n"
+
+            local path_params=$(echo "$api_path" | grep -o '{[^}]*}' | sed 's/[{}]//g')
+            if [ -n "$path_params" ]; then
+                for param in $path_params; do
+                    content+="# @prompt $param $param\n"
+                done
+            fi
+
+            local url="${api_path//\{/\{\{}"
+            url="${url//\}/\}\}}"
+            local method_upper=$(echo "$method" | tr '[:lower:]' '[:upper:]')
+
+            # Add mathod to the content
+            content+="$method_upper {{base_url}}$url\n"
+
+            # Extract headers from the swagger json
+            local headers=()
+            for header in $(echo "$swagger_json" | jq -r ".paths[\"$api_path\"][\"$method\"].parameters | select(. != null) | .[] | select(.in == \"header\") | .name"); do
+                headers+=("@header $header $header")
+            done
+            for header in "${headers[@]}"; do
+                content+="$header\n"
+            done
+            # Add user input headers
+            for header in "${input_headers[@]}"; do
+                content+="$header\n"
+            done
+            content+="\n"
+        done
+    done
+
+    [ "$verbose" = true ] && echo "Done" >&2
+
+    # Print the constructed HTTP content
+    echo -e "$content"
+}
+
+_do_command $@
