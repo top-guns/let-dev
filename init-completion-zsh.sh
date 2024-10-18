@@ -108,6 +108,7 @@ _letdev_menu_handler() {
         letdev_storage_set ldm ""
         local selected=$($LETDEV_HOME/completion-output.sh | fzf \
             --no-sort \
+            --cycle \
             --reverse \
             --exact \
             --inline-info \

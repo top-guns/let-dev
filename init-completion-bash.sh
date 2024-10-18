@@ -28,6 +28,7 @@ _letdev_menu_handler() {
                     # $LETDEV_HOME/list-commands.sh | sed "s|:|$LETDEV_HOME/commands/|" | fzf --reverse --inline-info --tac --preview="$LETDEV_HOME/get-command-variable.sh {} COMMAND_HELP"
                     local selected=$($LETDEV_HOME/completion-output.sh | fzf \
                         --no-sort \
+                        --cycle \
                         --reverse \
                         --exact \
                         --inline-info \
@@ -45,6 +46,7 @@ _letdev_menu_handler() {
                     # TODO: Implement arguments completion
                     local selected=$($LETDEV_HOME/completion-output.sh | fzf \
                         --no-sort \
+                        --cycle \
                         --reverse \
                         --exact \
                         --inline-info \

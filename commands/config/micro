@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+
+COMMAND_DESCRIPTION="Edit Micro editor configuration"
+COMMAND_HELP="\
+Edit Micro editor configuration.
+Open '' in the preferred text editor
+
+Usage:
+    :config:micro [settings | bindings]
+
+    If no arguments are provided, the 'settings' command will be used.
+
+Arguments:
+    settings: Edit the ~/.config/micro/settings.json file
+    bindings: Edit the ~/.config/micro/bindings.json file
+"
+
+_do_command() {
+    local command=$1
+    [ -z "$command" ] && command="settings" || shift
+    local FILE_TO_OPEN="$HOME/.config/micro"
+    [ "$command" == "bindings" ] && FILE_TO_OPEN="$FILE_TO_OPEN/bindings.json" || FILE_TO_OPEN="$FILE_TO_OPEN/settings.json"
+
+    source "$LETDEV_HOME/commands/config/.edit_config.sh"
+    _edit_config "$FILE_TO_OPEN" $@
+    return $?
+}
+
+_do_command "$@"
