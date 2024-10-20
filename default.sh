@@ -6,8 +6,28 @@ default_command() {
         return
     fi
 
-    # Add command to the history
-    put_command_to_history "$@"
+    local cur_command=""
+    if [ -n "$ZSH_VERSION" ]; then
+        # Save the current command to the history
+        fc -AI
+        # Update the history file
+        fc -R
+        # Get the last command
+        cur_command=$(fc -ln -1 | tail -n 1)
+    elif [ -n "$BASH_VERSION" ]; then
+        # Save the current command to the history
+        history -a
+        # Update the history file
+        history -r
+        # Get the last command
+        cur_command=$(history | tail -n 1 | sed "s/^[ ]*[0-9]*[ ]*//")
+    else
+        echo "Unsupported shell"
+        return 1
+    fi
+
+    # Add the current command to the let-dev history
+    put_command_to_history "$cur_command"
 
     local cmd=`echo "$1"`
     shift
