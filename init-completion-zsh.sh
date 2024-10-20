@@ -117,7 +117,8 @@ _letdev_menu_handler() {
             --bind "tab:reload( LETDEV_HOME='$LETDEV_HOME' $LETDEV_HOME/completion-output.sh )" \
         )
         if [[ -n $selected ]]; then
-            LBUFFER="${LBUFFER%:*}$selected"
+            # LBUFFER="${LBUFFER%:*}$selected"
+            LBUFFER="$selected"
             CURSOR=${#LBUFFER}
         fi
     else
