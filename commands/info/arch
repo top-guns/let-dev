@@ -1,0 +1,16 @@
+#!/bin/bash
+
+COMMAND_DESCRIPTION="Architecture Information"
+
+COMMAND_HELP="\
+Display main architecture information
+Usage: 
+    :info:arch
+"
+
+_do_command() {
+    echo "Architecture Information:"
+    uname -m
+}
+
+_do_command $@

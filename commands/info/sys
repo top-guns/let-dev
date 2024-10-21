@@ -9,6 +9,10 @@ Usage:
 "
 
 _do_command() {
+    echo "Architecture Information:"
+    uname -m
+    echo ""
+
     echo "Kernel Information:"
     uname -a
     echo ""
