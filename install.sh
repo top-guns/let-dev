@@ -54,25 +54,44 @@ SCRIPT_PATH=''
 # Get the absolute path of the current script and expand the '..' to the real path
 SCRIPT_PATH=`readlink -f $SCRIPT_PATH`
 
-# Get the default shell name (bash, zsh, etc.)
-shell_name=$1
-# If the shell name is not passed, then ask the user to enter the shell name
-[ -z "$shell_name" ] && read -p "Enter the shell name (bash, zsh, etc.): " shell_name
-
-auto_update=""
-[ -z "$auto_update" ] && read -p "Do you want to auto-update let-dev? (y/n): " response
-if [[ "$response" =~ ^[Nn][Oo]?$ ]]; then
-    auto_update="--no-update"
-else
-    auto_update="--update"
-fi
-
-
 LETDEV_HOME=`dirname $SCRIPT_PATH`
 
-# Get the user profile name
-LETDEV_PROFILE=""
+# Get the command line arguments
+shell_name=""               # Shell name
+auto_update="--no-update"   # let-dev auto-update 
+LETDEV_PROFILE=""           # User profile name
+for arg in "$@"; do
+    case $arg in
+        --profile=*)
+            LETDEV_PROFILE=`echo $arg | sed 's/--profile=//'`
+            ;;
+        --no-update)
+            auto_update="--no-update"
+            ;;
+        --update)
+            auto_update="--update"
+            ;;
+        --shell=*)
+            shell_name=`echo $arg | sed 's/--shell=//'`
+            ;;
+        --help|help)
+            echo "Usage: $0 [--shell=<bash|zsh>] [--profile=<letdev_profile_name>] [--update|--no-update]"
+            return
+            ;;
+        *)
+            echo "Unknown argument: $arg"
+            return
+            ;;
+    esac
+    shift
+done
+
+# If the shell name is not passed, ask the user to enter it
+[ -z "$shell_name" ] && read -p "Enter the shell name (bash, zsh, etc.): " shell_name
+
+# If the profile name is not passed, ask the user to enter it
 [ -z "$LETDEV_PROFILE" ] && read -p "Enter let-dev profile name: " LETDEV_PROFILE
+
 
 if [ -z "$LETDEV_PROFILE" ]; then
     echo "Profile is required"
@@ -100,10 +119,16 @@ else
     echo "Install let-dev"
 
     shell_integration $shell_name $auto_update
-    reload_shell $shell_name
+
+    # Reload the shell to apply changes
+    # reload_shell $shell_name
+    rc_file=$(get_shell_config_file $shell_name)
+    echo "reload $shell_name to apply changes ..."
+    source $rc_file
+    echo "successfully"
 
     echo ""
 
-    echo "Installation of let-dev has been completed."
-    echo "Use : to run let-dev commands."
+    echo "Installation of let-dev has been completed successfully."
+    echo "Use : prefix to run let-dev commands."
 fi
