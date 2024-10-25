@@ -1,0 +1,110 @@
+#!/bin/bash
+
+COMMAND_DESCRIPTION="Manage user groups"
+
+COMMAND_HELP="\
+Manage groups of a user.
+
+Usage:
+    :admin:user:groups [command] [username]
+
+    If command is not provided, it will default to 'ls'.
+    If username is not provided, it will default to the current user.
+
+Commands:
+    ls: List all groups of a user.
+    add: Add a user to a group.
+    rm: Remove a user from a group.
+"
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local command=$1
+    [ -z "$command" ] && command="ls" || shift
+
+    local user=$1
+    [ -z "$user" ] && user=$USER || shift
+
+    case $command in
+        ls|list)
+            groups $user | tr ' ' '\n'
+            ;;
+        add)
+            local group=$1
+            [ -z "$group" ] && echo "Group name is required." && return
+            # Check the OS type
+            if [ "$(uname)" == "Darwin" ]; then
+                # Check the group exists in the system
+                [ -z "$(dscl . -list /Groups | grep $group)" ] && echo "Group $group does not exist." && return
+
+                # Check if the user is already a member of the group
+                if ! dseditgroup -o checkmember -m $user $group; then
+                    sudo dseditgroup -o edit -a $user -t user $group
+                else
+                    echo "$user is already a member of $group"
+                fi
+
+                return
+            elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+                # Check the group exists
+                [ -z "$(getent group $group)" ] && echo "Group $group does not exist." && return
+
+                # Check if the user is already a member of the group
+                if ! groups $user | grep -q $group; then
+                    sudo usermod -aG $group $user
+                else
+                    echo "$user is already a member of $group"
+                fi
+                return
+            else
+                echo "Unsupported OS"
+                return
+            fi
+            
+            ;;
+        rm|del|remove)
+            local group=$1
+            [ -z "$group" ] && echo "Group name is required." && return
+
+            # Check the OS type
+            if [ "$(uname)" == "Darwin" ]; then
+                # Check the group exists in the system
+                [ -z "$(dscl . -list /Groups | grep $group)" ] && echo "Group $group does not exist." && return
+
+                # Check if the user is a member of the group
+                if dseditgroup -o checkmember -m $user $group; then
+                    sudo dseditgroup -o edit -d $user -t user $group
+                else
+                    echo "$user is not a member of $group"
+                fi
+
+                return
+            elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+                # Check the group exists
+                [ -z "$(getent group $group)" ] && echo "Group $group does not exist." && return
+
+                # Check if the user is a member of the group
+                if groups $user | grep -q $group; then
+                    sudo deluser $user $group
+                else
+                    echo "$user is not a member of $group"
+                fi
+                return
+            else
+                echo "Unsupported OS"
+                return
+            fi
+            ;;
+        *)
+            echo "Invalid command"
+            echo "$COMMAND_HELP"
+            return
+            ;;
+    esac
+}
+
+_do_command $@

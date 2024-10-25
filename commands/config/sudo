@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+
+COMMAND_DESCRIPTION="Edit sudo configuration"
+COMMAND_HELP="\
+Open sudo configuration file with visudo command
+"
+
+_do_command() {
+    sudo visudo
+    return $?
+}
+
+_do_command "$@"

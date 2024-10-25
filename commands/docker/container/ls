@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Docker containers list"
+
+COMMAND_HELP="\
+Get list of Docker containers.
+Usage:
+    :docker:container:ls
+"
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    docker ps -a --format "table {{.ID}}\t{{.Names}}\t{{.Image}}\t{{.Status}}\t{{.CreatedAt}}" $@
+}
+
+_do_command "$@"

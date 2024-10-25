@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Docker container IP address"
+
+COMMAND_HELP="\
+Get the IP address of a Docker container.
+Usage:
+    :docker:container:ip <container_id | container_name>
+"
+
+_get_container_ip() {
+    docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $1
+}
+
+_echo_with_right_padding() {
+    local str="$1"
+    local padding="$2"
+    printf "%s%*s" "$str" $((padding - ${#str})) ''
+}
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local container="$1"
+    # [ -z "$container" ] && container=$(docker ps --format "{{.Names}}" | fzf) || shift
+
+    if [ -n "$container" ]; then
+        _get_container_ip $container
+    else
+        # Use all containers if no container is specified
+        container=$(docker ps --format "{{.Names}}" | xargs) || shift
+
+        _echo_with_right_padding "CONTAINER" 30
+        echo "\tIP ADDRESS"
+
+        for c in $(echo "$container"); do
+            _echo_with_right_padding "$c" 30
+            echo "\t$(_get_container_ip $c)"
+        done
+    fi
+}
+
+_do_command "$@"

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-COMMAND_DESCRIPTION="List all listening ports."
+COMMAND_DESCRIPTION="List all listening ports"
 
 COMMAND_HELP="\
 List all listening ports.
@@ -17,7 +17,7 @@ _do_command() {
     method=$1
 
     if [[ -z "$method" || "$method" == "lsof" ]]; then
-        sudo lsof -P -iTCP -sTCP:LISTEN
+        lsof -P -iTCP -sTCP:LISTEN
         return
     elif [ "$method" == "netstat" ]; then
         netstat -tuln

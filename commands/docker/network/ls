@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Docker networks list"
+
+COMMAND_HELP="\
+Get list of Docker networks.
+Usage:
+    :docker:network:ls
+"
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    docker network ls
+}
+
+_do_command "$@"

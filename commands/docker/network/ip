@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Docker network IP address"
+
+COMMAND_HELP="\
+Get the IP address of a Docker network.
+Usage:
+    :docker:network:ip [network_id | network_name]
+
+"
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local network_id=$1
+    # [ -z "$network_id" ] && network_id=$(docker network ls --format '{{.ID}}' | fzf)
+
+    # default to bridge network
+    [ -z "$network_id" ] && network_id='bridge' || shift
+
+    docker network inspect -f '{{range .IPAM.Config}}{{.Gateway}}{{end}}' "$network_id" $@
+}
+
+_do_command "$@"

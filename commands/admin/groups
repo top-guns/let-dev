@@ -1,0 +1,53 @@
+#!/bin/bash
+
+COMMAND_DESCRIPTION="Manage groups"
+
+COMMAND_HELP="\
+Manage groups registered in the system.
+
+Usage:
+    :admin:groups [command] [username]
+
+    If command is not provided, it will default to 'ls'.
+
+Commands:
+    ls: List all groups.
+    add: Create a new group.
+    rm: Remove a group.
+"
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local command=$1
+    [ -z "$command" ] && command="ls" || shift
+
+    local user=$1
+    [ -z "$user" ] && user=$USER || shift
+
+    case $command in
+        ls|list)
+            cut -d: -f1 /etc/group
+            ;;
+        add)
+            local group=$1
+            [ -z "$group" ] && echo "Group name is required." && return
+            sudo groupadd $group
+            ;;
+        rm|del|remove)
+            local group=$1
+            [ -z "$group" ] && echo "Group name is required." && return
+            sudo groupdel $group
+            ;;
+        *)
+            echo "Invalid command"
+            echo "$COMMAND_HELP"
+            return
+            ;;
+    esac
+}
+
+_do_command $@
