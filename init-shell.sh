@@ -81,6 +81,7 @@ init_shell() {
             # if set -o | grep -qE '^(emac|vi)[^\w]+on$'; then
                 # echo "Init completion for bash"
                 source $LETDEV_HOME/init-completion-bash.sh
+                source $LETDEV_HOME/init-prompt-bash.sh
             # fi
         elif [ "$shell_name" = "zsh" ]; then
             # echo "Init completion for zsh"
