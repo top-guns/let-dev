@@ -1,6 +1,8 @@
 #!/bin/bash
 
 PS1='\[\033[47m\]\[\033[01;30m\] bash \[\033[00m\] '
+FOOTER_BORDER='═'
+#'\[\033[47m\]\[\033[01;30m\]
 
 LAST_CLI_COMMAND=""
 
@@ -15,11 +17,11 @@ print_header() {
     # Calculate the number of spaces needed for right alignment
     spaces=$((cols - ${#pwd} - ${#user_host} - 1))
 
-    printf '%*s\n' "$cols" '' | tr ' ' '═'
+    printf '%*s\n' "$cols" '' | tr ' ' "$FOOTER_BORDER"
     # Print the current working directory and the user@host aligned to the right
     echo -e "\033[1;32m$pwd\033[0m$(printf '%*s' "$spaces" '')\033[1;32m$user_host\033[0m"
     
-    printf '%*s\n' "$cols" '' | tr ' ' '═'
+    printf '%*s\n' "$cols" '' | tr ' ' "$FOOTER_BORDER"
 }
 
 clear_header() {
