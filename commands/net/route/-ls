@@ -1,0 +1,31 @@
+#!/bin/bash
+
+COMMAND_DESCRIPTION="List routing rules"
+
+COMMAND_HELP="\
+Display all routing rules.
+
+Usage: 
+    :net:route:ls
+"
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local OS="$(uname)"
+
+    if [[ "$OS" == "Linux" ]]; then
+        ip route list
+    elif [[ "$OS" == "Darwin" ]]; then
+        netstat -rn -f inet
+    else
+        echo "Unsupported OS: $OS"
+        return
+    fi
+
+}
+
+_do_command $@

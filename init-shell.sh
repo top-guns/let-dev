@@ -114,6 +114,8 @@ init_shell() {
     if [ "$shell_name" = "bash" ]; then
         # Disable replacment of glob patterns which don't match any files
         shopt -u nullglob
+        # Disable filename expansion (globbing)
+        set -f
     elif [ "$shell_name" = "zsh" ]; then
         # Disable special characters substitution (like * and ?)
         setopt NO_NOMATCH

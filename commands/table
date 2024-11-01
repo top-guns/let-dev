@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Draw nice looking ascii tables"
+
+COMMAND_HELP="\
+Use PrettyTable library to draw nice looking ascii tables 
+with auto sizing columns to the screen.
+
+Usage:
+    :table <column_count> [header_color]
+
+    Columns need to be delimited using a `\t` (Tab) character.
+
+Arguments:
+    column_count  Number of columns in the table
+    header_color  Color of the header row. Available colors:
+        blue
+        green
+        cyan
+        red
+        purple
+        yellow
+        gray
+        light_blue
+        light_green
+        light_cyan
+        light_red
+        light_purple
+        light_yellow
+        light_gray
+
+Example:
+    {
+        printf 'PID\tUSER\tAPPNAME\n';
+        printf '%s\t%s\t%s\n' '1' 'john' 'foo bar';
+        printf '%s\t%s\t%s\n' '12345' 'someone_with_a_long_name' 'blub blib';
+    } | :table 3
+"
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
+        echo "Error: Invalid number of arguments"
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local column_count="$1"
+    if ! [[ "$column_count" =~ ^[0-9]+$ ]]; then
+        echo "Error: Invalid column count"
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local color="${2:-none}"
+
+    source "$LETDEV_HOME/commands/.prettytable/prettytable.sh"
+
+    prettytable "$column_count" $color
+}
+
+_do_command "$@"

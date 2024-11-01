@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Find links by glob pattern"
+
+COMMAND_HELP="\
+Find all links in the current or specified directory by glob pattern.
+
+Usage:
+    :links [pattern] [directory]
+
+Arguments:
+    pattern - glob pattern to search links by, default is *
+    directory - directory to search files in, default is the current directory
+
+Example:
+    :files *.txt
+"
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local pattern="$1"
+    [ -z "$pattern" ] && pattern="*" || shift
+
+    local directory="$2"
+    [ -z "$directory" ] && directory="." || shift
+
+    echo "Searching for links by pattern '$pattern' in directory '$directory'"
+
+    find "$directory" -type l "$@" -name "$pattern"
+}
+
+_do_command "$@"

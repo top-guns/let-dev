@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Get image entrypoint"
+
+COMMAND_HELP="\
+Get the entrypoint of a Docker image.
+
+Usage:
+    :docker:image:entrypoint <image_name>
+"
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local image_name="$1"
+
+    if [ -z "$image_name" ]; then
+        echo "Image name is required"
+        return
+    fi
+
+    docker inspect --format '{{json .Config.Entrypoint}}' "$image_name"
+}
+
+_do_command $@

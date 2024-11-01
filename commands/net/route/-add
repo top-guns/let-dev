@@ -1,0 +1,44 @@
+#!/bin/bash
+
+COMMAND_DESCRIPTION="Add new routing rule"
+
+COMMAND_HELP="\
+Add new routing rule to the system.
+
+Usage: 
+    :net:route:add
+"
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local subnet="$1"
+    local gateway="$2"
+
+    if [ -z "$subnet" ]; then
+        echo "Subnet mask is required"
+        return
+    fi
+
+    if [ -z "$gateway" ]; then
+        echo "Gateway IP is required"
+        return
+    fi
+
+    local OS="$(uname)"
+
+    if [[ "$OS" == "Linux" ]]; then
+        sudo ip route add "$subnet" via "$gateway"
+    elif [[ "$OS" == "Darwin" ]]; then
+        sudo route -n add "$subnet" "$gateway"
+    else
+        echo "Unsupported OS: $OS"
+        return
+    fi
+
+}
+
+_do_command $@

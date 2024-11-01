@@ -23,6 +23,7 @@ _letdev_menu_handler() {
         if [[ "$symbol_before_cursor" != " " ]]; then
             if [[ "$cur" =~ ^: ]]; then
                 letdev_storage_set ldm ""
+                local cmd_name=${cur:1} # remove the first ":" symbol from $cur
                 if [[ $cur_word_index -eq 1 ]]; then
                     # Command completion
                     # $LETDEV_HOME/list-commands.sh | sed "s|:|$LETDEV_HOME/commands/|" | fzf --reverse --inline-info --tac --preview="$LETDEV_HOME/get-command-variable.sh {} COMMAND_HELP"
@@ -32,7 +33,7 @@ _letdev_menu_handler() {
                         --reverse \
                         --exact \
                         --inline-info \
-                        --query=": $cur" \
+                        --query="$cmd_name" \
                         --preview="$LETDEV_HOME/get-command-variable.sh {} COMMAND_HELP" \
                         --bind "tab:reload( LETDEV_HOME='$LETDEV_HOME' $LETDEV_HOME/completion-output.sh )" \
                     )

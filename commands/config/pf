@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+
+COMMAND_DESCRIPTION="Edit PF configuration file"
+COMMAND_HELP="\
+Open PF configuration file in the preferred text editor.
+
+PF - is a BSD licensed packet filter that comes with macOS. 
+It is a powerful tool for controlling network traffic.
+
+After editing you need to reload the configuration with the following commands:
+sudo pfctl -f /etc/pf.conf
+sudo pfctl -e
+"
+
+_do_command() {
+    local FILE_TO_OPEN="/etc/pf.conf"
+
+    # Check OS type
+    if [ "$(uname -s)" != "Darwin" ]; then
+        echo "This command is only available on macOS"
+        return 1
+    fi
+
+    source "$LETDEV_HOME/commands/config/.edit_config.sh"
+    _edit_config "$FILE_TO_OPEN" $@
+    return $?
+}
+
+_do_command "$@"

@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+
+COMMAND_DESCRIPTION="List the environment variables"
+
+COMMAND_HELP="\
+List the environment variables in the current shell, optionally filtered by a pattern.
+
+Usage:
+    :env:ls [filter]
+
+Example:
+    :env:ls
+    :env:ls MY_ENV_VAR
+"
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local filter="$1"
+
+    if [ -z "$filter" ]; then
+        env
+    else
+        # Filter is case-insensitive
+        env | grep -i "$filter"        
+    fi
+}
+
+_do_command "$@"

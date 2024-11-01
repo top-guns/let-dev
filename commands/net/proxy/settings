@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# ip addr show eth0 | grep inet | awk '{ print $2; }' | sed 's/\/.*$//'
+
+COMMAND_DESCRIPTION="Display console proxy settings"
+
+COMMAND_HELP="\
+Display console proxy settings.
+Usage: 
+    :net:proxy:settings
+"
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    echo "Console proxy settings:"
+    local SOCKS_PROXY=$(echo $socks_proxy)
+    [ -n "$SOCKS_PROXY" ] && echo "  socks: $SOCKS_PROXY"
+    local HTTP_PROXY=$(echo $http_proxy)
+    [ -n "$HTTP_PROXY" ] &&  echo "  http:  $HTTP_PROXY"
+    local HTTPS_PROXY=$(echo $https_proxy)
+    [ -n "$HTTPS_PROXY" ] && echo "  https: $HTTPS_PROXY"
+    local NO_PROXY=$(echo $no_proxy)
+    [ -n "$NO_PROXY" ] && echo "  skip proxy for: $NO_PROXY"
+
+    # Check operating system and display proxy settings
+    if [ "$(uname)" = "Darwin" ]; then
+        echo "macOS proxy settings:"
+        # get networksetup -getwebproxy "Wi-Fi", skip if Enabled = No, and display server:port
+        local OS_HTTP_PROXY=$(networksetup -getwebproxy "Wi-Fi")
+        local proxy_enabled=$(echo $OS_HTTP_PROXY | grep -o -E "Enabled = (.*)" | sed -E 's/.*Enabled = (.*)/\1/')
+            local server=$(echo $HTTP_PROXY | grep -o -E "Server = (.*), Port" | sed -E 's/.*Server = (.*), Port.*/\1/')
+            local HTTP_PROXY=
+            echo "  http:  $HTTP_PROXY"
+        fi
+    else
+        echo "Unsupported OS"
+        return 1
+    fi
+}
+
+_do_command $@

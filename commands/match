@@ -6,7 +6,9 @@ COMMAND_HELP="\
 Chain of greps (grep $1 | grep $2 | ...).
 
 Usage:
-    :where [--with-first-row[s=n]] <contains1> <contains2> <!not_contains1> ...
+    :match [--with-first-row[s=n]] <contains1> <contains2> <!not_contains1> ...
+
+    Use regular expression (in all patterns)
 
 Arguments:
     contains - pattern which should present in the output
@@ -19,7 +21,7 @@ Options:
       if used without arguments, the first line will be printed
 
 Example:
-    ls | :where .txt|.md !tmp
+    ls | :match .txt|.md !tmp
 "
 
 # Escape all special characters in the patern, so it can be used in the grep, including . () | and others
@@ -34,7 +36,7 @@ _do_command() {
         return
     fi
 
-    :grep "$@"
+    :grep --regexp "$@"
 }
 
 _do_command "$@"

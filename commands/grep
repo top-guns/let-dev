@@ -1,0 +1,125 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Chain of greps"
+
+COMMAND_HELP="\
+Chain of greps (grep $1 | grep $2 | ...).
+
+Usage:
+    :grep [--regexp] [--with-first-row[s=n]] <contains1> <contains2> <!not_contains1> ...
+
+Arguments:
+    contains - pattern which should present in the output
+    !not_contains - pattern which should not present in the output
+
+Options:
+    --regexp, --re: use regular expression (in all patterns)
+      if regexp is not used, you can use | and () in the patterns
+    --glob: use glob patterns (in all patterns)
+    --with-first-row print the first line of the input in any case before the grep output
+    --with-first-rows[=n]: print the first lines of the input in any case before the grep output
+      can be used with arguments or without them
+      if used without arguments, the first line will be printed
+
+Example:
+    ls | :grep .txt|.md !tmp
+"
+
+# Escape all special characters in the patern, so it can be used in the grep, including . () | and others
+_escape_patern() {
+    # Now escaping only . | () 
+    echo "$1" | sed 's!\([.|()]\)!\\\1!g'
+}
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local positive_paterns=()
+    local negative_paterns=()
+    local use_regexp=false
+    local with_first_rows=""
+    local no_colors=false
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --regexp | --re)
+                use_regexp=true
+                ;;
+            --glob)
+                echo "Glob is not supported yet"
+                return 1
+                ;;
+            --with-first-row)
+                with_first_rows=1
+                ;;
+            --with-first-rows*)
+                with_first_rows="${1:18}"
+                [ -z "$with_first_rows" ] && with_first_rows=1
+                ;;
+            --no-colors)
+                no_colors=true
+                ;;
+            -*)
+                negative_paterns+=("${1:1}")
+                ;;
+            +*)
+                positive_paterns+=("${1:1}")
+                ;;
+            *)
+                positive_paterns+=("$1")
+                ;;
+        esac
+        shift
+    done
+
+    local cmd_negative=""
+    for patern in "${negative_paterns[@]}"; do
+        [ -n "$cmd_negative" ] && cmd_negative="$cmd_negative |"
+        cmd_negative="$cmd_negative grep -i"
+        if [ "$use_regexp" = true ]; then
+            cmd_negative="$cmd_negative -E"
+        else
+            patern=$(_escape_patern "$patern")
+        fi
+        cmd_negative="$cmd_negative -v -e '$patern'"
+    done
+
+    local cmd_positive=""
+    # local last_index=$((${#positive_paterns[@]} - 1))
+    # local index=0
+    for patern in "${positive_paterns[@]}"; do
+        [ -n "$cmd_positive" ] && cmd_positive="$cmd_positive | "
+        cmd_positive="${cmd_positive}grep -i"
+
+        if  [ "$no_colors" = false ]; then
+            cmd_positive="$cmd_positive --color=always"
+        fi
+
+        if [ "$use_regexp" = true ]; then
+            cmd_negative="$cmd_positive -E"
+        else
+            patern=$(_escape_patern "$patern")
+        fi
+
+        cmd_positive="$cmd_positive '$patern'"
+        # index=$((index + 1))
+    done
+    
+    local cmd="$cmd_negative"
+    [ -n "$cmd_negative" ] && [ -n "$cmd_positive" ] && cmd="$cmd |"
+    cmd="$cmd $cmd_positive"
+    # echo "Command: $cmd"
+
+    if [ -n "$with_first_rows" ]; then
+        local input=$(tee)
+        echo "$input" | head -n $with_first_rows
+        echo "$input" | tail -n +$((with_first_rows + 1)) | eval "$cmd"
+    else
+        eval "$cmd"
+    fi
+}
+
+_do_command "$@"
