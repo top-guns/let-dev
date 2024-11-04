@@ -1,0 +1,33 @@
+#!/bin/bash
+
+COMMAND_DESCRIPTION="Print path of the given command."
+
+COMMAND_HELP="\
+Print path of the given command.
+
+Usage:
+    :path [command]
+"
+
+_do_command() {
+    # Help
+    [[ "$1" == "--help" || "$1" == "help" ]] && echo "$COMMAND_HELP" && return
+
+    if [ -z "$1" ]; then
+        echo "$COMMAND_HELP"
+        return 1
+    fi
+
+    local command="$@"
+
+    local command_script_path=$($LETDEV_HOME/get-command-script-path.sh "$command")
+    [ -n "$command_script_path" ] && echo "$command_script_path" && return
+
+    command_script_path=$(whereis "$command" | awk '{print $2}')
+    [ -n "$command_script_path" ] && echo "$command_script_path" && return
+
+    echo "Command '$command' not found"
+    return 1
+}
+
+_do_command "$@"
