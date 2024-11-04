@@ -51,7 +51,12 @@ _get_list() {
             # fi
             if [ "$format" = "command" ]; then
                 # Print as ':dir:subdir:command'
+
+                # Files
                 find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print | sed 's|^\./|:|' | sed 's|/|:|g' | sed 's|::|:|' | sed 's|:-|:|'
+
+                # Folders
+                # find . -type f -name '-ls' -print | sed 's|/-ls||' | sed 's|/|:|g' | sed 's|.||'
             elif [ "$format" = "path" ]; then
                 # Print as 'dir/subdir/command'
                 find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print | sed 's|^\./||'
@@ -60,19 +65,31 @@ _get_list() {
                 find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print | sed "s|^\.|$dir|"
             elif [ "$format" = "var" ]; then
                 # Print as ':dir:subdir:command="/.../dir/subdir/command"'
+
+                # Files
                 find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print | sed 's|^\./||' \
                     | awk -F/ -v OFS=":" -v dir="$dir" '{path=$0; gsub("/", ":", path); print path"=\"" dir "/" $0 "\""}' \
                     | sed 's|^|:|' | sed 's|^::|:|' | sed 's|:-|:|'
+
+                # Folders
+                find . -type f -name '-ls' -print | sed 's|^\./||' \
+                    | awk -F/ -v OFS=":" -v dir="$dir" '{path=$0; gsub("/", ":", path); print path"=\"" dir "/" $0 "\""}' \
+                    | sed 's|:-ls||' | sed 's|^|:|'
             elif [ "$format" = "alias" ]; then
                 # Print as 'alias :dir:subdir:command="/.../dir/subdir/command"'
                 # find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print | sed 's|^\./||' \
                 #     | awk -F/ -v OFS=":" -v dir="$dir" '{path=$0; gsub("/", ":", path); print "alias "path"=\"source " dir "/" $0 "\""}' \
                 #     | sed 's|^alias |alias :|' | sed 's|::|:|'
 
-
+                # files
                 find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print | sed 's|^\./||' \
                     | awk -F/ -v OFS=":" -v dir="$dir" '{path=$0; gsub("/", ":", path); print path"=\"" dir "/" $0 "\""}' \
                     | sed 's|^|:|' | sed 's|^::|:|' | sed 's|:-|:|' | sed 's|/|: /|' | sed 's|^|alias |'
+                # folders
+                find . -type f -name '-ls' -print | sed 's|^\./||' \
+                    | awk -F/ -v OFS=":" -v dir="$dir" '{path=$0; gsub("/", ":", path); print path"=\"" dir "/" $0 "\""}' \
+                    | sed 's|:-ls||' | sed 's|^|alias :|'
+                
             elif [ "$format" = "raw" ]; then
                 find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print
             else

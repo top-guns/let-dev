@@ -2,19 +2,38 @@
 
 _find_command_file() {
     local relative_path="$1"
-    local file=''
+    local cur_path=''
     
     # in project commands
-    file=".let-dev/$LETDEV_PROFILE/commands$relative_path"
-    [ -f "$file" ] && echo "$file" && return
+    cur_path=".let-dev/$LETDEV_PROFILE/commands$relative_path"
+    [ -f "$cur_path" ] && echo "$cur_path" && return
 
     # in users commands
-    file="$LETDEV_HOME/profiles/$LETDEV_PROFILE/commands$relative_path"
-    [ -f "$file" ] && echo "$file" && return
+    cur_path="$LETDEV_HOME/profiles/$LETDEV_PROFILE/commands$relative_path"
+    [ -f "$cur_path" ] && echo "$cur_path" && return
 
     # in system commands
-    file="$LETDEV_HOME/commands$relative_path"
-    [ -f "$file" ] && echo "$file" && return
+    cur_path="$LETDEV_HOME/commands$relative_path"
+    [ -f "$cur_path" ] && echo "$cur_path" && return
+
+    return 1
+}
+
+_find_listed_folder() {
+    local relative_path="$1"
+    local cur_path=''
+    
+    # in project commands
+    cur_path=".let-dev/$LETDEV_PROFILE/commands$relative_path"
+    [ -f "$cur_path/-ls" ] && echo "$cur_path" && return
+
+    # in users commands
+    cur_path="$LETDEV_HOME/profiles/$LETDEV_PROFILE/commands$relative_path"
+    [ -f "$cur_path/-ls" ] && echo "$cur_path" && return
+
+    # in system commands
+    cur_path="$LETDEV_HOME/commands$relative_path"
+    [ -f "$cur_path/-ls" ] && echo "$cur_path" && return
 
     return 1
 }
@@ -24,6 +43,10 @@ _do_command() {
     command=$(echo "$command" | sed 's/^: //')
 
     local relative_path=$(echo $command | sed 's|:|/|g')
+    
+    local folder=$(_find_listed_folder "$relative_path")
+    [ -n "$folder" ] && echo "$folder/-ls" && return
+
     local file=''
 
     file=$(_find_command_file "$relative_path")
