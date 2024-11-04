@@ -59,13 +59,11 @@ vlength() {
 concat() {
     local separator="$1"
     shift
-    local strings=("$@")
-    local str=""
-    for (( i=0; i<${#strings[@]}; i++ )); do
-        [ $i -gt 0 ] && str+="$separator"
-        str+="${strings[$i]}"
+    local result=""
+    for element in "$@"; do
+        [ -z "$result" ] && result="$element" || result="$result$separator$element"
     done
-    echo $str
+    echo "$result"
 }
 
 print_separator() {
@@ -111,17 +109,52 @@ print_header() {
 
     # Google availability
     if ping -q -c 1 -W 1 google.com 2>/dev/null >/dev/null; then
-        right_part+=("Internet: ${FG_GREEN}✓${RESET}")
+        right_part+=("${FG_GREEN}✓${RESET} Internet")
     else
-        right_part+=("Internet: ${FG_RED}✗${RESET}")
+        right_part+=("${FG_RED}✗${RESET} Internet")
     fi
 
-    # Office availability
+    # Office VPN availability
     if ping -q -c 1 -W 1 office.lan 2>/dev/null >/dev/null; then
-        right_part+=("VPN: ${FG_GREEN}✓${RESET}")
+        right_part+=("${FG_GREEN}✓${RESET} Office")
     else
-        right_part+=("VPN: ${FG_RED}✗${RESET}")
+        right_part+=("${FG_RED}✗${RESET} Office")
     fi
+
+    # Port availability - 3128
+    local ports_info='Ports: '
+    if nc -z -w 1 127.0.0.1 3128 &> /dev/null; then
+        ports_info="$ports_info ${FG_GREEN}✓${RESET} 3128"
+    else
+        ports_info="$ports_info ${FG_RED}✗${RESET} 3128"
+    fi
+
+    # Port availability - 1080
+    if nc -z -w 1 127.0.0.1 1080 &> /dev/null; then
+        ports_info="$ports_info ${FG_GREEN}✓${RESET} 1080"
+    else
+        ports_info="$ports_info ${FG_RED}✗${RESET} 1080"
+    fi
+
+    right_part+=("$ports_info")
+
+    
+
+    # # SOCKS proxy availability (port 1080)
+    # local proxy_resp_status=$(curl -x http://127.0.0.1:1080 -s -o /dev/null -w "%{http_code}" http://www.google.com)
+    # if [[ "$result" == "200" ]]; then
+    #     right_part+=("SOCKS: ${FG_GREEN}✓${RESET}")
+    # else
+    #     right_part+=("SOCKS: ${FG_RED}✗${RESET}")
+    # fi
+
+    # # HTTP proxy availability (port 3128)
+    # local proxy_resp_status=$(curl -x http://127.0.0.1:3128 -s -o /dev/null -w "%{http_code}" http://www.google.com)
+    # if [[ "$result" == "200" ]]; then
+    #     right_part+=("HTTP: ${FG_GREEN}✓${RESET}")
+    # else
+    #     right_part+=("HTTP: ${FG_RED}✗${RESET}")
+    # fi
 
     # Get the username and hostname
     # right_part+=("${BG_BLUE}$(whoami)${FG_GREEN}@${RESET}${BG_BLUE}$(hostname)${RESET}")
@@ -131,10 +164,10 @@ print_header() {
     # ----------------------------------------------------------------
     # Concatenate the left parts with ' | ' separator
 
-    local SEPARATOR="   ${FG_CYAN}│${RESET}   "
+    local SEPARATOR=" ${FG_CYAN}│${RESET} "
 
-    left_part=$(concat "${SEPARATOR}" "${left_part[@]}")
-    right_part=$(concat "${SEPARATOR}" "${right_part[@]}")
+    left_part="$(concat "${SEPARATOR}" "${left_part[@]}")"
+    right_part="$(concat "${SEPARATOR}" "${right_part[@]}")"
 
     # ----------------------------------------------------------------
     # Calculate the number of spaces needed for right alignment
