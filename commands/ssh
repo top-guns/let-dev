@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="SSH into the specified host"
+
+COMMAND_HELP="\
+This script SSH into the specified host.
+Usage: 
+    :ssh [host]
+
+If the host is not specified, it will use the fzf menu to select the host listed in files:
+    ~/.ssh/config
+    ~/.ssh/known_hosts
+    /etc/hosts
+
+To edit the hosts list and connection options, run the command:
+    :config:ssh
+
+Example:
+    :ssh host
+    :ssh user@host
+"
+
+function _get_host_info() {
+    local host="$1"
+    local host_info=$(cat ~/.ssh/config | grep -A 1000 "Host $host" | grep -E "Host|HostName|User|Port" | sed -E "s/HostName/Host/g")
+    [ -z "$host_info" ] && host_info="Host: $host"
+    echo "$host_info"
+}
+
+function _do_command {
+     [[ "$1" == "--help" || "$1" == "help" ]] && echo "$COMMAND_HELP" && return
+
+    local host="$1"
+    [ -n "$host" ] && shift
+    local query="$@"
+    
+    # [ -z "$host" ] && host=$(cat ~/.ssh/config ~/.ssh/known_hosts /etc/hosts | grep -E "Host\s+" | sed -E "s/Host\s+//g" | fzf)
+    if [ -z "$host" ]; then
+        local confit_hosts=$(cat ~/.ssh/config | grep -E '^ *Host\s+' | sed -E 's/^ *Host  *([^ ]*)/\1/')
+        # local known_hosts=$(cat ~/.ssh/known_hosts | awk '{print $1}')
+        #local etc_hosts=$(cat /etc/hosts | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | awk '{print $2}')
+
+        # Merge all without duplicates
+        # local hosts=$(echo "$confit_hosts\n$etc_hosts" | sort | uniq)
+        local hosts=$(echo "$confit_hosts")
+        
+        [ -n "$query" ] && query="--query=$query"
+        host=$(echo "$hosts" | fzf $query \
+            --no-sort \
+            --cycle \
+            --reverse \
+            --exact \
+            --inline-info \
+            --preview="sed -n '/^Host {}[[:space:]]*$/,/^Host /{ /^Host /!p; }' ~/.ssh/config | sed '/^ *#/d'" \
+        )
+    fi
+    
+    [ -z "$host" ] && return 1
+   
+    echo "SSH into host: $host"
+    ssh $host
+}
+
+_do_command $@
