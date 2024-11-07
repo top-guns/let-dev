@@ -13,6 +13,16 @@ FG_PURPLE='\033[35m'
 FG_CYAN='\033[36m'
 FG_WHITE='\033[37m'
 
+# Bold foreground colors
+FG_BOLD_BLACK='\033[1;30m'
+FG_BOLD_RED='\033[1;31m'
+FG_BOLD_GREEN='\033[1;32m'
+FG_BOLD_YELLOW='\033[1;33m'
+FG_BOLD_BLUE='\033[1;34m'
+FG_BOLD_PURPLE='\033[1;35m'
+FG_BOLD_CYAN='\033[1;36m'
+FG_BOLD_WHITE='\033[1;37m'
+
 # Background colors
 BG_BLACK='\033[40m'
 BG_RED='\033[41m'
@@ -43,12 +53,17 @@ BG_BRIGHT_PURPLE='\033[105m'
 BG_BRIGHT_CYAN='\033[106m'
 BG_BRIGHT_WHITE='\033[107m'
 
+
 PS1='\[\033[47m\]\[\033[01;30m\] bash \[\033[00m\] '
 FOOTER_BORDER='=' #$(printf '\xC4')
 #'\[\033[47m\]\[\033[01;30m\]
 COMMAND_SEPARATOR='-'
 
 LAST_CLI_COMMAND=""
+
+INTERNET_AVAILIBLE=1
+export EXTERNAL_IP=""
+
 
 vlength() {
     local str="$1"
@@ -80,6 +95,18 @@ print_separator() {
     echo ""
 }
 
+check_internet_availability() {
+    # google.com availability
+    ping -q -c 1 -W 1 8.8.8.8 2>/dev/null >/dev/null
+    return $?
+}
+
+check_dns_availability() {
+    # google.com availability
+    timeout 1 host google.com 2>/dev/null >/dev/null
+    return $?
+}
+
 print_header() {
     local last_exit_code="$1"
 
@@ -89,12 +116,22 @@ print_header() {
     local left_part=()
     local right_part=()
 
+    local left_part2=()
+    local right_part2=()
+
+    local internet_availible=1
+    [ $INTERNET_AVAILIBLE -eq 0 ] && internet_availible=0 || internet_availible=$( ping -q -c 1 -W 1 8.8.8.8 2>/dev/null >/dev/null; echo $? )
+
     # Monkey
-    # 🐵 🐒 🦊 🐞 🪲 🐸 🍀 🔥 🍏 🍌 📟 💡 🛠️ ♨️ ⚠️ 💤 ✔️ 🔘 🛜 📶 🟢 🔴 🟠 🟡 🔵 ⚪️ 👍 👌 ☕ 🌀 🌏 🌍 🌎 🌐 💻 🔒 🔆 🔅 🫥 
+    # 🐵 🐒 🦊 🐞 🪲 🐸 🍀 🔥 🍏 🍌 📟 💡 🛠️ ♨️ ⚠️ 💤 ✔️ 🔘 🛜 📶 🟢 🔴 🟠 🟡 🔵 ⚪️ 👍 👌 🌀 🌏 🌍 🌎 🌐 💻 🔒 🔆 🔅 🫥 
     if [ $last_exit_code -eq 0 ]; then
         left_part+=("🐵")
+        # left_part2+=("${FG_GREEN}ok${RESET}")
+        left_part2+=("${FG_GREEN}  ${RESET}")
     else
-        left_part+=("🐞")
+        # left_part+=("🐞")
+        left_part+=("⚠️")
+        left_part2+=("${FG_RED}  ${RESET}")
     fi
 
     # Get the current working directory
@@ -102,27 +139,40 @@ print_header() {
 
     # Last exit code
     if [ $last_exit_code -eq 0 ]; then
-        left_part+=("last exit code: ${FG_GREEN}$last_exit_code${RESET}")
+        left_part2+=("exit code: ${FG_GREEN}$last_exit_code (ok)${RESET}")
     else
-        left_part+=("last exit code: ${FG_RED}$last_exit_code${RESET}")
+        left_part2+=("exit code: ${FG_RED}$last_exit_code (error)${RESET}")
     fi
 
-    # Google availability
-    if ping -q -c 1 -W 1 google.com 2>/dev/null >/dev/null; then
-        right_part+=("${FG_GREEN}✓${RESET} Internet")
+    # Internet availability
+    if [ $internet_availible -eq 0 ]; then
+        if [ -z "$EXTERNAL_IP" ] && [ $INTERNET_AVAILIBLE -eq 0 ]; then
+            EXTERNAL_IP=$(curl -s ifconfig.me)
+        fi
+        right_part+=("${FG_GREEN}✓${RESET} Internet ${EXTERNAL_IP}")
     else
+        EXTERNAL_IP=""
         right_part+=("${FG_RED}✗${RESET} Internet")
     fi
+    INTERNET_AVAILIBLE=$internet_availible
+
+    # # DNS availability
+    # local dns_availible=$( timeout 1 host google.com 2>/dev/null >/dev/null; echo $? )
+    # if [ $dns_availible -eq 0 ]; then
+    #     right_part2+=("${FG_GREEN}✓${RESET} DNS")
+    # else
+    #     right_part2+=("${FG_RED}✗${RESET} DNS")
+    # fi
 
     # Office VPN availability
-    if ping -q -c 1 -W 1 office.lan 2>/dev/null >/dev/null; then
-        right_part+=("${FG_GREEN}✓${RESET} Office")
+    if [ "$internet_availible" = "true" ] && ping -q -c 1 -W 1 office.lan 2>/dev/null >/dev/null; then
+        right_part2+=("${FG_GREEN}✓${RESET} Office VPN")
     else
-        right_part+=("${FG_RED}✗${RESET} Office")
+        right_part2+=("${FG_RED}✗${RESET} Office VPN")
     fi
 
     # Port availability - 3128
-    local ports_info='Ports: '
+    local ports_info='Proxy: '
     if nc -z -w 1 127.0.0.1 3128 &> /dev/null; then
         ports_info="$ports_info ${FG_GREEN}✓${RESET} 3128"
     else
@@ -136,9 +186,7 @@ print_header() {
         ports_info="$ports_info ${FG_RED}✗${RESET} 1080"
     fi
 
-    right_part+=("$ports_info")
-
-    
+    right_part2+=("$ports_info")
 
     # # SOCKS proxy availability (port 1080)
     # local proxy_resp_status=$(curl -x http://127.0.0.1:1080 -s -o /dev/null -w "%{http_code}" http://www.google.com)
@@ -156,10 +204,13 @@ print_header() {
     #     right_part+=("HTTP: ${FG_RED}✗${RESET}")
     # fi
 
+
     # Get the username and hostname
     # right_part+=("${BG_BLUE}$(whoami)${FG_GREEN}@${RESET}${BG_BLUE}$(hostname)${RESET}")
     # right_part+=("$(whoami)${FG_GREEN}@${RESET}$(hostname)")
-    right_part+=("$(whoami)${FG_GREEN}🌀${RESET}$(hostname)")
+    # right_part+=("$(whoami)${FG_GREEN}🌀${RESET}$(hostname)")
+    
+    right_part+=("${FG_GREEN}$(whoami)${RESET}${FG_YELLOW}@${RESET}${FG_GREEN}$(hostname)${RESET}")
 
     # ----------------------------------------------------------------
     # Concatenate the left parts with ' | ' separator
@@ -168,21 +219,27 @@ print_header() {
 
     left_part="$(concat "${SEPARATOR}" "${left_part[@]}")"
     right_part="$(concat "${SEPARATOR}" "${right_part[@]}")"
+    left_part2="$(concat "${SEPARATOR}" "${left_part2[@]}")"
+    right_part2="$(concat "${SEPARATOR}" "${right_part2[@]}")"
 
     # ----------------------------------------------------------------
     # Calculate the number of spaces needed for right alignment
 
-    local spaces_length=$(($(tput cols) - $(vlength "$left_part") - $(vlength "$right_part") - 4))
+    local spaces_length=$(($(tput cols) - $(vlength "$left_part") - $(vlength "$right_part") - 3))
+    local spaces_length2=$(($(tput cols) - $(vlength "$left_part2") - $(vlength "$right_part2") - 3))
 
     # ----------------------------------------------------------------
     # Print the header
 
     print_separator "${FG_CYAN}═${RESET}"
     echo -e " ${left_part}$(printf '%*s' "$spaces_length" '')${right_part}"
+    echo -e " ${left_part2}$(printf '%*s' "$spaces_length2" '')${right_part2}"
     print_separator "${FG_CYAN}═${RESET}"
 }
 
 clear_header() {
+    tput cuu1
+    tput el
     tput cuu1
     tput el
     tput cuu1
@@ -211,10 +268,13 @@ preexec() {
 }
 # Function to execute after each command
 precmd() {
-    local last_exit_code=$?
+    local last_exit_code="$?"
 
     if [ -z "$LAST_CLI_COMMAND" ]; then
         clear_header
+        # Clear cache
+        INTERNET_AVAILIBLE=1
+        EXTERNAL_IP=""
         echo ""
     fi
 

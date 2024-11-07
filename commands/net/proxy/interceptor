@@ -63,12 +63,15 @@ in_array() {
 
 PROC_UTILITY="mitmproxy"
 PROC_TAG="$PROC_UTILITY --listen-port "
-PROC_CMD_START="$PROC_TAG%1\$s"
+# PROC_CMD_START="$PROC_TAG%1\$s"
+PROC_CMD_START="$PROC_TAG%s"
 
 PROC_CMD_FIND_ALL="ps axww | grep -v grep | grep '$PROC_TAG'"
-PROC_CMD_FIND_ONE="ps axww | grep -v grep | grep '$PROC_TAG%1\$s'"
+# PROC_CMD_FIND_ONE="ps axww | grep -v grep | grep '$PROC_TAG%1\$s'"
+PROC_CMD_FIND_ONE="ps axww | grep -v grep | grep '$PROC_TAG%s'"
 PROC_CMD_PID_ALL="pgrep -f '$PROC_TAG'"
-PROC_CMD_PID_ONE="pgrep -f '$PROC_TAG%1\$s'"
+# PROC_CMD_PID_ONE="pgrep -f '$PROC_TAG%1\$s'"
+PROC_CMD_PID_ONE="pgrep -f '$PROC_TAG%s'"
 
 PROC_CMD_NAME=$(basename "$0")
 PROC_CMD_NAME=":net:proxy:$PROC_CMD_NAME"
@@ -202,7 +205,7 @@ start() {
     echo "You can install it with --install option"
     return
   fi
-  
+
   local port=$1
   if [ -z "$port" ]; then
     echo "Port is required to start proxy"
@@ -210,8 +213,11 @@ start() {
   fi
 
   local cmd=$(printf "$PROC_CMD_START" "$port")
+
   eval $cmd
+
   pid=$(find_pids $port)
+
   if [ -z "$pid" ]; then
     echo "Failed to start proxy on port $port"
     return

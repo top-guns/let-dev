@@ -10,7 +10,6 @@ Usage:
 "
 
 _do_command() {
-    # Help
     [[ "$1" == "--help" || "$1" == "help" ]] && echo "$COMMAND_HELP" && return
 
     if [ -z "$1" ]; then

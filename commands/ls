@@ -17,10 +17,7 @@ Example:
 
 function _do_command {
     # Show help on --help
-    if [[ "$1" == "--help" || "$1" == "help" ]]; then
-        echo "$COMMAND_HELP"
-        return
-    fi
+    [[ "$1" == "--help" || "$1" == "help" ]] && echo "$COMMAND_HELP" && return
 
     LLS_PATH=$1
     if [ -z "$LLS_PATH" ]; then

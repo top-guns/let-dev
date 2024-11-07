@@ -11,11 +11,7 @@ Example:
 "
 
 _do_command() {
-    # Show help on --help
-    if [[ "$#" -eq 0 || "$1" == "--help" || "$1" == "help" ]]; then
-        echo "$COMMAND_HELP"
-        return
-    fi
+    [[ "$1" == "--help" || "$1" == "help" ]] && echo "$COMMAND_HELP" && return
 
     TARGET_DIR="${1:-.}"
 
