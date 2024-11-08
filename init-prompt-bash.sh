@@ -129,8 +129,8 @@ print_header() {
         # left_part2+=("${FG_GREEN}ok${RESET}")
         left_part2+=("${FG_GREEN}  ${RESET}")
     else
-        # left_part+=("🐞")
-        left_part+=("⚠️")
+        left_part+=("🐞")
+        # left_part+=("⚠️")
         left_part2+=("${FG_RED}  ${RESET}")
     fi
 
