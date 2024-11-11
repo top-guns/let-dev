@@ -138,10 +138,15 @@ setup_fzf_completion_in_bash() {
     echo "    ok"
   fi
 
+  # Start fzf configuration block to ~/.bashrc if not exists
+  if [[ -z "$(grep 'if [ -d ~/.fzf-tab-completion ]; then' ~/.bashrc)" ]]; then
+    echo "if [ -d ~/.fzf-tab-completion ]; then" >> ~/.bashrc
+  fi
+
   # Add fzf-tab-completion configuration to ~/.bashrc if not exists
   if [[ -z "$(grep 'source ~/.fzf-tab-completion/bash/fzf-bash-completion.sh' ~/.bashrc)" ]]; then
     echo "  - add fzf complete configuration to .bashrc"
-    echo "source ~/.fzf-tab-completion/bash/fzf-bash-completion.sh" >> ~/.bashrc
+    echo "  source ~/.fzf-tab-completion/bash/fzf-bash-completion.sh" >> ~/.bashrc
     echo "    ok"
   else
     echo "  + fzf complete configuration is already exists in .bashrc"
@@ -150,7 +155,7 @@ setup_fzf_completion_in_bash() {
   # Add tab binding configuration to ~/.bashrc if not exists
   if [[ -z "$(grep "fzf_bash_completion" ~/.bashrc)" ]]; then
     echo "  - add tab binding configuration to .bashrc"
-    echo "bind -x '\"\\t\": fzf_bash_completion'" >> ~/.bashrc
+    echo "  bind -x '\"\\t\": fzf_bash_completion'" >> ~/.bashrc
     echo "    ok"
   else
     echo "  + tab binding configuration is already exists in .bashrc"
@@ -159,10 +164,15 @@ setup_fzf_completion_in_bash() {
   # Add command history search configuration to ~/.bashrc if not exists
   if [[ -z "$(grep 'eval "$(fzf --bash)"' ~/.bashrc)" ]]; then
     echo "  - add command history search configuration to .bashrc"
-    echo "eval \"\$(fzf --bash)\"" >> ~/.bashrc
+    echo "  eval \"\$(fzf --bash) 2>/dev/null\"" >> ~/.bashrc
     echo "    ok"
   else
     echo "  + command history search configuration is already exists in .bashrc"
+  fi
+
+  # End fzf configuration block to ~/.bashrc if not exists
+  if [[ -z "$(grep 'fi' ~/.bashrc)" ]]; then
+    echo "fi" >> ~/.bashrc
   fi
 }
 
