@@ -134,7 +134,8 @@ setup_fzf_completion_in_bash() {
     echo "  + fzf-tab-completion is already installed"
   else
     echo "  - install fzf-tab-completion"
-    git clone git@github.com:lincheney/fzf-tab-completion.git ~/.fzf-tab-completion
+    # git clone git@github.com:lincheney/fzf-tab-completion.git ~/.fzf-tab-completion
+    git clone https://github.com/lincheney/fzf-tab-completion.git ~/.fzf-tab-completion
     echo "    ok"
   fi
 
