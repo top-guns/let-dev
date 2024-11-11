@@ -139,8 +139,8 @@ setup_fzf_completion_in_bash() {
   fi
 
   # Start fzf configuration block to ~/.bashrc if not exists
-  if [[ -z "$(grep 'if [ -d ~/.fzf-tab-completion ]; then' ~/.bashrc)" ]]; then
-    echo "if [ -d ~/.fzf-tab-completion ]; then" >> ~/.bashrc
+  if [[ -z "$(grep 'if [ -d ~/.fzf-tab-completion ]; then # start of fzf configuration block' ~/.bashrc)" ]]; then
+    echo "if [ -d ~/.fzf-tab-completion ]; then # start of fzf configuration block" >> ~/.bashrc
   fi
 
   # Add fzf-tab-completion configuration to ~/.bashrc if not exists
@@ -171,8 +171,8 @@ setup_fzf_completion_in_bash() {
   fi
 
   # End fzf configuration block to ~/.bashrc if not exists
-  if [[ -z "$(grep 'fi' ~/.bashrc)" ]]; then
-    echo "fi" >> ~/.bashrc
+  if [[ -z "$(grep 'fi # end of fzf configuration block' ~/.bashrc)" ]]; then
+    echo "fi # end of fzf configuration block" >> ~/.bashrc
   fi
 }
 
