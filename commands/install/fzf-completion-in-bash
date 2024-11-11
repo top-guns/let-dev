@@ -139,40 +139,18 @@ setup_fzf_completion_in_bash() {
   fi
 
   # Start fzf configuration block to ~/.bashrc if not exists
-  if [[ -z "$(grep 'if [ -d ~/.fzf-tab-completion ]; then # start of fzf configuration block' ~/.bashrc)" ]]; then
-    echo "if [ -d ~/.fzf-tab-completion ]; then # start of fzf configuration block" >> ~/.bashrc
-  fi
-
-  # Add fzf-tab-completion configuration to ~/.bashrc if not exists
-  if [[ -z "$(grep 'source ~/.fzf-tab-completion/bash/fzf-bash-completion.sh' ~/.bashrc)" ]]; then
-    echo "  - add fzf complete configuration to .bashrc"
+  if [[ -z "$(grep 'fzf configuration block' ~/.bashrc)" ]]; then
+    echo "# fzf configuration block" >> ~/.bashrc
+    echo "if [ -d ~/.fzf-tab-completion ]; then" >> ~/.bashrc
     echo "  source ~/.fzf-tab-completion/bash/fzf-bash-completion.sh" >> ~/.bashrc
-    echo "    ok"
-  else
-    echo "  + fzf complete configuration is already exists in .bashrc"
-  fi
-
-  # Add tab binding configuration to ~/.bashrc if not exists
-  if [[ -z "$(grep "fzf_bash_completion" ~/.bashrc)" ]]; then
-    echo "  - add tab binding configuration to .bashrc"
     echo "  bind -x '\"\\t\": fzf_bash_completion'" >> ~/.bashrc
-    echo "    ok"
-  else
-    echo "  + tab binding configuration is already exists in .bashrc"
-  fi
-
-  # Add command history search configuration to ~/.bashrc if not exists
-  if [[ -z "$(grep 'eval "$(fzf --bash)"' ~/.bashrc)" ]]; then
-    echo "  - add command history search configuration to .bashrc"
     echo "  eval \"\$(fzf --bash) 2>/dev/null\"" >> ~/.bashrc
-    echo "    ok"
-  else
-    echo "  + command history search configuration is already exists in .bashrc"
-  fi
-
-  # End fzf configuration block to ~/.bashrc if not exists
-  if [[ -z "$(grep 'fi # end of fzf configuration block' ~/.bashrc)" ]]; then
-    echo "fi # end of fzf configuration block" >> ~/.bashrc
+    echo "elif [ -d ~/.fzf ]; then" >> ~/.bashrc
+    echo "  source ~/.fzf/shell/completion.bash" >> ~/.bashrc
+    echo "  source ~/.fzf/shell/key-bindings.bash" >> ~/.bashrc
+    # echo "  export FZF_DEFAULT_COMMAND='history -n 1 | fzf'" >> ~/.bashrc
+    # echo "  export FZF_DEFAULT_OPTS=\"--height 50% --layout=reverse --prompt='Command > '\""
+    echo "fi" >> ~/.bashrc
   fi
 }
 
