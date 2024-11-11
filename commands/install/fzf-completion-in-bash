@@ -132,6 +132,8 @@ setup_fzf_completion_in_bash() {
   # Install fzf-tab-completion if not exists
   if [[ -d ~/.fzf-tab-completion ]]; then
     echo "  + fzf-tab-completion is already installed"
+  elif [[ -d ~/.fzf ]]; then
+    echo "  + fzf-tab-completion is not installed, but fzf is installed, try to use it"
   else
     echo "  - install fzf-tab-completion"
     git clone git@github.com:lincheney/fzf-tab-completion.git ~/.fzf-tab-completion

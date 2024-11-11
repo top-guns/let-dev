@@ -84,7 +84,7 @@ _letdev_tab_handler() {
 _letdev_init_completion() {
     # complete -F _letdev_complete :
 
-    # Bind tab key 
+    # Bind tab key
     bind -x '"\t": _letdev_tab_handler'
 
     # Bind shift-tab key 
