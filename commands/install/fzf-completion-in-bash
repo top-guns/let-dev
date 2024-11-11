@@ -132,8 +132,6 @@ setup_fzf_completion_in_bash() {
   # Install fzf-tab-completion if not exists
   if [[ -d ~/.fzf-tab-completion ]]; then
     echo "  + fzf-tab-completion is already installed"
-  elif [[ -d ~/.fzf ]]; then
-    echo "  + fzf-tab-completion is not installed, but fzf is installed, try to use it"
   else
     echo "  - install fzf-tab-completion"
     git clone git@github.com:lincheney/fzf-tab-completion.git ~/.fzf-tab-completion
@@ -147,11 +145,6 @@ setup_fzf_completion_in_bash() {
     echo "  source ~/.fzf-tab-completion/bash/fzf-bash-completion.sh" >> ~/.bashrc
     echo "  bind -x '\"\\t\": fzf_bash_completion'" >> ~/.bashrc
     echo "  eval \"\$(fzf --bash) 2>/dev/null\"" >> ~/.bashrc
-    echo "elif [ -d ~/.fzf ]; then" >> ~/.bashrc
-    echo "  source ~/.fzf/shell/completion.bash" >> ~/.bashrc
-    echo "  source ~/.fzf/shell/key-bindings.bash" >> ~/.bashrc
-    # echo "  export FZF_DEFAULT_COMMAND='history -n 1 | fzf'" >> ~/.bashrc
-    # echo "  export FZF_DEFAULT_OPTS=\"--height 50% --layout=reverse --prompt='Command > '\""
     echo "fi" >> ~/.bashrc
   fi
 }
