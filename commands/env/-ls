@@ -15,10 +15,7 @@ Example:
 "
 
 _do_command() {
-    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
-        echo "$COMMAND_HELP"
-        return
-    fi
+    [[ "$1" == "--help" || "$1" == "help" ]] && echo "$COMMAND_HELP" && return
 
     local filter="$1"
 

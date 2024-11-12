@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+
+COMMAND_DESCRIPTION="List DNS servers"
+
+COMMAND_HELP="\
+List DNS servers.
+"
+
+_do_command() {
+    [[ "$1" == "--help" || "$1" == "help" ]] && echo "$COMMAND_HELP" && return
+
+    local OS="$(uname)"
+    if [[ "$OS" == "Linux" ]]; then
+        cat /etc/resolv.conf | grep nameserver | grep -v '^#' | awk '{print $2}'
+    elif [[ "$OS" == "Darwin" ]]; then
+        cat /etc/resolv.conf | grep nameserver | grep -v '^#' | awk '{print $2}'
+    else
+        echo "Unsupported OS: $OS"
+        return
+    fi
+}
+
+_do_command "$@"

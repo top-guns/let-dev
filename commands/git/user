@@ -1,0 +1,51 @@
+#!/bin/bash
+
+COMMAND_DESCRIPTION="Manage the git user name & email for the current repository"
+
+COMMAND_HELP="\
+Manage the git user name & email for the current repository.
+
+Usage: 
+    :git:user
+    :git:user <git-user-name> <git-user-email>
+
+Example:
+    :git:user                                   # Display the current git user name & email
+    :git:user my_github_user my-work-email      # Update the git user name & email
+"
+
+_do_command() {
+    if [[ "$1" == "--help" || "$1" == "help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local new_name="$1"
+    [ -n "$new_name" ] && shift
+    local new_email="$1"
+    [ -n "$new_email" ] && shift
+
+    if [ "$new_name" == "reset" ]; then
+        echo "Reset git user name & email"
+        git config --unset user.name
+        git config --unset user.email
+        return
+    fi
+
+    if [ -z "$new_name" ]; then
+        echo "Current git user name & email"
+        local name=$(git config user.name)
+        local email=$(git config user.email)
+        [ -n "$name" ] && echo "user.name: $name" || echo "Name: Not set"
+        [ -n "$email" ] && echo "user.email: $email" || echo "Email: Not set"
+        return
+    fi
+
+    [ -z "$new_email" ] && echo "Missing email" && return
+    
+    echo "Update git user name & email"
+    git config user.name "$new_name"
+    git config user.email "$new_value"
+}
+
+_do_command $@

@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+
+COMMAND_DESCRIPTION="Edit DNS configuration file"
+
+COMMAND_HELP="\
+Open actual DNS configuration file in the preferred text editor.
+"
+
+_do_command() {
+    local FILE_TO_OPEN=""
+
+    # Check OS
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        FILE_TO_OPEN="/etc/resolv.conf"
+    elif [ "$OSTYPE" == "linux-gnu" ]; then
+        FILE_TO_OPEN="/etc/resolv.conf"
+    else
+        echo "Unsupported OS"
+        return
+    fi
+
+    source "$LETDEV_HOME/commands/config/.edit_config.sh"
+    _edit_config "$FILE_TO_OPEN" $@
+    return $?
+}
+
+_do_command "$@"
