@@ -107,12 +107,8 @@ else
 
     # Add fzf completion to the shell if it is not added and shell is bash
     if [ "$shell_name" == "bash" ]; then
-        if grep -q "fzf" $HOME/.bashrc; then
-            echo "fzf completion is already added to $HOME/.bashrc"
-        else
-            echo "Add fzf completion to $HOME/.bashrc"
-            source $LETDEV_HOME/commands/install/fzf-completion-in-bash $shell_name
-        fi
+        echo "Add fzf completion to $HOME/.bashrc"
+        source $LETDEV_HOME/install-fzf-completion-in-bash $shell_name
     fi
     echo ""
 
