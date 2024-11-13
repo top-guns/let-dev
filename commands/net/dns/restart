@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Restart DNS service"
+
+COMMAND_HELP="\
+Restart DNS service.
+"
+
+_do_command() {
+    [[ "$1" == "--help" || "$1" == "help" ]] && echo "$COMMAND_HELP" && return
+
+    local OS="$(uname)"
+    if [[ "$OS" == "Linux" ]]; then
+        sudo systemctl restart systemd-resolved
+    elif [[ "$OS" == "Darwin" ]]; then
+        sudo dscacheutil -flushcache
+        sudo killall -HUP mDNSResponder
+    else
+        echo "Unsupported OS: $OS"
+        return
+    fi
+}
+
+_do_command $@
