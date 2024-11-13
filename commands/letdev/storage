@@ -6,17 +6,17 @@ COMMAND_HELP="\
 Simple key-value storage implementation.
 
 Usage: 
-    :letdev:storage get <key> [default-value]      - get the value of the key or default value if not found
-    :letdev:storage set <key> [new-value]          - set new value for the key or remove the key
-    :letdev:storage has <key>                      - check if the key exists, return 'true' or 'false' 
+    :storage get <key> [default-value]      - get the value of the key or default value if not found
+    :storage set <key> [new-value]          - set new value for the key or remove the key
+    :storage has <key>                      - check if the key exists, return 'true' or 'false' 
 
-    :letdev:storage [status]                       - check the status of the storage, default command
-    :letdev:storage start                          - start the storage
-    :letdev:storage stop                           - stop the storage
-    :letdev:storage restart                        - restart the storage
-    :letdev:storage pid                            - get the process ID of the storage
+    :storage [status]                       - check the status of the storage, default command
+    :storage start                          - start the storage
+    :storage stop                           - stop the storage
+    :storage restart                        - restart the storage
+    :storage pid                            - get the process ID of the storage
 
-    :letdev:storage help                           - display this help
+    :storage help                           - display this help
 
 Arguments:
     key: the key to store or retrieve
@@ -24,13 +24,13 @@ Arguments:
     default-value: the default value to return if the key is not found
 
 Example:
-    :letdev:storage get my-key # get the value of the key or empty string if not found
-    :letdev:storage get my-key default-value # get the value of the key or default value if not found
+    :storage get my-key # get the value of the key or empty string if not found
+    :storage get my-key default-value # get the value of the key or default value if not found
 
-    :letdev:storage set my-key new-value # set new value for the key
-    :letdev:storage set my-key # remove the key
+    :storage set my-key new-value # set new value for the key
+    :storage set my-key # remove the key
 
-    :letdev:storage has my-key # check if the key exists
+    :storage has my-key # check if the key exists
 "
 
 _do_command() {
