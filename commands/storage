@@ -6,6 +6,7 @@ COMMAND_HELP="\
 Simple key-value storage implementation.
 
 Usage: 
+    :storage ls                             - list all keys and values
     :storage get <key> [default-value]      - get the value of the key or default value if not found
     :storage set <key> [new-value]          - set new value for the key or remove the key
     :storage has <key>                      - check if the key exists, return 'true' or 'false' 
@@ -33,14 +34,67 @@ Example:
     :storage has my-key # check if the key exists
 "
 
-_do_command() {
-    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
-        echo "$COMMAND_HELP"
-        return
+_list_values() {
+    if letdev_storage_started; then
+        letdev_storage_list
+    else
+        echo "Storage is not started" >&2
+    fi
+}
+
+_get_value() {
+    local key="$1"
+    local default_value="$2"
+
+    if [ -z "$key" ]; then
+        echo "Missing key" >&2
+        return 3
     fi
 
-    local command=$1
-    [ -z "$command" ] && command="status"
+    if letdev_storage_started; then
+        if letdev_storage_has "$key"; then
+            letdev_storage_get "$key"
+        else
+            [ -n "$default_value" ] && echo "$default_value"
+            return 1
+        fi
+    else
+        echo "Storage is not started" >&2
+        return 2
+    fi
+}
+
+_set_value() {
+    local key="$1"
+    local new_value="$2"
+
+    if [ -z "$key" ]; then
+        echo "Missing key" >&2
+        return 3
+    fi
+
+    if letdev_storage_started; then
+        if [ -z "$new_value" ]; then
+            [ letdev_storage_has "$key" ] && letdev_storage_remove "$key" || return 1
+            return
+        fi
+
+        letdev_storage_set "$key" "$new_value"
+    else
+        echo "Storage is not started" >&2
+        return 2
+    fi
+}
+
+_do_command() {
+    [[ "$1" == "--help" || "$1" == "help" ]] && echo "$COMMAND_HELP" && return
+
+    local command="$1"
+    [ -n "$command" ] && shift
+    local key="$1"
+    [ -n "$key" ] && shift
+    local value="$1"
+    [ -n "$value" ] && shift
 
     case $command in
         status)
@@ -66,51 +120,39 @@ _do_command() {
         pid)
             letdev_storage_pid
             ;;
+        ls|list)
+            _list_values
+            ;;
         get)
-            if letdev_storage_started; then
-                if [ -z "$2" ]; then
-                    echo "Missing key" >&2
-                    return 1
-                fi
-                local value=$(letdev_storage_get "$2")
-                if [ $# -eq 2 ]; then
-                   letdev_storage_has "$2" && echo "$value"
-                else
-                    letdev_storage_has "$2" && echo "$value" || echo "$3"
-                fi
-            else
-                echo "Storage is not started" >&2
-            fi
+            _get_value "$key" "$value"
             ;;
         set)
-            if letdev_storage_started; then
-                if [ -z "$2" ]; then
-                    echo "Missing key" >&2
-                    return 1
-                fi
-                if [ $# -lt 3 ]; then
-                    letdev_storage_remove "$2"
-                else
-                    letdev_storage_set "$2" "$3"
-                fi
-            else
-                echo "Storage is not started"
-            fi
+            _set_value "$key" "$value"
             ;;
         has)
             if letdev_storage_started; then
-                if [ -z "$2" ]; then
+                if [ -z "$key" ]; then
                     echo "Missing key"
                     return 1
                 fi
-                letdev_storage_has "$2"
+                letdev_storage_has "$key"
             else
                 echo "Storage is not available"
             fi
             ;;
         *)
-            echo "Invalid command: $command" >&2
-            return 1
+            # Simple mode
+
+            value="$key"
+            key="$command"
+
+            if [ -z "$key" ]; then
+                _list_values
+            elif [ -z "$value" ]; then
+                _get_value "$key"
+            else
+                _set_value "$key" "$value"
+            fi
             ;;
     esac
 }

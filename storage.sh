@@ -4,10 +4,64 @@
 # It listens for commands from a named pipe and performs operations
 # to store and retrieve values.
 
+
 # Named pipe for reading commands
 LETDEV_STORAGE_PIPE_IN="/tmp/letdev_storage_pipe_in"
 # Named pipe for writing results
 LETDEV_STORAGE_PIPE_OUT="/tmp/letdev_storage_pipe_out"
+# File to store values
+LETDEV_STORAGE_FILE="$LETDEV_HOME/profiles/$LETDEV_PROFILE/storage.env"
+
+
+# ----------------------------------------------------------------
+# Interact with the storage file
+# The storage file is a simple text file with key-value pairs separated by an equal sign
+
+_storage_var_find_key() {
+    local key="$1"
+
+    if grep -q "^$key=" "$LETDEV_STORAGE_FILE"; then
+        return 0  # Key found
+    else
+        return 1  # Key not found
+    fi
+}
+
+_storage_var_get_value() {
+    local key="$1"
+    local value=$(grep "^$key=" "$LETDEV_STORAGE_FILE" | cut -d '=' -f2-)
+    echo "$value"
+}
+
+_storage_var_put_value() {
+    local key="$1"
+    local value="$2"
+
+    if grep -q "^$key=" "$LETDEV_STORAGE_FILE"; then
+        sed -i '' "s/^$key=.*/$key=$value/" "$LETDEV_STORAGE_FILE"
+    else
+        echo "$key=$value" >> "$LETDEV_STORAGE_FILE"
+    fi
+}
+
+_storage_var_remove_value() {
+    local key="$1"
+    sed -i '' "/^$key=/d" "$LETDEV_STORAGE_FILE"
+}
+
+_storage_var_rows() {
+    # Remove all except key-value pairs
+    cat "$LETDEV_STORAGE_FILE" | grep -E "^[^#].*="
+}
+
+
+# ----------------------------------------------------------------
+# Interact with the storage listener via named pipe
+
+letdev_storage_list() {
+    echo "list" >$LETDEV_STORAGE_PIPE_IN
+    cat <$LETDEV_STORAGE_PIPE_OUT
+}
 
 # Get the value associated with a key
 letdev_storage_get() {
@@ -38,36 +92,42 @@ letdev_storage_remove() {
     echo "remove $key" >$LETDEV_STORAGE_PIPE_IN
 }
 
+
+# ----------------------------------------------------------------
+# Storage listener
+
 # Create a named pipe for communication and start listening for commands
 _letdev_storage_listener() {
     # Create named pipes if they do not exist
     [ -p $LETDEV_STORAGE_PIPE_IN ] || mkfifo $LETDEV_STORAGE_PIPE_IN
-    [ -p $LETDEV_STORAGE_PIPE_OUT ] || mkfifo $LETDEV_STORAGE_PIPE_OUT
-
-    # Declare an associative array to store values
-    declare -A values
+    [ -p $LETDEV_STORAGE_PIPE_OUT ] || mkfifo $LETDEV_STORAGE_PIPE_OUT    
 
     # Listen for commands
     while true; do
         if read -r line <$LETDEV_STORAGE_PIPE_IN; then
             # Split the line into command and arguments
-            cmd=$(echo $line | cut -d ' ' -f1)
-            arg1=$(echo $line | cut -d ' ' -f2)
-            arg2=$(echo $line | cut -d ' ' -f3)
+            local cmd=$(echo $line | cut -d ' ' -f1)
+            local key=$(echo $line | cut -d ' ' -f2)
+            # value is the rest of the line
+            local val=$(echo $line | cut -d ' ' -f3-)
 
             # Perform the command based on the received value
-            case $cmd in
+            case "$cmd" in
+                "list")
+                    _storage_var_rows >$LETDEV_STORAGE_PIPE_OUT
+                    ;;
                 "set")
-                    values[$arg1]=$arg2
+                    _storage_var_put_value "$key" "$val"
                     ;;
                 "get")
-                    echo "${values[$arg1]}" >$LETDEV_STORAGE_PIPE_OUT
+                    local val=$(_storage_var_get_value "$key")
+                    echo "$val" >$LETDEV_STORAGE_PIPE_OUT
                     ;;
                 "has")
-                    [ -n "${values[$arg1]}" ] && echo "true" >$LETDEV_STORAGE_PIPE_OUT || echo "false" >$LETDEV_STORAGE_PIPE_OUT
+                    _storage_var_find_key "$key" && echo "true" >$LETDEV_STORAGE_PIPE_OUT || echo "false" >$LETDEV_STORAGE_PIPE_OUT
                     ;;
                 "remove")
-                    unset values[$arg1]
+                    _storage_var_remove_value "$key"
                     ;;
                 "exit")
                     break
@@ -83,6 +143,10 @@ _letdev_storage_listener() {
     [ -p $LETDEV_STORAGE_PIPE_IN ] && rm $LETDEV_STORAGE_PIPE_IN
     [ -p $LETDEV_STORAGE_PIPE_OUT ] && rm $LETDEV_STORAGE_PIPE_OUT
 }
+
+
+# ----------------------------------------------------------------
+# Storage listener management
 
 # Start the listener in the background
 letdev_storage_start() {

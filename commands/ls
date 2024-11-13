@@ -16,7 +16,6 @@ Example:
 "
 
 function _do_command {
-    # Show help on --help
     [[ "$1" == "--help" || "$1" == "help" ]] && echo "$COMMAND_HELP" && return
 
     LLS_PATH=$1
