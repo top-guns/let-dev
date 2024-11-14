@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+
+COMMAND_DESCRIPTION="Edit let-dev storage for the current user"
+COMMAND_HELP="\
+Open storage file in the preferred text editor.
+"
+
+_do_command() {
+    local FILE_TO_OPEN="$LETDEV_HOME/profiles/$LETDEV_PROFILE/storage.env"
+
+    source "$LETDEV_HOME/commands/config/.edit_config.sh"
+    _edit_config "$FILE_TO_OPEN" $@
+    return $?
+}
+
+_do_command "$@"

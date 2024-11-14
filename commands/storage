@@ -9,15 +9,7 @@ Usage:
     :storage ls                             - list all keys and values
     :storage get <key> [default-value]      - get the value of the key or default value if not found
     :storage set <key> [new-value]          - set new value for the key or remove the key
-    :storage has <key>                      - check if the key exists, return 'true' or 'false' 
-
-    :storage [status]                       - check the status of the storage, default command
-    :storage start                          - start the storage
-    :storage stop                           - stop the storage
-    :storage restart                        - restart the storage
-    :storage pid                            - get the process ID of the storage
-
-    :storage help                           - display this help
+    :storage has <key>                      - check if the key exists, return 0 or 1
 
 Arguments:
     key: the key to store or retrieve
@@ -34,13 +26,6 @@ Example:
     :storage has my-key # check if the key exists
 "
 
-_list_values() {
-    if letdev_storage_started; then
-        letdev_storage_list
-    else
-        echo "Storage is not started" >&2
-    fi
-}
 
 _get_value() {
     local key="$1"
@@ -48,19 +33,14 @@ _get_value() {
 
     if [ -z "$key" ]; then
         echo "Missing key" >&2
-        return 3
+        return 2
     fi
 
-    if letdev_storage_started; then
-        if letdev_storage_has "$key"; then
-            letdev_storage_get "$key"
-        else
-            [ -n "$default_value" ] && echo "$default_value"
-            return 1
-        fi
+    if letdev_storage_has "$key"; then
+        letdev_storage_get "$key"
     else
-        echo "Storage is not started" >&2
-        return 2
+        [ -n "$default_value" ] && echo "$default_value"
+        return 1
     fi
 }
 
@@ -73,17 +53,12 @@ _set_value() {
         return 3
     fi
 
-    if letdev_storage_started; then
-        if [ -z "$new_value" ]; then
-            [ letdev_storage_has "$key" ] && letdev_storage_remove "$key" || return 1
-            return
-        fi
-
-        letdev_storage_set "$key" "$new_value"
-    else
-        echo "Storage is not started" >&2
-        return 2
+    if [ -z "$new_value" ]; then
+        [ letdev_storage_has "$key" ] && letdev_storage_remove "$key" || return 1
+        return
     fi
+
+    letdev_storage_set "$key" "$new_value"
 }
 
 _do_command() {
@@ -97,31 +72,8 @@ _do_command() {
     [ -n "$value" ] && shift
 
     case $command in
-        status)
-            letdev_storage_status
-            ;;
-        start)
-            if letdev_storage_started; then
-                echo "Storage is already started"
-            else
-                letdev_storage_start
-                echo "Storage has been started"
-            fi
-            ;;
-        stop)
-            letdev_storage_stop
-            echo "Storage has been stopped and all resources have been released"
-            ;;
-        restart)
-            letdev_storage_stop
-            letdev_storage_start
-            echo "Storage has been restarted"
-            ;;
-        pid)
-            letdev_storage_pid
-            ;;
         ls|list)
-            _list_values
+            letdev_storage_list
             ;;
         get)
             _get_value "$key" "$value"
@@ -130,15 +82,11 @@ _do_command() {
             _set_value "$key" "$value"
             ;;
         has)
-            if letdev_storage_started; then
-                if [ -z "$key" ]; then
-                    echo "Missing key"
-                    return 1
-                fi
-                letdev_storage_has "$key"
-            else
-                echo "Storage is not available"
+            if [ -z "$key" ]; then
+                echo "Missing key"
+                return 1
             fi
+            letdev_storage_has "$key"
             ;;
         *)
             # Simple mode
@@ -147,7 +95,7 @@ _do_command() {
             key="$command"
 
             if [ -z "$key" ]; then
-                _list_values
+                letdev_storage_list
             elif [ -z "$value" ]; then
                 _get_value "$key"
             else
