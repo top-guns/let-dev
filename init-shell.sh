@@ -69,7 +69,6 @@ init_shell() {
     source "$LETDEV_HOME/marked_process.sh"
     # Load the functions for working with the storage
     source "$LETDEV_HOME/storage.sh"
-    letdev_storage_started || [ "$interactive_mode" = true ] && letdev_storage_start
     # Load the functions for working with the commands list
     source "$LETDEV_HOME/list_commands_impl.sh"
     # Load commands history engine
