@@ -4,16 +4,18 @@ COMMAND_DESCRIPTION="Check port availability"
 
 COMMAND_HELP="\
 Check port availability.
+
 Usage:
-    :net:check <host> <port>
-    :net:check <port> <host>
-    :net:check <port>
-    :net:check <host>:<port>
+    :net:port:check <host> <port>
+    :net:port:check <port> <host>
+    :net:port:check <port>
+    :net:port:check <host>:<port>
     If host is not provided, localhost is assumed.
+
 Example:
-    :net:check 80 # Check if port 80 is open on localhost
-    :net:check google.com 443 # Check if port 443 is open on google.com
-    :net:check google.com:443 # Check if port 443 is open on google.com
+    :net:port:check 80 # Check if port 80 is open on localhost
+    :net:port:check google.com 443 # Check if port 443 is open on google.com
+    :net:port:check google.com:443 # Check if port 443 is open on google.com
 "
 
 COMMAND_INFO="
@@ -30,7 +32,7 @@ Arguments
     port
         Port number
 Example:
-    :net:check 80
+    :net:port:check 80
         Check if port 80 is open on localhost
     :net:check google.com 443
         Check if port 443 is open on google.com
@@ -147,7 +149,7 @@ _do_command() {
         result="open"
     fi
 
-    echo "$host:$port is $result"
+    echo "$result"
 }
 
 _do_command "$@"
