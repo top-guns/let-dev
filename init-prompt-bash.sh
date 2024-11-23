@@ -54,10 +54,8 @@ BG_BRIGHT_CYAN='\033[106m'
 BG_BRIGHT_WHITE='\033[107m'
 
 
-PS1='\[\033[47m\]\[\033[01;30m\] bash \[\033[00m\] '
-FOOTER_BORDER='=' #$(printf '\xC4')
-#'\[\033[47m\]\[\033[01;30m\]
-COMMAND_SEPARATOR='-'
+# PS1='\[\033[47m\]\[\033[01;30m\] bash \[\033[00m\] '
+PS1='\[\033[47m\]\[\033[01;30m\]#cmd ⏎\[\033[00m\] '
 
 LAST_CLI_COMMAND=""
 
@@ -125,13 +123,14 @@ print_header() {
     # Monkey
     # 🐵 🐒 🦊 🐞 🪲 🐸 🍀 🔥 🍏 🍌 📟 💡 🛠️ ♨️ ⚠️ 💤 ✔️ 🔘 🛜 📶 🟢 🔴 🟠 🟡 🔵 ⚪️ 👍 👌 🌀 🌏 🌍 🌎 🌐 💻 🔒 🔆 🔅 🫥 
     if [ $last_exit_code -eq 0 ]; then
-        left_part+=("🐵")
+        left_part+=("${FG_CYAN}BASH${RESET}")
+        left_part2+=(" 🐵 ")
         # left_part2+=("${FG_GREEN}ok${RESET}")
-        left_part2+=("${FG_GREEN}  ${RESET}")
     else
-        left_part+=("🐞")
+        left_part+=("${FG_CYAN}BASH${RESET}")
+        left_part2+=(" 🐞 ")
         # left_part+=("⚠️")
-        left_part2+=("${FG_RED}  ${RESET}")
+        # left_part2+=("${FG_RED}  ${RESET}")
     fi
 
     # Get the current working directory
@@ -186,7 +185,21 @@ print_header() {
         ports_info="$ports_info ${FG_RED}✗${RESET} 1080"
     fi
 
-    right_part2+=("$ports_info")
+    # Get the username and hostname
+    local user_info="${FG_GREEN}$(whoami)${RESET}${FG_YELLOW}@${RESET}${FG_GREEN}$(hostname)${RESET}"
+
+
+    local len1=$(vlength "$user_info")
+    local len2=$(vlength "$ports_info")
+    if [ $len1 -gt $len2 ]; then
+        ports_info=$(printf "%*s" $((len1 - len2)) '' | tr ' ' ' ')${ports_info}
+    else
+        user_info=$(printf "%*s" $((len2 - len1)) '' | tr ' ' ' ')${user_info}
+    fi
+
+    right_part+=("$user_info")
+    right_part2+=("$ports_info ")
+
 
     # # SOCKS proxy availability (port 1080)
     # local proxy_resp_status=$(curl -x http://127.0.0.1:1080 -s -o /dev/null -w "%{http_code}" http://www.google.com)
@@ -210,7 +223,7 @@ print_header() {
     # right_part+=("$(whoami)${FG_GREEN}@${RESET}$(hostname)")
     # right_part+=("$(whoami)${FG_GREEN}🌀${RESET}$(hostname)")
     
-    right_part+=("${FG_GREEN}$(whoami)${RESET}${FG_YELLOW}@${RESET}${FG_GREEN}$(hostname)${RESET}")
+    
 
     # ----------------------------------------------------------------
     # Concatenate the left parts with ' | ' separator
@@ -230,6 +243,22 @@ print_header() {
 
     # ----------------------------------------------------------------
     # Print the header
+
+    # ⌘ ⏎ ⏏ ⎋ ⌫ ⌦ ⌧ ⌤ ⌥ ⌃ ⌽ ⌾ ⌿ ⍀ ⍁ ⍂ ⍃ ⍄ ⍅ ⍆ ⍇ ⍈ ⍉ ⍊ ⍋ ⍌ ⍍ ⍎ ⍏ ⍐ ⍑ ⍒ ⍓ ⍔ ⍕ ⍖ ⍗ ⍘ ⍙ ⍚ ⍛ ⍜ ⍝ ⍞ ⍟ ⍠ ⍡ ⍢ ⍣ ⍤ 
+    # ⍥ ⍦ ⍧ ⍨ ⍩ ⍪ ⍫ ⍬ ⍭ ⍮ ⍯ ⍰ ⍱ ⍲ ⍳ ⍴ ⍵ ⍶ ⍷ ⍸ ⍹ ⍺ ⍻ ⍼ ⍽ ⍾ ⍿ ⎀ ⎁ ⎂ ⎃ ⎄ ⎅ ⎆ ⎇ ⎈ ⎉ ⎊ ⎋ ⎌ ⎍ ⎎ ⎏ ⎐ ⎑ ⎒ 
+    # ⎔ ⎕ ⎖ ⎗ ⎘ ⎙ ⎚ ⏀ ⏁ ⏂ ⏃ ⏄ ⏅ ⏆ ⏇ ⏈  ⏍ ⏥ ⏦ ⏧ ⏨ 
+    # ⏩ ⏪ ⏫ ⏬ ⏭ ⏮ ⏯ ⏰ ⏱ ⏲ ⏳ ⏴ ⏵ ⏶ ⏷ ⏸ ⏹ ⏺ ⏻ ⏼ ⏽ ⏾ ⏿
+    # ▲ △ ▴ ▵ ▶ ▷ ▸ ▹ ► ▻ ▼ ▽ ▾ ▿ ◀ ◁ ◂ ◃ ◄ ◅ ◆ ◇ ◈ ◉ ◊ ○ ◌ ◍ ◎ ● ◐ ◑ ◒ ◓ ◔ ◕ ◖ ◗ ⏢ ⏣ ◘ ◙ ◚ ◛  
+    # ◢ ◣ ◤ ◥ ◦ ◧ ◨ ◩ ◪ ◫ ◬ ◭ ◮ ◯ ◰ ◱ ◲ ◳ ◴ ◵ ◶ ◷ ◸ ◹ ◺ ◻ ◼ ◽ ◾ ◿ ☀ ☁ ☂ ☃ ☄ ★ ☆ ☇ ☈ ☉ ☊ ☋ ☌ ☍ ☎ ☏
+    # ⏉ ⏊ ⏋ ⏌ ⏐ ⏑ ⏒ ⏓ ⏔ ⏕ ⏖ ⏗ ⏘ ⏙ ⏚ ⏛ ⏜ ⏝ ⏞ ⏟ ⏠ ⏡ ◜ ◝ ◞ ◟ ◠ ◡ ⏤
+    # ⎛ ⎜ ⎝ ⎞ ⎟ ⎠ ⎡ ⎢ ⎣ ⎤ ⎥ ⎦ ⎧ ⎨ ⎩ ⎪ ⎫ ⎬ ⎭ ⎮ ⎯ ⎰ ⎱ ⎲ ⎳ ⎴ ⎵ ⎶ ⎷ ⎸ ⎹ ⎺ ⎻ ⎼ ⎽ ⎾ ⎿ 
+    # ⎓ ═ ║ ╒ ╓ ╔ ╕ ╖ ╗ ╘ ╙ ╚ ╛ ╜ ╝ ╞ ╟ ╠ ╡ ╢ ╣ ╤ ╥ ╦ ╧ ╨ ╩ ╪ ╫ ╬ ╭ ╮ ╯ ╰ ╱ ╲ ╳ ╴ ╵ ╶ ╷ ╸ ╹ ╺ ╻ ╼ ╽ ╾ ╿ ▀ 
+    # ▁ ▂ ▃ ▄ ▅ ▆ ▇ █ ▉ ▊ ▋ ▌ ▍ ▎ ▏ ▐ ░ ▒ ▓ ▔ ▕ ▖ ▗ ▘ ▙ ▚ ▛ ▜ ▝ ▞ ▟ ■ □ ▢ ▣ ▤ ▥ ▦ ▧ ▨ ▩ ▪ ▫ ▬ ▭ ▮ ▯ ▰ ▱ 
+    # ─ ━ ┃ │ ┆ ┇ ┈ ┉ ┊ ┋ ┌ ┍ ┎ ┏ ┐ ┑ ┒ ┓ └ ┕ ┖ ┗ ┘ ┙ ┚ ┛ ├ ┝ ┞ ┟ ┠ ┡ ┢ ┣ ┤ ┥ ┦ ┧ ┨ ┩ ┪ ┫ 
+    # ┬ ┭ ┮ ┯ ┰ ┱ ┲ ┳ ┴ ┵ ┶ ┷ ┸ ┹ ┺ ┻ ┼ ┽ ┾ ┿ ╀ ╁ ╂ ╃ ╄ ╅ ╆ ╇ ╈ ╉ ╊ ╋ ╌ ╍ ╎ ╏ ═ ║ ╒ ╓ ╔ ╕ ╖ ╗ 
+
+    # Best
+    # ⎯ ═ ━ ■ ⏛ ⏤ ⎼ ╍ ╌ ┉ ┈ ╺ ▬ ─
 
     print_separator "${FG_CYAN}═${RESET}"
     echo -e " ${left_part}$(printf '%*s' "$spaces_length" '')${right_part}"
@@ -262,7 +291,7 @@ preexec() {
     clear_header
 
     # Manually print the prompt
-    print_separator "${FG_CYAN}┈${RESET}"
+    print_separator "${FG_CYAN}─${RESET}"
     echo -n "${PS1@P}"
     echo "$LAST_CLI_COMMAND"
 }
