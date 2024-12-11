@@ -150,14 +150,14 @@ print_header() {
         local untracked=$(git ls-files --others --exclude-standard | wc -l)
         local unpushed=$(git log origin/$branch..$branch --oneline 2> /dev/null | wc -l)
         local unmerged=$(git log --oneline --merges 2> /dev/null | wc -l)
-        local stashes=$(git stash list | wc -l)
-        local ahead=$(git log origin/$branch..$branch --oneline 2> /dev/null | wc -l)
-        local behind=$(git log $branch..origin/$branch --oneline 2> /dev/null | wc -l)
-        local commits=$(git log --oneline 2> /dev/null | wc -l)
-        local tags=$(git tag --list | wc -l)
-        local remotes=$(git remote | wc -l)
-        local branches=$(git branch --list | wc -l)
-        local submodules=$(git submodule status | wc -l)
+        # local stashes=$(git stash list | wc -l)
+        local ahead=$(git log origin/$branch..$branch --oneline 2> /dev/null | wc -l | sed 's/^[ \t]*//')
+        local behind=$(git log $branch..origin/$branch --oneline 2> /dev/null | wc -l | sed 's/^[ \t]*//')
+        # local commits=$(git log --oneline 2> /dev/null | wc -l)
+        # local tags=$(git tag --list | wc -l)
+        # local remotes=$(git remote | wc -l)
+        # local branches=$(git branch --list | wc -l)
+        # local submodules=$(git submodule status | wc -l)
         local conflicts=$(git diff --name-only --diff-filter=U | wc -l)
 
         local status=""
@@ -176,17 +176,17 @@ print_header() {
         fi
 
         if [ $ahead -gt 0 ]; then
-            status+="${FG_GREEN}↑${RESET}$ahead"
+            status+=" $ahead${FG_YELLOW}↑${RESET}"
         fi
         if [ $behind -gt 0 ]; then
-            status+="${FG_RED}↓${RESET}$behind"
+            status+=" $behind${FG_RED}↓${RESET}"
         fi
 
-        local git_info="git: $status $branch"
+        local git_info="git: $branch $status"
         
-        if [ $stashes -gt 0 ]; then
-            git_info+=" ${FG_YELLOW}⚑${RESET}$stashes"
-        fi
+        # if [ $stashes -gt 0 ]; then
+        #     git_info+=" ${FG_YELLOW}⚑${RESET}$stashes"
+        # fi
 
         left_part2+=("$git_info")
     fi
