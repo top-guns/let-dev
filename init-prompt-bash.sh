@@ -138,9 +138,9 @@ print_header() {
 
     # Last exit code
     if [ $last_exit_code -eq 0 ]; then
-        left_part2+=("exit code: ${FG_GREEN}$last_exit_code (ok)${RESET}")
+        left_part2+=("exit: ${FG_GREEN}$last_exit_code (ok)${RESET}")
     else
-        left_part2+=("exit code: ${FG_RED}$last_exit_code (error)${RESET}")
+        left_part2+=("exit: ${FG_RED}$last_exit_code (error)${RESET}")
     fi
 
     # Git repository info
