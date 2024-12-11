@@ -143,6 +143,54 @@ print_header() {
         left_part2+=("exit code: ${FG_RED}$last_exit_code (error)${RESET}")
     fi
 
+    # Git repository info
+    if [ -d .git ]; then
+        local branch=$(git branch --show-current)
+        local unconmmited=$(git diff --shortstat 2> /dev/null | tail -n1)
+        local untracked=$(git ls-files --others --exclude-standard | wc -l)
+        local unpushed=$(git log origin/$branch..$branch --oneline 2> /dev/null | wc -l)
+        local unmerged=$(git log --oneline --merges 2> /dev/null | wc -l)
+        local stashes=$(git stash list | wc -l)
+        local ahead=$(git log origin/$branch..$branch --oneline 2> /dev/null | wc -l)
+        local behind=$(git log $branch..origin/$branch --oneline 2> /dev/null | wc -l)
+        local commits=$(git log --oneline 2> /dev/null | wc -l)
+        local tags=$(git tag --list | wc -l)
+        local remotes=$(git remote | wc -l)
+        local branches=$(git branch --list | wc -l)
+        local submodules=$(git submodule status | wc -l)
+        local conflicts=$(git diff --name-only --diff-filter=U | wc -l)
+
+        local status=""
+        if [ $conflicts -gt 0 ]; then
+            status+="${FG_RED}C${RESET}"
+        elif [ -n "$unconmmited" ]; then
+            status+="${FG_YELLOW}*${RESET}"
+        elif [ $untracked -gt 0 ]; then
+            status+="${FG_YELLOW}+${RESET}"
+        elif [ $unpushed -gt 0 ]; then
+            status+="${FG_YELLOW}↑${RESET}$unpushed"
+        elif [ $unmerged -gt 0 ]; then
+            status+="${FG_YELLOW}⚠${RESET}$unmerged"
+        else
+            status+="${FG_GREEN}✓${RESET}"
+        fi
+
+        if [ $ahead -gt 0 ]; then
+            status+="${FG_GREEN}↑${RESET}$ahead"
+        fi
+        if [ $behind -gt 0 ]; then
+            status+="${FG_RED}↓${RESET}$behind"
+        fi
+
+        local git_info="git: $status $branch"
+        
+        if [ $stashes -gt 0 ]; then
+            git_info+=" ${FG_YELLOW}⚑${RESET}$stashes"
+        fi
+
+        left_part2+=("$git_info")
+    fi
+
     # Internet availability
     if [ $internet_availible -eq 0 ]; then
         if [ -z "$EXTERNAL_IP" ] && [ $INTERNET_AVAILIBLE -eq 0 ]; then
