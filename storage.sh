@@ -23,7 +23,14 @@ letdev_storage_set() {
     local value="$2"
 
     if grep -q "^$key=" "$LETDEV_STORAGE_FILE"; then
-        sed -i '' "s/^$key=.*/$key=$value/" "$LETDEV_STORAGE_FILE"
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            # macOS
+            sed -i '' "s/^$key=.*/$key=$value/" "$LETDEV_STORAGE_FILE"
+        else
+            # Linux (Ubuntu и другие)
+            sed -i "s/^$key=.*/$key=$value/" "$LETDEV_STORAGE_FILE"
+        fi
+        
     else
         echo "$key=$value" >> "$LETDEV_STORAGE_FILE"
     fi

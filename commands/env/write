@@ -5,14 +5,16 @@ COMMAND_DESCRIPTION="Write a new value to a variable in the .env file"
 
 COMMAND_HELP="\
 Write a new value to a variable in the .env file.
+
 Usage:
     :env:write <env_file> <variable_name> <new_value>
+
 Example:
     :env:read .env MY_ENV_VAR 'new_value'
 "
 
 _do_command() {
-    if [[ "$1" = "--help" ]]; then
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
         echo "$COMMAND_HELP"
         return
     fi
@@ -41,7 +43,13 @@ _do_command() {
         echo "$VARIABLE_NAME=$NEW_VALUE" >>$ENV_FILE
     else
         # Use sed to replace the variable value in the .env file
-        sed -i "" "s/^$VARIABLE_NAME=.*/$VARIABLE_NAME=$NEW_VALUE/" $ENV_FILE
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            # macOS
+            sed -i "" "s/^$VARIABLE_NAME=.*/$VARIABLE_NAME=$NEW_VALUE/" $ENV_FILE
+        else
+            # Linux (Ubuntu и другие)
+            sed -i "s/^$VARIABLE_NAME=.*/$VARIABLE_NAME=$NEW_VALUE/" $ENV_FILE
+        fi
     fi
 }
 
