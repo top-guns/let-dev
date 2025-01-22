@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Start MC in a running container"
+
+COMMAND_HELP="\
+Connect to a running container and start mc.
+
+Usage:
+    :docker:container:mc [container_id | container_name]
+
+    If container_id is not provided, it will ask for it.
+    If command is not provided, it will default to '/bin/bash'.
+
+Example:
+    :docker:container:mc
+    :docker:container:mc my-container
+"
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    :docker:container:exec $1 mc
+}
+
+_do_command "$@"

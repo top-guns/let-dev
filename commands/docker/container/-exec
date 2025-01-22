@@ -9,7 +9,7 @@ Usage:
     :docker:container:exec [container_id | container_name] [command]
 
     If container_id is not provided, it will ask for it.
-    If command is not provided, it will default to '/bin/bash'.
+    If command is not provided, it will default to sh.
 
 Example:
     :docker:container:exec 1234567890abcdef /bin/bash
@@ -64,7 +64,7 @@ _do_command() {
         return
     fi
 
-    [ -z "$command" ] && command="/bin/bash"
+    [ -z "$command" ] && command="sh"
 
     docker exec -it "$container" "$command"
 }
