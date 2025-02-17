@@ -115,9 +115,13 @@ init_shell() {
         shopt -u nullglob
         # Disable filename expansion (globbing)
         set -f
+        # Disable history expansion (like !)
+        set +H
     elif [ "$shell_name" = "zsh" ]; then
         # Disable special characters substitution (like * and ?)
         setopt NO_NOMATCH
+        # Disable history expansion (like !)
+        setopt NO_BANG_HIST
     fi
 
     builtin cd $cur_dir
