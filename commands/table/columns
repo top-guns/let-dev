@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Extract columns from a table"
+
+COMMAND_HELP='\
+Extract columns from a table and print them to the screen with a strings delimiters.
+
+Usage:
+    :table:columns <column_number | string> [column_number | string] ...
+
+    Columns numbers are zero based.
+    Columns need to be delimited using a `\t` (Tab) character.
+
+Example:
+    ... | :table:columns 0 "\t" 2    # Print the first column, tab and the third column
+'
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    if [ "$#" -lt 1 ]; then
+        echo "Error: Invalid number of arguments"
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local columns=()
+    while [[ $# -gt 0 ]]; do
+        # if ! [[ "$1" =~ ^[0-9]+$ ]]; then
+        # fi
+
+        columns+=("$1")
+        shift
+    done
+
+    # Print column if it is a number or a string if it is not
+    while IFS= read -r line; do
+        output=""
+        for col in "${columns[@]}"; do
+            if [[ "$col" =~ ^[0-9]+$ ]]; then
+                col=$((col + 1))  # Adjust column number to start from 0
+                output+=$(echo "$line" | awk -v col="$col" '{print $col}')
+            else
+                output+="$col"
+            fi
+        done
+        echo -e "$output"
+    done
+}
+
+_do_command "$@"
