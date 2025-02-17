@@ -1,17 +1,23 @@
 #!/usr/bin/env bash
 
-COMMAND_DESCRIPTION="Split stdin lines"
+COMMAND_DESCRIPTION="Split stdin lines into multiple lines or columns with a delimiter"
 
-COMMAND_HELP="\
-Split every line of stdin into multiple lines with a separator.
+COMMAND_HELP='\
+Split every line of stdin into multiple lines or columns with a delimiter.
+
 Usage:
-    :lines:split [separator]
+    :line:split [delimiter] [new_delimiter]
+
 Arguments:
-    separator: Separator between the grouped lines. 
+    delimiter: delimiter between the grouped lines. 
                Default is space
+    new_delimiter: delimiter between the columns in the line. 
+                   Default is tab
+
 Example:
-    :lines:split ' '
-"
+    :line:split            # Split every line by space into separated columns
+    :line:split , "\n"     # Split every line by comma into separated lines
+'
 
 _do_command() {
     # Show help on --help
@@ -20,13 +26,23 @@ _do_command() {
         return
     fi
 
-    local separator="$1"
-    [[ -z "$separator" ]] && separator=" "
+    local delimiter="$1"
+    [[ -z "$delimiter" ]] && delimiter=" " || shift
+
+    local new_delimiter="$1"
+    [[ -z "$new_delimiter" ]] && new_delimiter=$'\t' || shift
 
     while IFS= read -r line; do
-        echo "$line" | tr "$separator" '\n' | while IFS= read -r word; do
-            echo "$word"
+        local first=true
+        echo "$line" | tr "$delimiter" '\n' | while IFS= read -r word; do
+            if [ "$first" = true ]; then
+                first=false
+            else
+                echo -n -e "$new_delimiter"
+            fi
+            echo -n "$word"
         done
+        echo ""
     done
 }
 
