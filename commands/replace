@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Make replacements in stdin lines with regular expressions"
+
+COMMAND_HELP="\
+Make replacements in stdin lines with regular expressions.
+
+Usage:
+    :replace <pattern> <replacement>
+
+Arguments:
+    pattern:      The regular expression pattern to search for.
+    replacement:  The replacement expression. 
+                  Use \\1, \\2, etc. to refer to the matched groups.
+
+Options:
+    --case-insensitive, -i: Make the search case-insensitive.
+
+Example:
+    echo 'hello, world!' | :replace '(hello|hi).*' '\\1 to all'
+    Output: 'hello to all'
+"
+
+_do_command() {
+    # Show help on --help
+    if [[ "$1" == "--help" || "$1" == "help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local pattern=""
+    local replacement=""
+    local options=''
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --case-insensitive | -i)
+                options+="I"
+                ;;
+            *)
+                if [ -z "$pattern" ]; then
+                    pattern="$1"
+                elif [ -z "$replacement" ]; then
+                    replacement="$1"
+                fi
+                ;;
+        esac
+        shift
+    done
+
+    if [ -z "$pattern" ]; then
+        echo "Pattern is not provided"
+        return
+    fi
+
+    if [ -z "$replacement" ]; then
+        echo "Replacement is not provided"
+        return
+    fi
+
+    sed -E "s/$pattern/$replacement/g$options"
+}
+
+_do_command "$@"
