@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-COMMAND_DESCRIPTION="Chain of greps"
+COMMAND_DESCRIPTION="Include by chain of greps"
 
 COMMAND_HELP="\
-Chain of greps (grep $1 | grep $2 | ...).
+Include by chain of greps (grep $1 | grep $2 | ...).
 
 Usage:
     :where [--with-first-row[s=n]] <contains1> <contains2> <!not_contains1> ...

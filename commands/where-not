@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Exclude by chain of greps"
+
+COMMAND_HELP="\
+Exclude by chain of greps (not (grep $1 | grep $2 | ...)).
+
+Usage:
+    :where-not <contains1> <contains2> <!not_contains1> ...
+
+Arguments:
+    contains - pattern which should not present in the output
+    !not_contains - pattern which should present in the output
+
+Example:
+    ls | :where-not .txt|.md !valueble-file
+"
+
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    # Invert every pattern
+    local new_args_str=""
+    for i in "$@"; do
+        if [[ "$i" == "!"* ]]; then
+            new_args_str+=" $(echo "$i" | cut -c 2-)"
+        else
+            new_args_str+=" !${i}"
+        fi
+    done
+
+    # Trim leading space
+    new_args_str=${new_args_str:1}
+
+    :where "$new_args_str"
+}
+
+_do_command "$@"

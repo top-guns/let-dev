@@ -62,7 +62,7 @@ _do_command() {
             --no-colors)
                 no_colors=true
                 ;;
-            -*)
+            -* | !*)
                 negative_paterns+=("${1:1}")
                 ;;
             +*)
