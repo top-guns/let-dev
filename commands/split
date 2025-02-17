@@ -6,7 +6,7 @@ COMMAND_HELP='\
 Split every line of stdin into multiple lines or columns with a delimiter.
 
 Usage:
-    :line:split [delimiter] [new_delimiter]
+    :split [delimiter] [new_delimiter]
 
 Arguments:
     delimiter: delimiter between the grouped lines. 
@@ -15,8 +15,8 @@ Arguments:
                    Default is tab
 
 Example:
-    :line:split            # Split every line by space into separated columns
-    :line:split , "\n"     # Split every line by comma into separated lines
+    :split            # Split every line by space into separated columns
+    :split , "\n"     # Split every line by comma into separated lines
 '
 
 _do_command() {
