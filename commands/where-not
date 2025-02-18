@@ -2,7 +2,7 @@
 
 COMMAND_DESCRIPTION="Exclude by chain of greps"
 
-COMMAND_HELP="\
+COMMAND_HELP='\
 Exclude by chain of greps (not (grep $1 | grep $2 | ...)).
 
 Usage:
@@ -14,7 +14,7 @@ Arguments:
 
 Example:
     ls | :where-not .txt|.md !valueble-file
-"
+'
 
 
 _do_command() {
@@ -25,16 +25,18 @@ _do_command() {
 
     # Invert every pattern
     local new_args_str=""
-    for i in "$@"; do
-        if [[ "$i" == "!"* ]]; then
-            new_args_str+=" $(echo "$i" | cut -c 2-)"
+    for ii in "$@"; do
+        if [[ "$ii" == "!"* ]]; then
+            new_args_str+=" $(echo "$ii" | cut -c 2-)"
         else
-            new_args_str+=" !${i}"
+            new_args_str+=" !${ii}"
         fi
     done
 
     # Trim leading space
     new_args_str=${new_args_str:1}
+
+    # echo ":grep $new_args_str"
 
     eval ":grep $new_args_str"
 }

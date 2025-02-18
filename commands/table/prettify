@@ -112,19 +112,22 @@ _colorize() {
     echo -e "\033[${attr:-0};${color:-0};${bg_color:-0}m${text}\033[0m"
 }
 
-# Repeat a character n times
-_repeat_char() {
-    local n="$1"
-    local char="$2"
-    for ((i=0; i<n; i++)); do
-        echo -n "$char"
-    done
-}
-
 _get_columns_count() {
     local line="$1"
     echo "$line" | awk -F'\t' '{print NF}'
 }
+
+_detect_shell() {
+    if [ -n "$ZSH_VERSION" ]; then
+        SHELL_TYPE="zsh"
+        OFFSET=1
+    else
+        SHELL_TYPE="bash"
+        OFFSET=0
+    fi
+}
+
+_detect_shell
 
 _get_columns() {
     local line="$1"
@@ -142,13 +145,20 @@ _get_columns() {
     eval "$result_var=(\"\${result[@]}\")"
 }
 
+_repeat_char() {
+    local n="$1"
+    local char="$2"
+    for ((i=0; i<n; i++)); do
+        echo -n "$char"
+    done
+}
+
 _clear_value() {
     local value="$1"
     value=$(echo "$value" | sed -r 's/\x1B\[[0-9;]*[a-zA-Z]//g')
     echo "$value"
 }
 
-# Print a table
 print_table() {
     local column_count=0
     local column_widths=()
@@ -163,59 +173,44 @@ print_table() {
     local rows=()
     [ -z "$header" ] || rows+=("$header")
 
-    # echo "Column count: $column_count"
-    # echo "Column widths: ${column_widths[@]}"
-    # echo "Header: $header"
-    # echo "Rows: ${rows[@]}"
-    # echo "-----------"
-
-    # Read all lines from stdin
     while IFS= read -r line; do
         rows+=("$line")
 
-        # Calculate maximum width for each column
         local cols=()
         _get_columns "$line" cols
         local cols_count="${#cols[@]}"
         if [ "$cols_count" -gt "$column_count" ]; then
-            for ((i=1; i<=column_count; i++)); do
-                local val="${cols[i]}"
-                val=$(_clear_value "$val")
+            for ((i=0; i<column_count; i++)); do
+                local index=$((i + OFFSET))
+                local val=$(_clear_value "${cols[index]}")
                 local width=${#val}
-                local old_width=${column_widths[i]}
+                local old_width=${column_widths[index]}
                 if [ "$width" -gt "$old_width" ]; then
-                    column_widths[i]=$width
+                    column_widths[index]=$width
                 fi
             done
 
-            # Add the rest of the columns to the column_widths
-            for ((i=column_count+1; i<=cols_count; i++)); do
-                local val="${cols[i]}"
-                val=$(_clear_value "$val")
+            for ((i=column_count; i<cols_count; i++)); do
+                local index=$((i + OFFSET))
+                local val=$(_clear_value "${cols[index]}")
                 local width=${#val}
                 column_widths+=("$width")
             done
 
             column_count=$cols_count
         else
-            for ((i=1; i<=cols_count; i++)); do
-                local val=$(_clear_value "${cols[i]}")
-                # echo "$val" | cat -vet
+            for ((i=0; i<cols_count; i++)); do
+                local index=$((i + OFFSET))
+                local val=$(_clear_value "${cols[index]}")
                 local width=${#val}
-                local old_width=${column_widths[i]}
-                # echo "Column $i: $val, width: $width, old width: $old_width"
+                local old_width=${column_widths[index]}
                 if [ "$width" -gt "$old_width" ]; then
-                    column_widths[i]=$width
+                    column_widths[index]=$width
                 fi
             done
         fi
     done
 
-    # echo "Column widths: ${column_widths[@]}"
-    # echo "Rows: ${rows[@]}"
-    # echo "-----------"
-
-    # Function to print a separator line
     print_separator() {
         local orient="$1"
 
@@ -228,27 +223,27 @@ print_table() {
         local center_char=$(eval echo \$${center_char_name})
 
         echo -n "$left_char"
-        for ((i=1; i<=column_count; i++)); do
-            [ $i -gt 1 ] && echo -n "$center_char"
-            echo -n "$(_repeat_char "${column_widths[i]}" "$_char_horizontal")"
+        for ((i=0; i<column_count; i++)); do
+            (( i > 0 )) && echo -n "$center_char"
+            echo -n "$(_repeat_char "${column_widths[i + OFFSET]}" "$_char_horizontal")"
         done
         echo -n "$right_char"
         echo ""
     }
 
-    # Print the table
     print_separator "top"
     local first_row=true
     for row in "${rows[@]}"; do
-        [ "$first_row" = true ] && first_row=false || print_separator "center"
+        [[ "$first_row" == true ]] && first_row=false || print_separator "center"
 
         local columns=()
         _get_columns "$row" columns
-        for ((i=1; i<=column_count; i++)); do
+        for ((i=0; i<column_count; i++)); do
             echo -n "$_char_vertical"
-            local value="${columns[i]}"
+            local index=$((i + OFFSET))
+            local value="${columns[index]}"
             value=$(_clear_value "$value")
-            local width=$column_widths[i]
+            local width="${column_widths[index]}"
             printf "%-${width}s" "$value"
         done
         echo -n "$_char_vertical"
@@ -263,16 +258,11 @@ _do_command() {
         return
     fi
 
-    # local color="${1:-none}"
-    # shift
-
     local column_count="$#"
     local header=""
     if [ "$column_count" -eq 0 ]; then
-        # Read the first line from stdin to use as header
         read -r first_line
         header="$first_line"
-        # Determine the number of columns based on the first line
         column_count=$(echo "$first_line" | awk -F'\t' '{print NF}')
     else
         for col in "$@"; do
@@ -281,9 +271,7 @@ _do_command() {
         done
     fi
 
-    # source "$LETDEV_HOME/commands/table/.prettytable/prettytable.sh"
-
-    print_table $@
+    print_table "$@"
 }
 
 _do_command "$@"
