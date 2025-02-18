@@ -8,11 +8,12 @@ Extract columns from a table and print them to the screen with a strings delimit
 Usage:
     :table:columns <column_number | string> [column_number | string] ...
 
-    Columns numbers are zero based.
     Columns need to be delimited using a `\t` (Tab) character.
 
 Example:
-    ... | :table:columns 0 "\t" 2    # Print the first column, tab and the third column
+    ls -la | :table:columns 1 "" 3    # Print the first column, tab and the third column
+    ls -la | :table:columns 1 "\n" 5    # Print the first column, newline and the fifth column
+    ls -la | :table:columns 1 "" 2    # Print the first column and the second column without a delimiter
 '
 
 _do_command() {
@@ -38,13 +39,16 @@ _do_command() {
 
     # Print column if it is a number or a string if it is not
     while IFS= read -r line; do
-        output=""
+        local output=""
+        local was_column=false
         for col in "${columns[@]}"; do
             if [[ "$col" =~ ^[0-9]+$ ]]; then
-                col=$((col + 1))  # Adjust column number to start from 0
+                [ "$was_column" == true ] && output+="\t"
                 output+=$(echo "$line" | awk -v col="$col" '{print $col}')
+                was_column=true
             else
                 output+="$col"
+                was_column=false
             fi
         done
         echo -e "$output"
