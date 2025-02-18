@@ -2,7 +2,7 @@
 
 COMMAND_DESCRIPTION="Draw nice looking ascii tables"
 
-COMMAND_HELP="\
+COMMAND_HELP='\
 Use PrettyTable library to draw nice looking ascii tables 
 with auto sizing columns to the screen.
 
@@ -31,11 +31,11 @@ Arguments:
 
 Example:
     {
-        printf 'PID\tUSER\tAPPNAME\n';
-        printf '%s\t%s\t%s\n' '1' 'john' 'foo bar';
-        printf '%s\t%s\t%s\n' '12345' 'someone_with_a_long_name' 'blub blib';
+        printf "PID\tUSER\tAPPNAME\n";
+        printf "%s\t%s\t%s\n" 1 john "foo bar";
+        printf "%s\t%s\t%s\n" 12345 someone_with_a_long_name "blub blib";
     } | :table:prettify 3
-"
+'
 
 _do_command() {
     if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
@@ -60,7 +60,7 @@ _do_command() {
 
     source "$LETDEV_HOME/commands/table/.prettytable/prettytable.sh"
 
-    prettytable "$column_count" $color
+    prettytable "$column_count" "$color"
 }
 
 _do_command "$@"
