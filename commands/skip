@@ -1,0 +1,159 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Skip specified lines from the input"
+
+COMMAND_HELP="\
+Skip specified lines from the input.
+
+Usage:
+    :skip [--ignore-case | -i] <grep_pattern>
+    :skip [-]lines_count
+    :skip [-]first_no..[-]last_no
+    :skip every n
+
+Arguments:
+    grep_pattern    Skip lines by the grep pattern
+    lines_count     Skip lines from the begin (or end if - specified)
+    :skip [-]first_no..[-]last_no    Skip lines in the specified interval
+    :skip every n   Skip every n line 
+
+Example:
+    ls -la | :skip .txt|.md
+    ls -la | :skip 1
+    ls -la | :skip -5
+    ls -la | :skip 5..10
+    ls -la | :skip -5..-10
+    ls -la | :skip every 2
+"
+
+# Escape all special characters in the patern, so it can be used in the grep, including . () | and others
+_escape_patern() {
+    # Now escaping only . | () 
+    echo "$1" | sed 's!\([.|()]\)!\\\1!g'
+}
+
+_detect_shell() {
+    if [ -n "$ZSH_VERSION" ]; then
+        SHELL_TYPE="zsh"
+        OFFSET=1
+    else
+        SHELL_TYPE="bash"
+        OFFSET=0
+    fi
+}
+
+_detect_shell
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    # Parse the arguments
+
+    local ignore_case=false
+    local patterns=()
+    local intervals_from=()
+    local intervals_to=()
+    local every=()
+
+    while [ $# -gt 0 ]; do
+        # Ignore case
+        if [[ "$1" == "--ignore-case" || "$1" == "-i" ]]; then
+            ignore_case=true
+            shift
+            continue
+        fi
+
+        # Count
+        if [[ "$1" =~ ^-?[0-9]+$ ]]; then
+            if [ "$1" -gt 0 ]; then
+                intervals_from+=("1")
+                intervals_to+=("$1")
+            else
+                intervals_from+=("$1")
+                intervals_to+=("-1")
+            fi
+        # Interval like 1..10 or 1..-10 or ..10 or -10..
+        elif [[ "$1" =~ ^(-?[0-9]+)?\.\.(-?[0-9]+)?$ ]]; then
+            local from=$(echo "$1" | cut -d'.' -f1)
+            local to=$(echo "$1" | cut -d'.' -f3)
+            [ -z "$from" ] && from="1"
+            [ -z "$to" ] && to="-1"
+            # Swap from and to if from > to or from is negative and to is positive
+            if [ "$from" -gt "$to" ] || [[ "$from" =~ ^-[0-9]+$ ]] && [[ "$to" =~ ^[0-9]+$ ]]; then
+                local tmp="$from"
+                from="$to"
+                to="$tmp"
+            fi
+            intervals_from+=("$from")
+            intervals_to+=("$to")
+        # Every n
+        elif [ "$1" = "every" ] && [[ "$2" =~ ^[0-9]+$ ]]; then
+            every+=("$2")
+            shift
+        # Text grep pattern
+        else
+            patterns+=("$(_escape_patern "$1")")
+        fi
+
+        shift
+    done
+
+    # echo "Skipping patterns: $patterns"
+    # echo "Skipping intervals: $intervals_from..$intervals_to"
+    # echo "Skipping every: $every"
+
+    # Buffer the input
+    local rows=()
+    while IFS= read -r line; do
+        rows+=("$line")
+    done
+
+    # Print the lines to the screen excluding the ones that should be skipped
+    local rows_count="${#rows[@]}" 
+    for row_no in $(seq 0 $((rows_count - 1))); do
+        local row_ind=$((row_no + OFFSET))
+        local row_bash_ind=$((row_no + 1))
+        local row="${rows[row_ind]}"
+
+        # Skip if the line matches any pattern, ignoring case if specified
+        for pattern in "${patterns[@]}"; do
+            local pattern=$(_escape_patern "$pattern")
+            if [ "$ignore_case" == true ]; then
+                pattern=$(echo "$pattern" | tr '[:upper:]' '[:lower:]')
+                row=$(echo "$row" | tr '[:upper:]' '[:lower:]')
+            fi
+            if [[ "$row" =~ $pattern ]]; then
+                continue 2
+            fi
+        done
+
+        # Skip if the line is in one of the intervals
+        for ((i=0; i<${#intervals_from[@]}; i++)); do
+            local ind=$((i + OFFSET))
+            local from="${intervals_from[ind]}"
+            local to="${intervals_to[ind]}"
+
+            # Adjust the intervals if they are negative
+            [ "$from" -lt "0" ] && from=$((rows_count + from + 1))
+            [ "$to" -lt "0" ] && to=$((rows_count + to + 1))
+
+            if [ "$row_bash_ind" -ge "$from" ] && [ "$row_bash_ind" -le "$to" ]; then
+                continue 2
+            fi
+        done
+
+        # Skip if the line is on the every interval
+        for every in "${every[@]}"; do
+            if [ "$((row_bash_ind % every))" -eq "0" ]; then
+                continue 2
+            fi
+        done
+
+        echo "$row"
+    done
+}
+
+_do_command "$@"
