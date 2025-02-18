@@ -7,7 +7,7 @@ Use PrettyTable library to draw nice looking ascii tables
 with auto sizing columns to the screen.
 
 Usage:
-    :table <column_count> [header_color]
+    :table:prettify <column_count> [header_color]
 
     Columns need to be delimited using a `\t` (Tab) character.
 
@@ -34,7 +34,7 @@ Example:
         printf 'PID\tUSER\tAPPNAME\n';
         printf '%s\t%s\t%s\n' '1' 'john' 'foo bar';
         printf '%s\t%s\t%s\n' '12345' 'someone_with_a_long_name' 'blub blib';
-    } | :table 3
+    } | :table:prettify 3
 "
 
 _do_command() {
