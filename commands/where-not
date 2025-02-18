@@ -36,9 +36,6 @@ _do_command() {
     # Trim leading space
     new_args_str=${new_args_str:1}
 
-    # Print command
-    echo ":grep $new_args_str"
-
     :grep $new_args_str
 }
 
