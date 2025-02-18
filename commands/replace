@@ -6,7 +6,7 @@ COMMAND_HELP="\
 Make replacements in stdin lines with regular expressions.
 
 Usage:
-    :replace <pattern> <replacement>
+    :replace <pattern> [replacement]
 
 Arguments:
     pattern:      The regular expression pattern to search for.
@@ -50,11 +50,6 @@ _do_command() {
 
     if [ -z "$pattern" ]; then
         echo "Pattern is not provided"
-        return
-    fi
-
-    if [ -z "$replacement" ]; then
-        echo "Replacement is not provided"
         return
     fi
 
