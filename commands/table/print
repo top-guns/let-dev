@@ -58,7 +58,7 @@ _do_command() {
 
     local color="${2:-none}"
 
-    source "$LETDEV_HOME/commands/.prettytable/prettytable.sh"
+    source "$LETDEV_HOME/commands/table/.prettytable/prettytable.sh"
 
     prettytable "$column_count" $color
 }
