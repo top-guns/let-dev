@@ -36,7 +36,7 @@ _do_command() {
     # Trim leading space
     new_args_str=${new_args_str:1}
 
-    :grep $new_args_str
+    eval ":grep $new_args_str"
 }
 
 _do_command "$@"

@@ -7,13 +7,13 @@ Use PrettyTable library to draw nice looking ascii tables
 with auto sizing columns to the screen.
 
 Usage:
-    :table:prettify <column_count> [header_color]
+    :table:prettify [header_color] column1 column2 ...
 
     Columns need to be delimited using a `\t` (Tab) character.
 
 Arguments:
-    column_count  Number of columns in the table
-    header_color  Color of the header row. Available colors:
+    column1         Name of column 1 in the table
+    header_color    Color of the header row. Available colors:
         blue
         green
         cyan
@@ -34,8 +34,228 @@ Example:
         printf "PID\tUSER\tAPPNAME\n";
         printf "%s\t%s\t%s\n" 1 john "foo bar";
         printf "%s\t%s\t%s\n" 12345 someone_with_a_long_name "blub blib";
-    } | :table:prettify 3
+    } | :table:prettify green "PID" "USER" "APPNAME"
 '
+
+_char_top_left="┌"
+_char_top_right="┐"
+_char_top_center="┬"
+
+_char_bottom_left="└"
+_char_bottom_right="┘"
+_char_bottom_center="┴"
+
+_char_center_left="├"
+_char_center_right="┤"
+_char_center_center="┼"
+
+_char_horizontal="─"
+_char_vertical="│"
+
+
+# Escape codes
+
+# Default colors
+_color_blue="0;34"
+_color_green="0;32"
+_color_cyan="0;36"
+_color_red="0;31"
+_color_purple="0;35"
+_color_yellow="0;33"
+_color_gray="1;30"
+_color_light_blue="1;34"
+_color_light_green="1;32"
+_color_light_cyan="1;36"
+_color_light_red="1;31"
+_color_light_purple="1;35"
+_color_light_yellow="1;33"
+_color_light_gray="0;37"
+# Somewhat special colors
+_color_black="0;30"
+_color_white="1;37"
+_color_none="0"
+
+# Background colors
+_bg_color_blue="44"
+_bg_color_green="42"
+_bg_color_cyan="46"
+_bg_color_red="41"
+_bg_color_purple="45"
+_bg_color_yellow="43"
+_bg_color_gray="40"
+_bg_color_light_blue="104"
+_bg_color_light_green="102"
+_bg_color_light_cyan="106"
+_bg_color_light_red="101"
+_bg_color_light_purple="105"
+_bg_color_light_yellow="103"
+_bg_color_light_gray="47"
+_bg_color_black="40"
+_bg_color_white="107"
+_bg_color_none="49"
+
+# Text attributes
+_attr_reset="0"
+_attr_bold="1"
+_attr_dim="2"
+_attr_underlined="4"
+_attr_blink="5"
+_attr_reverse="7"
+_attr_hidden="8"
+
+# Colorize text
+_colorize() {
+    local color="$1"
+    local bg_color="$2"
+    local attr="$3"
+    local text="$4"
+    echo -e "\033[${attr:-0};${color:-0};${bg_color:-0}m${text}\033[0m"
+}
+
+# Repeat a character n times
+_repeat_char() {
+    local n="$1"
+    local char="$2"
+    for ((i=0; i<n; i++)); do
+        echo -n "$char"
+    done
+}
+
+_get_columns_count() {
+    local line="$1"
+    echo "$line" | awk -F'\t' '{print NF}'
+}
+
+_get_columns() {
+    local line="$1"
+    local result_var="$2"
+    local result=()
+    while [[ $line ]]; do
+        if [[ $line == *$'\t'* ]]; then
+            result+=("${line%%$'\t'*}")
+            line=${line#*$'\t'}
+        else
+            result+=("$line")
+            break
+        fi
+    done
+    eval "$result_var=(\"\${result[@]}\")"
+}
+
+_clear_value() {
+    local value="$1"
+    value=$(echo "$value" | sed -r 's/\x1B\[[0-9;]*[a-zA-Z]//g')
+    echo "$value"
+}
+
+# Print a table
+print_table() {
+    local column_count=0
+    local column_widths=()
+    local header=""
+    for col in "$@"; do
+        [ -z "$header" ] || header+=$'\t'
+        header+="$col"
+        column_count=$((column_count + 1))
+        column_widths+=("${#col}")
+    done
+
+    local rows=()
+    [ -z "$header" ] || rows+=("$header")
+
+    # echo "Column count: $column_count"
+    # echo "Column widths: ${column_widths[@]}"
+    # echo "Header: $header"
+    # echo "Rows: ${rows[@]}"
+    # echo "-----------"
+
+    # Read all lines from stdin
+    while IFS= read -r line; do
+        rows+=("$line")
+
+        # Calculate maximum width for each column
+        local cols=()
+        _get_columns "$line" cols
+        local cols_count="${#cols[@]}"
+        if [ "$cols_count" -gt "$column_count" ]; then
+            for ((i=1; i<=column_count; i++)); do
+                local val="${cols[i]}"
+                val=$(_clear_value "$val")
+                local width=${#val}
+                local old_width=${column_widths[i]}
+                if [ "$width" -gt "$old_width" ]; then
+                    column_widths[i]=$width
+                fi
+            done
+
+            # Add the rest of the columns to the column_widths
+            for ((i=column_count+1; i<=cols_count; i++)); do
+                local val="${cols[i]}"
+                val=$(_clear_value "$val")
+                local width=${#val}
+                column_widths+=("$width")
+            done
+
+            column_count=$cols_count
+        else
+            for ((i=1; i<=cols_count; i++)); do
+                local val=$(_clear_value "${cols[i]}")
+                # echo "$val" | cat -vet
+                local width=${#val}
+                local old_width=${column_widths[i]}
+                # echo "Column $i: $val, width: $width, old width: $old_width"
+                if [ "$width" -gt "$old_width" ]; then
+                    column_widths[i]=$width
+                fi
+            done
+        fi
+    done
+
+    # echo "Column widths: ${column_widths[@]}"
+    # echo "Rows: ${rows[@]}"
+    # echo "-----------"
+
+    # Function to print a separator line
+    print_separator() {
+        local orient="$1"
+
+        local left_char_name="_char_${orient}_left"
+        local right_char_name="_char_${orient}_right"
+        local center_char_name="_char_${orient}_center"
+
+        local left_char=$(eval echo \$${left_char_name})
+        local right_char=$(eval echo \$${right_char_name})
+        local center_char=$(eval echo \$${center_char_name})
+
+        echo -n "$left_char"
+        for ((i=1; i<=column_count; i++)); do
+            [ $i -gt 1 ] && echo -n "$center_char"
+            echo -n "$(_repeat_char "${column_widths[i]}" "$_char_horizontal")"
+        done
+        echo -n "$right_char"
+        echo ""
+    }
+
+    # Print the table
+    print_separator "top"
+    local first_row=true
+    for row in "${rows[@]}"; do
+        [ "$first_row" = true ] && first_row=false || print_separator "center"
+
+        local columns=()
+        _get_columns "$row" columns
+        for ((i=1; i<=column_count; i++)); do
+            echo -n "$_char_vertical"
+            local value="${columns[i]}"
+            value=$(_clear_value "$value")
+            local width=$column_widths[i]
+            printf "%-${width}s" "$value"
+        done
+        echo -n "$_char_vertical"
+        echo ""
+    done
+    print_separator "bottom"
+}
 
 _do_command() {
     if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
@@ -43,24 +263,27 @@ _do_command() {
         return
     fi
 
-    if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
-        echo "Error: Invalid number of arguments"
-        echo "$COMMAND_HELP"
-        return
+    # local color="${1:-none}"
+    # shift
+
+    local column_count="$#"
+    local header=""
+    if [ "$column_count" -eq 0 ]; then
+        # Read the first line from stdin to use as header
+        read -r first_line
+        header="$first_line"
+        # Determine the number of columns based on the first line
+        column_count=$(echo "$first_line" | awk -F'\t' '{print NF}')
+    else
+        for col in "$@"; do
+            [ -z "$header" ] || header+=$'\t'
+            header+="$col"
+        done
     fi
 
-    local column_count="$1"
-    if ! [[ "$column_count" =~ ^[0-9]+$ ]]; then
-        echo "Error: Invalid column count"
-        echo "$COMMAND_HELP"
-        return
-    fi
+    # source "$LETDEV_HOME/commands/table/.prettytable/prettytable.sh"
 
-    local color="${2:-none}"
-
-    source "$LETDEV_HOME/commands/table/.prettytable/prettytable.sh"
-
-    prettytable "$column_count" "$color"
+    print_table $@
 }
 
 _do_command "$@"
