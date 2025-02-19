@@ -7,12 +7,19 @@ Use PrettyTable library to draw nice looking ascii tables
 with auto sizing columns to the screen.
 
 Usage:
-    :table:prettify [header_color] column1 column2 ...
+    :table:prettify [border_style] [header_color] col1 col2 ...
 
     Columns need to be delimited using a `\t` (Tab) character.
 
 Arguments:
-    column1         Name of column 1 in the table
+    col1            Name of column 1 in the table
+    border_style    Border style. Available styles:
+        --single
+        --double
+        --rounded
+        --bold
+        --middle
+        --filled=<horizontal_border_symbol><vertical_border_symbol>
     header_color    Color of the header row. Available colors:
         blue
         green
@@ -37,20 +44,109 @@ Example:
     } | :table:prettify green "PID" "USER" "APPNAME"
 '
 
-_char_top_left="┌"
-_char_top_right="┐"
-_char_top_center="┬"
+# Single borders
 
-_char_bottom_left="└"
-_char_bottom_right="┘"
-_char_bottom_center="┴"
+_char_top_left_single="┌"
+_char_top_right_single="┐"
+_char_top_center_single="┬"
 
-_char_center_left="├"
-_char_center_right="┤"
-_char_center_center="┼"
+_char_bottom_left_single="└"
+_char_bottom_right_single="┘"
+_char_bottom_center_single="┴"
 
-_char_horizontal="─"
-_char_vertical="│"
+_char_center_left_single="├"
+_char_center_right_single="┤"
+_char_center_center_single="┼"
+
+_char_horizontal_single="─"
+_char_vertical_single="│"
+
+# Double borders
+
+_char_top_left_double="╔"
+_char_top_right_double="╗"
+_char_top_center_double="╦"
+
+_char_bottom_left_double="╚"
+_char_bottom_right_double="╝"
+_char_bottom_center_double="╩"
+
+_char_center_left_double="╟"
+_char_center_right_double="╢"
+_char_center_center_double="╬"
+
+_char_horizontal_double="═"
+_char_vertical_double="║"
+
+# # Filled borders
+
+# _char_top_left_filled="█"
+# _char_top_right_filled="█"
+# _char_top_center_filled="█"
+
+# _char_bottom_left_filled="█"
+# _char_bottom_right_filled="█"
+# _char_bottom_center_filled="█"
+
+# _char_center_left_filled="█"
+# _char_center_right_filled="█"
+# _char_center_center_filled="█"
+
+# _char_horizontal_filled="█"
+# _char_vertical_filled="█"
+
+
+# Bold borders
+
+_char_top_left_bold="┏"
+_char_top_right_bold="┓"
+_char_top_center_bold="┳"
+
+_char_bottom_left_bold="┗"
+_char_bottom_right_bold="┛"
+_char_bottom_center_bold="┻"
+
+_char_center_left_bold="┣"
+_char_center_right_bold="┫"
+_char_center_center_bold="╋"
+
+_char_horizontal_bold="━"
+_char_vertical_bold="┃"
+
+
+# Rounded borders
+
+_char_top_left_rounded="╭"
+_char_top_right_rounded="╮"
+_char_top_center_rounded="┬"
+
+_char_bottom_left_rounded="╰"
+_char_bottom_right_rounded="╯"
+_char_bottom_center_rounded="┴"
+
+_char_center_left_rounded="├"
+_char_center_right_rounded="┤"
+_char_center_center_rounded="┼"
+
+_char_horizontal_rounded="─"
+_char_vertical_rounded="│"
+
+# Middle borders
+
+_char_top_left_middle="╒"
+_char_top_right_middle="╕"
+_char_top_center_middle="╤"
+
+_char_bottom_left_middle="╘"
+_char_bottom_right_middle="╛"
+_char_bottom_center_middle="╧"
+
+_char_center_left_middle="╞"
+_char_center_right_middle="╡"
+_char_center_center_middle="╪"
+
+_char_horizontal_middle="═"
+_char_vertical_middle="│"
 
 
 # Escape codes
@@ -160,6 +256,12 @@ _clear_value() {
 }
 
 print_table() {
+    local border_style="$1"
+    shift
+
+    local fill_symbol="$1"
+    shift
+
     local column_count=0
     local column_widths=()
     local header=""
@@ -213,43 +315,53 @@ print_table() {
 
     print_separator() {
         local orient="$1"
+        local border_style="$2"
+        local fill_horizontal="$3"
+        local fill_vertical="$4"
 
-        local left_char_name="_char_${orient}_left"
-        local right_char_name="_char_${orient}_right"
-        local center_char_name="_char_${orient}_center"
+        local left_char_name="_char_${orient}_left_${border_style}"
+        local right_char_name="_char_${orient}_right_${border_style}"
+        local center_char_name="_char_${orient}_center_${border_style}"
+        local horizontal_char_name="_char_horizontal_${border_style}"
 
-        local left_char=$(eval echo \$${left_char_name})
-        local right_char=$(eval echo \$${right_char_name})
-        local center_char=$(eval echo \$${center_char_name})
+        local left_char=$([ "$border_style" == "filled" ] && echo "$fill_horizontal" || eval echo \$${left_char_name})
+        local right_char=$([ "$border_style" == "filled" ] && echo "$fill_horizontal" || eval echo \$${right_char_name})
+        local center_char=$([ "$border_style" == "filled" ] && echo "$fill_horizontal" || eval echo \$${center_char_name})
+        local horizontal_char=$([ "$border_style" == "filled" ] && echo "$fill_horizontal" || eval echo \$${horizontal_char_name})
 
         echo -n "$left_char"
         for ((i=0; i<column_count; i++)); do
             (( i > 0 )) && echo -n "$center_char"
-            echo -n "$(_repeat_char "${column_widths[i + OFFSET]}" "$_char_horizontal")"
+            # Increase the width by 2 to account for the space between the border and the content
+            local column_width=$((column_widths[i + OFFSET] + 2))
+            echo -n "$(_repeat_char "$column_width" "$horizontal_char")"
         done
         echo -n "$right_char"
         echo ""
     }
 
-    print_separator "top"
+    local char_vertical_name="_char_vertical_${border_style}"
+    local char_vertical=$([ "$border_style" == "filled" ] && echo "$fill_vertical" || eval echo \$${char_vertical_name})
+
+    print_separator "top" "$border_style" "$fill_horizontal" "$fill_vertical"
     local first_row=true
     for row in "${rows[@]}"; do
-        [[ "$first_row" == true ]] && first_row=false || print_separator "center"
+        [[ "$first_row" == true ]] && first_row=false || print_separator "center" "$border_style" "$fill_horizontal" "$fill_vertical"
 
         local columns=()
         _get_columns "$row" columns
         for ((i=0; i<column_count; i++)); do
-            echo -n "$_char_vertical"
+            echo -n "$char_vertical"
             local index=$((i + OFFSET))
             local value="${columns[index]}"
             value=$(_clear_value "$value")
             local width="${column_widths[index]}"
-            printf "%-${width}s" "$value"
+            printf " %-${width}s " "$value"
         done
-        echo -n "$_char_vertical"
+        echo -n "$char_vertical"
         echo ""
     done
-    print_separator "bottom"
+    print_separator "bottom" "$border_style" "$fill_horizontal" "$fill_vertical"
 }
 
 _do_command() {
@@ -258,20 +370,54 @@ _do_command() {
         return
     fi
 
-    local column_count="$#"
+    local border_style="single"
+    local fill_horizontal=''
+    local fill_vertical=''
+    local header_column=()
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --single)
+                border_style="single"
+                ;;
+            --double)
+                border_style="double"
+                ;;
+            --rounded)
+                border_style="rounded"
+                ;;
+            --bold)
+                border_style="bold"
+                ;;
+            --middle)
+                border_style="middle"
+                ;;
+            --filled=*)
+                border_style="filled"
+                local fill_symbols=$(echo "$1" | cut -d'=' -f2)
+                fill_horizontal=$(echo "$fill_symbols" | cut -d',' -f1)
+                fill_vertical=$(echo "$fill_symbols" | cut -d',' -f2)
+                ;;
+            *)
+                header_column+=("$1")
+                ;;
+        esac
+        shift
+    done
+
+    local column_count="${#column[@]}"
     local header=""
     if [ "$column_count" -eq 0 ]; then
         read -r first_line
         header="$first_line"
         column_count=$(echo "$first_line" | awk -F'\t' '{print NF}')
     else
-        for col in "$@"; do
+        for col in "${header_column[@]}"; do
             [ -z "$header" ] || header+=$'\t'
             header+="$col"
         done
     fi
 
-    print_table "$@"
+    print_table "$border_style" "$fill_horizontal" "$fill_vertical" "$header"
 }
 
 _do_command "$@"
