@@ -117,8 +117,6 @@ _do_command() {
 
     # echo "Response: $response"
 
-    echo ""
-
     print_markdown "$response"
 
 }
