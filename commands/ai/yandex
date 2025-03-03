@@ -26,24 +26,31 @@ print_markdown() {
 
     # Iterate through each line of input
     while IFS= read -r line; do
-        # Links in [text](url) format
+        # Links in [name](url) format
         if [[ $line =~ \[.*\]\(.*\) ]]; then
-            line=$(echo "$line" | sed -E 's/\[([^]]+)\]\(([^)]+)\)/\2 (\1)/g')
+            # If url = name then print only url, else print url (name)
+            local url=$(echo "$line" | sed -E 's/\[([^]]+)\]\(([^)]+)\)/\2/')
+            local name=$(echo "$line" | sed -E 's/\[([^]]+)\]\(([^)]+)\)/\1/')
+            if [[ "$url" == "$name" ]]; then
+                line=$(echo "$line" | sed -E "s/\[([^]]+)\]\(([^)]+)\)/\2/g")
+            else
+                line=$(echo "$line" | sed -E 's/\[([^]]+)\]\(([^)]+)\)/\2 (\1)/g')
+            fi
         fi
 
         # Bold using ** (e.g., **text**)
-        if [[ $line =~ \*\* ]]; then
+        if [[ $line == *"**"*"**"* ]]; then
             line=$(echo "$line" | sed "s/\*\*\([^*]*\)\*\*/\\\\${dim}\1\\\\${reset}/g")
         fi
 
         # Italic using * (e.g., *text*)
-        if [[ $line =~ \* ]]; then
-            line=$(echo "$line" | sed "s/\*([^*]*)\*/\\${italic}\1\\${reset}/g")
+        if [[ $line == *"*"*"*"* ]]; then
+            line=$(echo "$line" | sed "s/\*([^*]*)\*/\\\\${italic}\1\\\\${reset}/g")
         fi
 
         # Underline using _ (e.g., _text_)
         if [[ $line =~ _ ]]; then
-            line=$(echo "$line" | sed "s/_([^_]*)_/\\${underline}\1\\${reset}/g")
+            line=$(echo "$line" | sed "s/_([^_]*)_/\\\\${underline}\1\\\\${reset}/g")
         fi
 
         if [[ $line =~ ^# ]]; then
@@ -114,7 +121,9 @@ _do_command() {
 
     # echo "Response: $response"
 
-    response=$(echo "$response" |  jq -r '.result.alternatives[0].message.text')
+    # response=$(echo "$response" |  jq -r '.result.alternatives[0].message.text')
+    response=$(echo "$response" | sed -E 's/^.*"text" *: *"//')
+    response=$(echo "$response" | sed -E 's/" *} *, *".*//')
 
     # echo "Response: $response"
 
