@@ -1,0 +1,157 @@
+#!/usr/bin/env bash
+
+COMMAND_DESRIPTION="Make a request to the Yandex GPT API"
+COMMAND_HELP="\
+This script is used to make a request to the Yandex GPT API.
+
+Usage: 
+    :ai:yandex <query>
+
+Example:
+    :ai:yandex What is the meaning of life?
+"
+
+print_markdown() {
+    local input="$1"
+
+    # ANSI escape codes
+    local reset="e[0m"
+    local bold="e[1m"
+    local dim="e[2m"
+    local italic="e[3m"
+    local underline="e[4m"
+    local cyan="e[36m"
+    local green="e[32m"
+    local yellow="e[33m"
+
+    # Iterate through each line of input
+    while IFS= read -r line; do
+        # Links in [text](url) format
+        if [[ $line =~ \[.*\]\(.*\) ]]; then
+            line=$(echo "$line" | sed -E 's/\[([^]]+)\]\(([^)]+)\)/\2 (\1)/g')
+        fi
+
+        # Bold using ** (e.g., **text**)
+        if [[ $line =~ \*\* ]]; then
+            line=$(echo "$line" | sed "s/\*\*\([^*]*\)\*\*/\\\\${dim}\1\\\\${reset}/g")
+        fi
+
+        # Italic using * (e.g., *text*)
+        if [[ $line =~ \* ]]; then
+            line=$(echo "$line" | sed "s/\*([^*]*)\*/\\${italic}\1\\${reset}/g")
+        fi
+
+        # Underline using _ (e.g., _text_)
+        if [[ $line =~ _ ]]; then
+            line=$(echo "$line" | sed "s/_([^_]*)_/\\${underline}\1\\${reset}/g")
+        fi
+
+        if [[ $line =~ ^# ]]; then
+            # Header (e.g., # Header)
+            echo -e "\\${bold}\\${cyan}${line//\#/}\\${reset}"
+        elif [[ $line =~ ^- ]]; then
+            # List item (e.g., - item)
+            echo -e "\\${green}-\\${reset} ${line:1}"
+        elif [[ $line =~ ^[0-9]+\..* ]]; then
+            # Numbered list item (e.g., 1. item)
+            num="${line%%.*}"
+            rest="${line#*.}"
+            echo -e "\\${yellow}${num}\\${reset}.${rest}"
+        else
+            # Normal text
+            echo -e "$line"
+        fi
+    done <<< "$input"
+}
+
+
+_do_command() {
+    if [[ "$1" = "help" ]] || [[ "$1" = "--help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local query="$@"
+    shift
+    [[ -z "$query" ]] && echo "Error: query is required" && return
+
+    # Load API key from .env file
+    local ENV_FILE="$LETDEV_HOME/profiles/$LETDEV_PROFILE/.env"
+    [ -f "$ENV_FILE" ] && source "$ENV_FILE"
+    local catalog_id="$yandex_api_catalog_id" || "$YANDEX_API_CATALOG_ID"
+    local api_key="$yandex_api_key_value" || "$YANDEX_API_KEY_VALUE"
+
+    local system_notes=" \
+        Ты полезный ассистент. \
+        Ты поможешь мне решить задачи и отвечать на вопросы. \
+        Неповторяй мне ответы. \
+        Отвечай на русском языке. \
+        Программный код и комментарии в коде пиши на английском языке. \
+        Ответ форматируй как Markdown. \
+    " 
+
+    local request_body="{ \
+        \"modelUri\": \"gpt://$catalog_id/yandexgpt-lite\", \
+        \"completionOptions\": { \
+            \"stream\": false, \
+            \"temperature\": 0.6, \
+            \"maxTokens\": \"2000\" \
+        }, \
+        \"messages\": [ \
+            { \"role\": \"system\", \"text\": \"$system_notes\" }, \
+            { \"role\": \"user\",   \"text\": \"$query\"        } \
+        ] \
+    }"
+
+    # echo "Request body: $request_body"
+
+    local response=$(curl -s https://llm.api.cloud.yandex.net/foundationModels/v1/completion \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Api-Key $api_key" \
+        -d "$request_body"
+    )
+
+    # echo "Response: $response"
+
+    response=$(echo "$response" |  jq -r '.result.alternatives[0].message.text')
+
+    # echo "Response: $response"
+
+    echo ""
+
+    print_markdown "$response"
+
+}
+
+_do_command "$@"
+
+
+
+# https://habr.com/ru/articles/780008/
+# 
+# prompt = {
+#     "modelUri": "gpt://<ВАШ_ИДЕНТИФИКАТОР_КАТАЛОГА>/yandexgpt-lite",
+#     "completionOptions": {
+#         "stream": False,
+#         "temperature": 0.6,
+#         "maxTokens": "2000"
+#     },
+#     "messages": [
+#         {
+#             "role": "system",
+#             "text": "Ты ассистент дроид, способный помочь в галактических приключениях."
+#         },
+#         {
+#             "role": "user",
+#             "text": "Привет, Дроид! Мне нужна твоя помощь, чтобы узнать больше о Силе. Как я могу научиться ее использовать?"
+#         },
+#         {
+#             "role": "assistant",
+#             "text": "Привет! Чтобы овладеть Силой, тебе нужно понять ее природу. Сила находится вокруг нас и соединяет всю галактику. Начнем с основ медитации."
+#         },
+#         {
+#             "role": "user",
+#             "text": "Хорошо, а как насчет строения светового меча? Это важная часть тренировки джедая. Как мне создать его?"
+#         }
+#     ]
+# }

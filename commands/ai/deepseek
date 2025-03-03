@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+
+COMMAND_DESRIPTION="Make a request to the Deepseek API"
+COMMAND_HELP="\
+This script is used to make a request to the Deepseek API.
+
+Usage: 
+    :ai:deepseek <query>
+
+Example:
+    :ai:deepseek What is the meaning of life?
+"
+
+
+# Encode text in JSON
+function json_text_encode() {
+    local text="$1"
+    echo "$text" | jq -R -s -c .
+}
+
+
+_do_command() {
+    if [[ "$1" = "help" ]] || [[ "$1" = "--help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local query="$@"
+    shift
+    [[ -z "$query" ]] && echo "Error: query is required" && return
+
+    # Encode query text for JSON
+    # query=$(json_text_encode "$query")
+
+    # echo "Query: $query"
+
+    # Load API key from .env file
+    local ENV_FILE="$LETDEV_HOME/profiles/$LETDEV_PROFILE/.env"
+    [ -f "$ENV_FILE" ] && source "$ENV_FILE"
+    local api_key="$deepseek_api_key" || "$DEEPSEEK_API_KEY"
+
+    # local system_notes="You are a helpful assistant. \
+    #     You answer questions. \
+    #     Your answers are short and concise. \
+    #     You are not allowed to repeat yourself. \
+    #     If you don't know the answer to a question, you say you don't know. \
+    #     If the question is not related to the context, you say you don't know. \
+    #     Answers should be in Russian language. \
+    #     You should use English language in programming code comments. \
+    #     Don't use emojis."
+
+    local system_notes="You are a helpful assistant."
+
+    local request_body="{ \
+        \"model\": \"deepseek-chat\", \
+        \"messages\": [ \
+            { \"role\": \"system\", \"content\": \"$system_notes\" }, \
+            { \"role\": \"user\",   \"content\": \"$query\"        } \
+        ], \
+        \"stream\": false \
+    }"
+
+    # echo "Request body: $request_body"
+
+    local response=$(curl -s https://api.deepseek.com/chat/completions \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer $api_key" \
+        -d "$request_body"
+    )
+
+    # echo "Response: $response"
+
+    echo "$(echo "$response" |  jq -r '.choices[0].message.content')"
+}
+
+_do_command "$@"

@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+
+COMMAND_DESRIPTION="Make a request to the GPT API"
+COMMAND_HELP="\
+This script is used to make a request to the GPT API.
+
+Usage: 
+    :ai:gpt <query>
+
+Example:
+    :ai:gpt What is the meaning of life?
+"
+
+
+_do_command() {
+    if [[ "$1" = "help" ]] || [[ "$1" = "--help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local query="$@"
+    shift
+    [[ -z "$query" ]] && echo "Error: query is required" && return
+
+    # echo "Query: $query"
+
+    # Load API key from .env file
+    local ENV_FILE="$LETDEV_HOME/profiles/$LETDEV_PROFILE/.env"
+    [ -f "$ENV_FILE" ] && source "$ENV_FILE"
+    local api_key="$gpt_api_key" || "$GPT_API_KEY"
+
+    local system_notes="You are a helpful assistant."
+
+    local request_body="{ \
+        \"model\": \"gpt-3.5-turbo\", \
+        \"messages\": [ \
+            { \"role\": \"system\", \"content\": \"$system_notes\" }, \
+            { \"role\": \"user\",   \"content\": \"$query\"        } \
+        ], \
+        \"stream\": false \
+    }"
+
+    # echo "Request body: $request_body"
+
+    local response=$(curl -s https://api.openai.com/v1/chat/completions \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer $api_key" \
+        -d "$request_body"
+    )
+
+    # echo "Response: $response"
+
+    # Check if the response is an error
+    if [[ "$response" == *"error"* ]]; then
+        local error_message=$(echo "$response" | jq -r '.error.message')
+        echo "Error: $error_message"
+        return
+    fi
+
+    echo "$(echo "$response" |  jq -r '.choices[0].message.content')"
+}
+
+_do_command "$@"

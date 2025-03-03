@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+COMMAND_DESRIPTION="Make a request to the default AI"
+
+COMMAND_HELP="\
+This script is used to make a request to the default AI.
+
+Usage: 
+    :ai <query>
+
+Example:
+    :ai What is the meaning of life?
+"
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    # Load default AI command from .env file
+    local ENV_FILE="$LETDEV_HOME/profiles/$LETDEV_PROFILE/.env"
+    [ -f "$ENV_FILE" ] && source "$ENV_FILE"
+    local default_ai="$default_ai" || "$DEFAULT_AI"
+    
+    local default_ai_command_file="$LETDEV_HOME/commands/ai/$default_ai"
+
+    if [[ -f "$default_ai_command_file" ]]; then
+        "$default_ai_command_file" "$@"
+    else
+        echo "Error: default AI command not found: $default_ai_command_file"
+        echo "Please, specify the default AI command in the .env file with the 'default_ai' variable"
+        return
+    fi
+}
+
+_do_command "$@"
