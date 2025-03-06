@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+
+COMMAND_DESRIPTION="Create a command line expression by description via the AI"
+COMMAND_HELP="\
+Create a command line expression with the DeepSeek AI 
+by describing the desired action in natural language.
+Print the created command line expression to the terminal, without its explanation.
+Add the command line expression to the history to use it with the up arrow.
+
+Usage: 
+    :ai:cmd <action description>
+
+Example:
+    :ai:cmd list all files in the current directory
+"
+
+
+ask_for_execution_confirmation() {
+    local value
+    echo -n "Execute it now? (Y/n): "
+    if [[ -n $ZSH_VERSION ]]; then
+        read -k 1 value  # Read a single character
+    elif [[ -n $BASH_VERSION ]]; then
+        read -n 1 -r value  # Read a single character
+    else
+        echo "Error: Unsupported shell"
+        return 1
+    fi
+    
+    if [[ "$value" == $'\n' || -z "$value" ]]; then
+        # If the user just presses Enter without input, set value to default "y"
+        value="y"
+    else
+        echo  # Move cursor to the next line
+    fi
+    
+    # Convert the input to lowercase
+    value=$(echo "$value" | tr '[:upper:]' '[:lower:]')
+
+    # Return 0 (true) if the input is 'y', otherwise return 1 (false)
+    [[ "$value" == "y" ]]
+}
+
+
+_do_command() {
+    if [[ "$1" = "help" ]] || [[ "$1" = "--help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local query="$@"
+    shift
+    [[ -z "$query" ]] && echo "Error: query is required" && return
+
+    # Encode query text for JSON
+    # query=$(json_text_encode "$query")
+
+    # echo "Query: $query"
+
+    # Load API key from .env file
+    local ENV_FILE="$LETDEV_HOME/profiles/$LETDEV_PROFILE/.env"
+    [ -f "$ENV_FILE" ] && source "$ENV_FILE"
+    local api_key="$deepseek_api_key" || "$DEEPSEEK_API_KEY"
+
+    local system_notes="You are a terminal command line assistant. \
+        You create a command line expression by describing the desired action and the desired result. \
+        Your answers is only a command line expression without any explanation or comments. \
+        Do not use any formatting or quotes in the command line expression. \
+    "
+
+    local request_body="{ \
+        \"model\": \"deepseek-chat\", \
+        \"messages\": [ \
+            { \"role\": \"system\", \"content\": \"$system_notes\" }, \
+            { \"role\": \"user\",   \"content\": \"$query\"        } \
+        ], \
+        \"stream\": false \
+    }"
+
+    # echo "Request body: $request_body"
+
+    local response=$(curl -s https://api.deepseek.com/chat/completions \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer $api_key" \
+        -d "$request_body"
+    )
+
+    # echo "Response: $response"
+
+    # Check if the response is an error
+    if [[ "$response" == *"error"* ]]; then
+        response=$(echo "$response" | sed -E 's/^.*"message" *: *"//')
+        response=$(echo "$response" | sed -E 's/" *, *".*//')
+        echo "Error: $response"
+        return
+    fi
+
+    response=$(echo "$response" | sed -E 's/^.*"content" *: *"//')
+    response=$(echo "$response" | sed -E 's/" *} *, *".*//')
+
+    # echo ""
+    # echo "Response: $response"
+    # echo ""
+
+    echo "$response"
+
+    # Add command to history for zsh
+    if [[ -n $ZSH_VERSION ]]; then
+        print -s "$response"
+    else
+        history -s "$response"
+    fi
+
+    # Ask the user to execute the command
+    if ask_for_execution_confirmation; then
+        eval "$response"
+    else
+        echo "Command is added to history. Use ⬆ up arrow key to call the command."
+    fi
+
+
+}
+
+_do_command "$@"

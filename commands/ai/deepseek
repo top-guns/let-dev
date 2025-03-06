@@ -128,6 +128,14 @@ _do_command() {
 
     # echo "Response: $response"
 
+    # Check if the response is an error
+    if [[ "$response" == *"error"* ]]; then
+        response=$(echo "$response" | sed -E 's/^.*"message" *: *"//')
+        response=$(echo "$response" | sed -E 's/" *, *".*//')
+        echo "Error: $response"
+        return
+    fi
+
     # echo "$(echo "$response" |  jq -r '.choices[0].message.content')"
     response=$(echo "$response" | sed -E 's/^.*"content" *: *"//')
     response=$(echo "$response" | sed -E 's/" *} *, *".*//')

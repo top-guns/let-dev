@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 
-COMMAND_DESRIPTION="Make a request to the GPT API"
+COMMAND_DESRIPTION="Make a request to the OpenAI API"
 COMMAND_HELP="\
-This script is used to make a request to the GPT API.
+This script is used to make a request to the OpenAI API.
 
 Usage: 
-    :ai:gpt <query>
+    :ai:openai <query>
 
 Example:
-    :ai:gpt What is the meaning of life?
+    :ai:openai What is the meaning of life?
 "
 
 
