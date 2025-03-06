@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 COMMAND_DESRIPTION="Make a request to the Gemini API"
+
 COMMAND_HELP="\
 This script is used to make a request to the Gemini API.
 

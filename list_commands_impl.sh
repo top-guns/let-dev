@@ -88,7 +88,7 @@ _get_list() {
                 # folders
                 find . -type f -name '-ls' -print | sed 's|^\./||' \
                     | awk -F/ -v OFS=":" -v dir="$dir" '{path=$0; gsub("/", ":", path); print path"=\"" dir "/" $0 "\""}' \
-                    | sed 's|:-ls||' | sed 's|^|alias :|'
+                    | sed 's|:-ls||' | sed 's|^|:|' | sed 's|^::|:|' | sed 's|:-|:|' | sed 's|/|: /|' | sed 's|^|alias |'
                 
             elif [ "$format" = "raw" ]; then
                 find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print

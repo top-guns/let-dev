@@ -22,16 +22,8 @@ _do_command() {
     local ENV_FILE="$LETDEV_HOME/profiles/$LETDEV_PROFILE/.env"
     [ -f "$ENV_FILE" ] && source "$ENV_FILE"
     local default_ai="$default_ai" || "$DEFAULT_AI"
-    
-    local default_ai_command_file="$LETDEV_HOME/commands/ai/$default_ai"
 
-    if [[ -f "$default_ai_command_file" ]]; then
-        "$default_ai_command_file" "$@"
-    else
-        echo "Error: default AI command not found: $default_ai_command_file"
-        echo "Please, specify the default AI command in the .env file with the 'default_ai' variable"
-        return
-    fi
+    eval ":ai:$default_ai" "$@"
 }
 
 _do_command "$@"
