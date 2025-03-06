@@ -1,0 +1,137 @@
+#!/usr/bin/env bash
+
+COMMAND_DESRIPTION="Make a request to the Gemini API"
+COMMAND_HELP="\
+This script is used to make a request to the Gemini API.
+
+Usage: 
+    :ai:gemini <query>
+
+Example:
+    :ai:gemini What is the meaning of life?
+"
+
+
+# Encode text in JSON
+function json_text_encode() {
+    local text="$1"
+    echo "$text" | jq -R -s -c .
+}
+
+print_markdown() {
+    local input="$1"
+
+    # ANSI escape codes
+    local reset="e[0m"
+    local bold="e[1m"
+    local dim="e[2m"
+    local italic="e[3m"
+    local underline="e[4m"
+    local cyan="e[36m"
+    local green="e[32m"
+    local yellow="e[33m"
+
+    # Iterate through each line of input
+    while IFS= read -r line; do
+        # Links in [name](url) format
+        if [[ $line =~ \[.*\]\(.*\) ]]; then
+            # If url = name then print only url, else print url (name)
+            local url=$(echo "$line" | sed -E 's/\[([^]]+)\]\(([^)]+)\)/\2/')
+            local name=$(echo "$line" | sed -E 's/\[([^]]+)\]\(([^)]+)\)/\1/')
+            if [[ "$url" == "$name" ]]; then
+                line=$(echo "$line" | sed -E "s/\[([^]]+)\]\(([^)]+)\)/\2/g")
+            else
+                line=$(echo "$line" | sed -E 's/\[([^]]+)\]\(([^)]+)\)/\2 (\1)/g')
+            fi
+        fi
+
+        # Bold using ** (e.g., **text**)
+        if [[ $line == *"**"*"**"* ]]; then
+            line=$(echo "$line" | sed "s/\*\*\([^*]*\)\*\*/\\\\${dim}\1\\\\${reset}/g")
+        fi
+
+        # Italic using * (e.g., *text*)
+        if [[ $line == *"*"*"*"* ]]; then
+            line=$(echo "$line" | sed "s/\*([^*]*)\*/\\\\${italic}\1\\\\${reset}/g")
+        fi
+
+        # Underline using _ (e.g., _text_)
+        if [[ $line =~ _ ]]; then
+            line=$(echo "$line" | sed "s/_([^_]*)_/\\\\${underline}\1\\\\${reset}/g")
+        fi
+
+        if [[ $line =~ ^# ]]; then
+            # Header (e.g., # Header)
+            echo -e "\\${bold}\\${cyan}${line//\#/}\\${reset}"
+        elif [[ $line =~ ^- ]]; then
+            # List item (e.g., - item)
+            echo -e "\\${green}-\\${reset} ${line:1}"
+        elif [[ $line =~ ^[0-9]+\..* ]]; then
+            # Numbered list item (e.g., 1. item)
+            num="${line%%.*}"
+            rest="${line#*.}"
+            echo -e "\\${yellow}${num}\\${reset}.${rest}"
+        else
+            # Normal text
+            echo -e "$line"
+        fi
+    done <<< "$input"
+}
+
+
+_do_command() {
+    if [[ "$1" = "help" ]] || [[ "$1" = "--help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local query="$@"
+    shift
+    [[ -z "$query" ]] && echo "Error: query is required" && return
+
+    # echo "Query: $query"
+
+    # Load API key from .env file
+    local ENV_FILE="$LETDEV_HOME/profiles/$LETDEV_PROFILE/.env"
+    [ -f "$ENV_FILE" ] && source "$ENV_FILE"
+    local api_key="$gemini_api_key" || "$GEMINI_API_KEY"
+
+    # role: user, model
+    local request_body="{ \
+        \"contents\": [
+            { \"role\" : \"user\", \"parts\": [ { \"text\" : \"$query\" } ] }
+        ]
+    }"
+
+    # echo "Request body: $request_body"
+
+    local response=$(curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$api_key" \
+        -H "Content-Type: application/json" \
+        -X POST \
+        -d "$request_body"
+    )
+
+    # echo "Response: $response"
+
+    # Check if the response is an error
+    if [[ "$response" == *"error"* ]]; then
+        response=$(echo "$response" | :json 'error.message')
+        echo "Error: $response"
+        return
+    fi
+
+    # Remove all lines before the first line with "parts" key
+    local in_parts=false
+    local parts=$(echo "$response" | :json 'candidates[0].content.parts[*].text')
+
+
+    # Concatenate all parts
+    local result=""
+    for part in $parts; do
+        result="$result$part"
+    done
+
+    print_markdown "$result"
+}
+
+_do_command "$@"

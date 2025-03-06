@@ -1,0 +1,218 @@
+#!/bin/bash
+
+COMMAND_DESCRIPTION="Parse JSON and extract values by path"
+
+COMMAND_HELP="\
+Parse JSON and extract values by path with JSON.sh.
+
+Usage:
+    :json [path]
+
+Example:
+    echo '[{"a": 1}, {"a": 2}]' | :json
+    echo '{"a": {"b": 1}}' | :json a.b
+    echo '{"a": [{"b": 1}, {"b": 2}]}' | :json a[0].b
+"
+
+
+_detect_shell() {
+    if [ -n "$ZSH_VERSION" ]; then
+        SHELL_TYPE="zsh"
+        OFFSET=1
+    else
+        SHELL_TYPE="bash"
+        OFFSET=0
+    fi
+}
+
+_detect_shell
+
+convert_standard_json_path_to_jsonsh_format() {
+    local standard_path="$1"
+    local jsonsh_path="["
+    local component=""
+    local length=${#standard_path}
+    local i=0
+
+    while [ $i -lt $length ]; do
+        local char="${standard_path:$i:1}"
+
+        if [[ "$char" == "." ]]; then
+            # If current character is a '.', this marks the end of a property name
+            if [[ -n "$component" ]]; then
+                if [[ "$component" == "*" ]]; then
+                    jsonsh_path+="*,"  # Use '*' to symbolize all elements
+                elif [[ "$component" =~ ^[0-9]+$ ]]; then
+                    jsonsh_path+="$component,"
+                else
+                    jsonsh_path+="\"$component\","
+                fi
+                component=""
+            fi
+        elif [[ "$char" == "[" ]]; then
+            # If current character is '[', then collect array index or '*'
+            if [[ -n "$component" ]]; then
+                jsonsh_path+="\"$component\","
+                component=""
+            fi
+            local index=""
+            ((i++))
+            while [[ "${standard_path:$i:1}" != "]" && $i -lt $length ]]; do
+                index+="${standard_path:$i:1}"
+                ((i++))
+            done
+            if [[ "$index" == "*" ]]; then
+                jsonsh_path+="*,"  # Use '*' to symbolize all elements
+            else
+                jsonsh_path+="$index,"
+            fi
+        else
+            # Collect character as part of a property name or number
+            component+="$char"
+        fi
+        ((i++))
+    done
+
+    # Final addition for the last component
+    if [[ -n "$component" ]]; then
+        if [[ "$component" == "*" ]]; then
+            jsonsh_path+="*"
+        elif [[ "$component" =~ ^[0-9]+$ ]]; then
+            jsonsh_path+="$component,"
+        else
+            jsonsh_path+="\"$component\","
+        fi
+    fi
+    
+    # Remove trailing comma and close the JSON.sh path format
+    jsonsh_path="${jsonsh_path%,}]"
+
+    echo "$jsonsh_path"
+}
+
+convert_jsonsh_path_to_array() {
+    local jsonsh_path="$1"
+    local jsonsh_path_array=()
+    local component=""
+    local length=${#jsonsh_path}
+    local i=1  # Start after the opening bracket '['
+
+    while [ $i -lt $length ]; do
+        local char="${jsonsh_path:$i:1}"
+
+        if [[ "$char" == "," || "$char" == "]" ]]; then
+            # End of a component
+            if [[ -n "$component" ]]; then
+                # Add component to array
+                jsonsh_path_array+=("$component")
+                component=""
+            fi
+        else
+            # Collect character as part of a component
+            component+="$char"
+        fi
+        ((i++))
+    done
+
+    echo "${jsonsh_path_array[@]}"
+}
+
+# Function to substitute newlines in string values within JSON
+read_input_json_with_escaped_newlines() {
+    local json_content
+    json_content=$(cat) # Read entire input into a variable
+    local in_string=false
+    local prev_char=""
+
+    local newline=$'\n'
+
+    for (( i=0; i<${#json_content}; i++ )); do
+        local current_char="${json_content:$i:1}"
+
+        if [[ "$current_char" == "\"" && "$prev_char" != "\\" ]]; then
+            # Toggle in_string flag when encountering a non-escaped quote
+            [ $in_string == true ] && in_string=false || in_string=true
+        fi
+
+        if [[ "$current_char" == "$newline" ]]; then
+            if [[ "$in_string" == true ]]; then
+                # Replace real newlines with \n if inside a string
+                printf '\\\\n'
+            else
+                # Output the current character immediately
+                printf "%s" "$current_char"
+            fi
+        else
+            # Output the current character immediately
+            printf "%s" "$current_char"
+        fi
+
+        # Track previous character for escape detection
+        prev_char="$current_char"
+    done
+}
+
+
+_do_command() {
+    # Show help on --help
+    [[ "$1" == "--help" || "$1" == "help" ]] && echo "$COMMAND_HELP" && return
+
+    local JSON_SH="$LETDEV_HOME/lib/JSON.sh/JSON.sh"
+
+    # Save json from input stream to variable
+    local json=$(read_input_json_with_escaped_newlines)
+
+    # Path in style a.b.c
+    local json_path="$1"
+
+    if [[ -z "$json_path" ]]; then
+        eval "$JSON_SH" <<< "$json"
+        return
+    fi
+
+    local jsonsh_path=$(convert_standard_json_path_to_jsonsh_format "$json_path")
+    local jsonsh_path_array=($(convert_jsonsh_path_to_array "$jsonsh_path"))
+
+    # Debug
+    # echo "$json"
+    # return
+
+    local jsonsh_result=$(eval "$JSON_SH" <<< "$json")
+    # echo "$jsonsh_result"
+    # return
+
+    # Iterate through each line of input
+    while IFS= read -r line; do
+        # echo "line: $line"
+        local jsonsh_line_path=$(echo "$line" | cut -d$'\t' -f1)
+        local value=$(echo "$line" | cut -d$'\t' -f2)
+        # echo "jsonsh_line_path: $jsonsh_line_path"
+
+        # Remove the first and last double quotes from the value
+        value=$(echo "$value" | sed '1s/^"//' | sed '$s/"$//' | sed 's/\\"/"/g')
+
+        local jsonsh_line_path_array=($(convert_jsonsh_path_to_array "$jsonsh_line_path"))
+        # echo "jsonsh_path_array: $jsonsh_path_array"
+        # echo "jsonsh_line_path: $jsonsh_line_path"
+        # echo "jsonsh_line_path_array: $jsonsh_line_path_array"
+
+        # If length of paths is different, then they don't match
+        [[ ${#jsonsh_path_array[@]} -ne ${#jsonsh_line_path_array[@]} ]] && continue
+
+        local different=false
+        for ((i=0; i<${#jsonsh_path_array[@]}; i++)); do
+            local ind=$((i + OFFSET))
+            local v1=${jsonsh_path_array[$ind]}
+            local v2=${jsonsh_line_path_array[$ind]}
+            # echo "jsonsh_path_array[$ind]: $v1"
+            # echo "jsonsh_line_path_array[$ind]: $v2"
+            [[ "$v1" == "*" ]] && continue
+            [[ "$v1" != "$v2" ]] && different=true && break
+        done
+
+        # echo "different: $different"
+        [[ "$different" == false ]] && echo "$value"
+    done <<< "$jsonsh_result"
+}
+
+_do_command $@

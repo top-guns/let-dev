@@ -27,7 +27,7 @@ _do_command() {
     # Load API key from .env file
     local ENV_FILE="$LETDEV_HOME/profiles/$LETDEV_PROFILE/.env"
     [ -f "$ENV_FILE" ] && source "$ENV_FILE"
-    local api_key="$gpt_api_key" || "$GPT_API_KEY"
+    local api_key="$openai_api_key" || "$OPENAI_API_KEY"
 
     local system_notes="You are a helpful assistant."
 
