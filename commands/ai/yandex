@@ -45,12 +45,12 @@ print_markdown() {
 
         # Italic using * (e.g., *text*)
         if [[ $line == *"*"*"*"* ]]; then
-            line=$(echo "$line" | sed "s/\*([^*]*)\*/\\\\${italic}\1\\\\${reset}/g")
+            line=$(echo "$line" | sed "s/\*\([^*]*\)\*/\\\\${italic}\1\\\\${reset}/g")
         fi
 
         # Underline using _ (e.g., _text_)
         if [[ $line =~ _ ]]; then
-            line=$(echo "$line" | sed "s/_([^_]*)_/\\\\${underline}\1\\\\${reset}/g")
+            line=$(echo "$line" | sed "s/_\([^_]*\)_/\\\\${underline}\1\\\\${reset}/g")
         fi
 
         if [[ $line =~ ^# ]]; then
