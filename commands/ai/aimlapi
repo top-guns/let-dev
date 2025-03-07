@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+
+COMMAND_DESRIPTION="Make a request to the AI/ML API"
+COMMAND_HELP="\
+This script is used to make a request to the AI/ML API.
+https://aimlapi.com/app/
+
+Usage: 
+    :ai:aimlapi <query>
+
+Example:
+    :ai:aimlapi What is the meaning of life?
+"
+
+
+_do_command() {
+    if [[ "$1" = "help" ]] || [[ "$1" = "--help" ]]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local query="$@"
+    shift
+    [[ -z "$query" ]] && echo "Error: query is required" && return
+
+    # Encode query text for JSON
+    # query=$(json_text_encode "$query")
+
+    # echo "Query: $query"
+
+    # Load API key from .env file
+    local ENV_FILE="$LETDEV_HOME/profiles/$LETDEV_PROFILE/.env"
+    [ -f "$ENV_FILE" ] && source "$ENV_FILE"
+    local api_key="$aimlapi_api_key" || "$AIMLAPI_API_KEY"
+    local model="$aimlapi_model" || "$AIMLAPI_MODEL"
+    local base_url="$aimlapi_base_url" || "$AIMLAPI_BASE_URL"
+
+    local system_notes="You are a helpful assistant. \
+        Answers should be in Russian language. \
+        You should use English language only in programming code comments. \
+        Use markdown to format the response."
+
+    local request_body="{ \
+        \"model\": \"$model\", \
+        \"messages\": [ \
+            { \"role\": \"system\", \"content\": \"$system_notes\" }, \
+            { \"role\": \"user\",   \"content\": \"$query\"        } \
+        ], \
+        \"stream\": false, \
+        \"temperature\": 0.6, \
+        \"max_tokens\": 250 \
+    }"
+
+    # echo "Request body: $request_body"
+
+    local response=$(curl -s -L \
+        --request POST \
+        --url "$base_url/v1/chat/completions" \
+        --header "Authorization: Bearer $api_key" \
+        --header 'Content-Type: application/json' \
+        --data "$request_body" \
+    )
+
+    # Trim the response: remove leading spaces and newlines from the beginning of the first line
+    # response=$(echo "$response" | sed -E 's/^[ \t]*//')
+
+
+    # echo "Response: $response"
+
+    # Check if the response is an error
+    local statusCode=$(echo "$response" | :json:extract 'statusCode')
+    if [[ "$statusCode" == 400 ]]; then
+        echo -n "Error: "
+        echo "$response" | :json:extract 'message'
+        return
+    fi
+    if [[ "$statusCode" == 429 ]]; then
+        echo "Error: Too many requests"
+        echo "$response" | :json:extract 'message'
+        return
+    fi
+    if [[ "$response" == *"error"* ]]; then
+        echo -n "Error: "
+        echo "$response" | :json:extract 'error.message'
+        return
+    fi
+
+    echo "$response" | :json:extract 'choices[0].message.content' | :markdown
+}
+
+_do_command "$@"
