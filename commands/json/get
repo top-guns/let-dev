@@ -6,28 +6,16 @@ COMMAND_HELP="\
 Parse JSON and extract values by path with JSON.sh.
 
 Usage:
-    :json [path]
+    :json:get [path]
 
 Example:
-    echo '[{"a": 1}, {"a": 2}]' | :json
-    echo '{"a": {"b": 1}}' | :json a.b
-    echo '{"a": [{"b": 1}, {"b": 2}]}' | :json a[0].b
-    echo '{"a": [1,2,3]}' | :json a[*]
-    echo '{"a": {"arr": [1,2,3]}, "b": {"arr": [4,5]}}' | :json **.arr[0]
+    echo '[{"a": 1}, {"a": 2}]' | :json:get
+    echo '{"a": {"b": 1}}' | :json:get a.b
+    echo '{"a": [{"b": 1}, {"b": 2}]}' | :jso:get a[0].b
+    echo '{"a": [1,2,3]}' | :json:get a[*]
+    echo '{"a": {"arr": [1,2,3]}, "b": {"arr": [4,5]}}' | :json:get **.arr[0]
 "
 
-
-_detect_shell() {
-    if [ -n "$ZSH_VERSION" ]; then
-        SHELL_TYPE="zsh"
-        OFFSET=1
-    else
-        SHELL_TYPE="bash"
-        OFFSET=0
-    fi
-}
-
-_detect_shell
 
 convert_standard_json_path_to_jsonsh_format() {
     local standard_path="$1"
@@ -94,33 +82,6 @@ convert_standard_json_path_to_jsonsh_format() {
     jsonsh_path="${jsonsh_path%,}]"
 
     echo "$jsonsh_path"
-}
-
-convert_jsonsh_path_to_array() {
-    local jsonsh_path="$1"
-    local jsonsh_path_array=()
-    local component=""
-    local length=${#jsonsh_path}
-    local i=1  # Start after the opening bracket '['
-
-    while [ $i -lt $length ]; do
-        local char="${jsonsh_path:$i:1}"
-
-        if [[ "$char" == "," || "$char" == "]" ]]; then
-            # End of a component
-            if [[ -n "$component" ]]; then
-                # Add component to array
-                jsonsh_path_array+=("$component")
-                component=""
-            fi
-        else
-            # Collect character as part of a component
-            component+="$char"
-        fi
-        ((i++))
-    done
-
-    echo "${jsonsh_path_array[@]}"
 }
 
 # Function to substitute newlines in string values within JSON

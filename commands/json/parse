@@ -1,0 +1,61 @@
+#!/bin/bash
+
+COMMAND_DESCRIPTION="Parse JSON and print paths and values"
+
+COMMAND_HELP="\
+Parse JSON and print paths and values with JSON.sh.
+
+Usage:
+    <input> | :json:parse
+
+Example:
+    echo '[{"a": 1}, {"a": 2}]' | :json:parse
+"
+
+
+# Function to substitute newlines in string values within JSON
+read_input_json_with_escaped_newlines() {
+    local json_content
+    json_content=$(cat) # Read entire input into a variable
+    local in_string=false
+    local prev_char=""
+
+    local newline=$'\n'
+
+    for (( i=0; i<${#json_content}; i++ )); do
+        local current_char="${json_content:$i:1}"
+
+        if [[ "$current_char" == "\"" && "$prev_char" != "\\" ]]; then
+            # Toggle in_string flag when encountering a non-escaped quote
+            [ $in_string == true ] && in_string=false || in_string=true
+        fi
+
+        if [[ "$current_char" == "$newline" ]]; then
+            if [[ "$in_string" == true ]]; then
+                # Replace real newlines with \n if inside a string
+                printf '\\\\n'
+            else
+                # Output the current character immediately
+                printf "%s" "$current_char"
+            fi
+        else
+            # Output the current character immediately
+            printf "%s" "$current_char"
+        fi
+
+        # Track previous character for escape detection
+        prev_char="$current_char"
+    done
+}
+
+
+_do_command() {
+    # Show help on --help
+    [[ "$1" == "--help" || "$1" == "help" ]] && echo "$COMMAND_HELP" && return
+
+    local JSON_SH="$LETDEV_HOME/lib/JSON.sh/JSON.sh"
+
+    read_input_json_with_escaped_newlines | eval "$JSON_SH"
+}
+
+_do_command $@
