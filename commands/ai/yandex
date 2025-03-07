@@ -64,7 +64,7 @@ _do_command() {
     # Check if the response is an error
     if [[ "$response" == *"error"* ]]; then
         echo -n "Error: "
-        echo "$response" | :json 'error.message'
+        echo "$response" | :json:extract 'error.message'
         return
     fi
 

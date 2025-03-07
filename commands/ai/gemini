@@ -50,11 +50,11 @@ _do_command() {
     # Check if the response is an error
     if [[ "$response" == *"error"* ]]; then
         echo -n "Error: "
-        echo "$response" | :json 'error.message'
+        echo "$response" | :json:extract 'error.message'
         return
     fi
 
-    echo "$response" | :json 'candidates[0].content.parts[*].text' | :markdown
+    echo "$response" | :json:extract 'candidates[0].content.parts[*].text' | :markdown
 }
 
 _do_command "$@"
