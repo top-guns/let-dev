@@ -1,0 +1,87 @@
+#!/bin/bash
+
+COMMAND_DESCRIPTION="Parse Markdown text and print it"
+
+COMMAND_HELP="\
+Parse Markdown text and print it.
+
+Usage:
+    :markdown
+
+Example:
+    echo '# Header' | :markdown
+"
+
+
+print_markdown() {
+    local input="$1"
+
+    # ANSI escape codes
+    local reset="e[0m"
+    local bold="e[1m"
+    local dim="e[2m"
+    local italic="e[3m"
+    local underline="e[4m"
+    local cyan="e[36m"
+    local green="e[32m"
+    local yellow="e[33m"
+
+    # Iterate through each line of input
+    while IFS= read -r line; do
+        # Links in [name](url) format
+        if [[ $line =~ \[.*\]\(.*\) ]]; then
+            # If url = name then print only url, else print url (name)
+            local url=$(echo "$line" | sed -E 's/\[([^]]+)\]\(([^)]+)\)/\2/')
+            local name=$(echo "$line" | sed -E 's/\[([^]]+)\]\(([^)]+)\)/\1/')
+            if [[ "$url" == "$name" ]]; then
+                line=$(echo "$line" | sed -E "s/\[([^]]+)\]\(([^)]+)\)/\2/g")
+            else
+                line=$(echo "$line" | sed -E 's/\[([^]]+)\]\(([^)]+)\)/\2 (\1)/g')
+            fi
+        fi
+
+        # Bold using ** (e.g., **text**)
+        if [[ $line == *"**"*"**"* ]]; then
+            line=$(echo "$line" | sed "s/\*\*\([^*]*\)\*\*/\\\\${dim}\1\\\\${reset}/g")
+        fi
+
+        # Italic using * (e.g., *text*)
+        if [[ $line == *"*"*"*"* ]]; then
+            line=$(echo "$line" | sed "s/\*\([^*]*\)\*/\\\\${italic}\1\\\\${reset}/g")
+        fi
+
+        # Underline using _ (e.g., _text_)
+        if [[ $line =~ _ ]]; then
+            line=$(echo "$line" | sed "s/_\([^_]*\)_/\\\\${underline}\1\\\\${reset}/g")
+        fi
+
+        if [[ $line =~ ^# ]]; then
+            # Header (e.g., # Header)
+            echo -e "\\${bold}\\${cyan}${line//\#/}\\${reset}"
+        elif [[ $line =~ ^- ]]; then
+            # List item (e.g., - item)
+            echo -e "\\${green}-\\${reset} ${line:1}"
+        elif [[ $line =~ ^[0-9]+\..* ]]; then
+            # Numbered list item (e.g., 1. item)
+            num="${line%%.*}"
+            rest="${line#*.}"
+            echo -e "\\${yellow}${num}\\${reset}.${rest}"
+        else
+            # Normal text
+            echo -e "$line"
+        fi
+    done <<< "$input"
+}
+
+
+_do_command() {
+    # Show help on --help
+    [[ "$1" == "--help" || "$1" == "help" ]] && echo "$COMMAND_HELP" && return
+
+    # Load text from input stream
+    local text=$(cat)
+
+    print_markdown "$text"
+}
+
+_do_command $@
