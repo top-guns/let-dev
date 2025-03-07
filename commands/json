@@ -12,6 +12,8 @@ Example:
     echo '[{"a": 1}, {"a": 2}]' | :json
     echo '{"a": {"b": 1}}' | :json a.b
     echo '{"a": [{"b": 1}, {"b": 2}]}' | :json a[0].b
+    echo '{"a": [1,2,3]}' | :json a[*]
+    echo '{"a": {"arr": [1,2,3]}, "b": {"arr": [4,5]}}' | :json **.arr[0]
 "
 
 
@@ -41,7 +43,9 @@ convert_standard_json_path_to_jsonsh_format() {
             # If current character is a '.', this marks the end of a property name
             if [[ -n "$component" ]]; then
                 if [[ "$component" == "*" ]]; then
-                    jsonsh_path+="*,"  # Use '*' to symbolize all elements
+                    jsonsh_path+="*,"  # Use '*' to symbolize any element
+                elif [[ "$component" == "**" ]]; then
+                    jsonsh_path+="**,"  # Use '**' to symbolize all elements
                 elif [[ "$component" =~ ^[0-9]+$ ]]; then
                     jsonsh_path+="$component,"
                 else
@@ -77,6 +81,8 @@ convert_standard_json_path_to_jsonsh_format() {
     if [[ -n "$component" ]]; then
         if [[ "$component" == "*" ]]; then
             jsonsh_path+="*"
+        elif [[ "$component" == "**" ]]; then
+            jsonsh_path+="**,"  
         elif [[ "$component" =~ ^[0-9]+$ ]]; then
             jsonsh_path+="$component,"
         else
@@ -171,48 +177,28 @@ _do_command() {
     fi
 
     local jsonsh_path=$(convert_standard_json_path_to_jsonsh_format "$json_path")
-    local jsonsh_path_array=($(convert_jsonsh_path_to_array "$jsonsh_path"))
 
-    # Debug
-    # echo "$json"
-    # return
+    local grep_filter=$(echo "$jsonsh_path" | sed \
+        -e 's/,\*,/,[^,]+,/g' \
+        -e 's/\[\*,/\[[^,]+,/' \
+        -e 's/,\*\]/,[^,]+\]/' \
+        -e 's/,\*\*,/,.+,/g' \
+        -e 's/\[\*\*,/\[.+,/' \
+        -e 's/,\*\*\]/,.+\]/' \
+        -e 's/\[/\\\[/' \
+        -e 's/\]/\\\]/'\
+    )
 
-    local jsonsh_result=$(eval "$JSON_SH" <<< "$json")
-    # echo "$jsonsh_result"
-    # return
+    # echo "jsonsh_path: $jsonsh_path"
+    # echo "grep_filter: $grep_filter"
 
-    # Iterate through each line of input
-    while IFS= read -r line; do
-        # echo "line: $line"
-        local jsonsh_line_path=$(echo "$line" | cut -d$'\t' -f1)
-        local value=$(echo "$line" | cut -d$'\t' -f2)
-        # echo "jsonsh_line_path: $jsonsh_line_path"
+    # Only the value from the second column is returned (after tab delim)
+    # Remove the first and last double quotes from the value
+    eval "$JSON_SH" <<< "$json" \
+        | grep --color=never -E "$grep_filter" \
+        | cut -f 2 \
+        | sed -e '1s/^"//' -e '$s/"$//' -e 's/\\"/"/g'
 
-        # Remove the first and last double quotes from the value
-        value=$(echo "$value" | sed '1s/^"//' | sed '$s/"$//' | sed 's/\\"/"/g')
-
-        local jsonsh_line_path_array=($(convert_jsonsh_path_to_array "$jsonsh_line_path"))
-        # echo "jsonsh_path_array: $jsonsh_path_array"
-        # echo "jsonsh_line_path: $jsonsh_line_path"
-        # echo "jsonsh_line_path_array: $jsonsh_line_path_array"
-
-        # If length of paths is different, then they don't match
-        [[ ${#jsonsh_path_array[@]} -ne ${#jsonsh_line_path_array[@]} ]] && continue
-
-        local different=false
-        for ((i=0; i<${#jsonsh_path_array[@]}; i++)); do
-            local ind=$((i + OFFSET))
-            local v1=${jsonsh_path_array[$ind]}
-            local v2=${jsonsh_line_path_array[$ind]}
-            # echo "jsonsh_path_array[$ind]: $v1"
-            # echo "jsonsh_line_path_array[$ind]: $v2"
-            [[ "$v1" == "*" ]] && continue
-            [[ "$v1" != "$v2" ]] && different=true && break
-        done
-
-        # echo "different: $different"
-        [[ "$different" == false ]] && echo "$value"
-    done <<< "$jsonsh_result"
 }
 
 _do_command $@
