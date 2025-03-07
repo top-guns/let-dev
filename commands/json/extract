@@ -6,14 +6,14 @@ COMMAND_HELP="\
 Parse JSON and extract values by path with JSON.sh.
 
 Usage:
-    :json:extract [path]
+    :json:get [path]
 
 Example:
-    echo '[{"a": 1}, {"a": 2}]' | :json:extract
-    echo '{"a": {"b": 1}}' | :json:extract a.b
-    echo '{"a": [{"b": 1}, {"b": 2}]}' | :jso:extract a[0].b
-    echo '{"a": [1,2,3]}' | :json:extract a[*]
-    echo '{"a": {"arr": [1,2,3]}, "b": {"arr": [4,5]}}' | :json:extract **.arr[0]
+    echo '[{"a": 1}, {"a": 2}]' | :json:get
+    echo '{"a": {"b": 1}}' | :json:get a.b
+    echo '{"a": [{"b": 1}, {"b": 2}]}' | :jso:get a[0].b
+    echo '{"a": [1,2,3]}' | :json:get a[*]
+    echo '{"a": {"arr": [1,2,3]}, "b": {"arr": [4,5]}}' | :json:get **.arr[0]
 "
 
 
@@ -133,7 +133,7 @@ _do_command() {
     local json_path="$1"
 
     if [[ -z "$json_path" ]]; then
-        echo "$json" | eval "$JSON_SH" | cut -f 2
+        eval "$JSON_SH" <<< "$json"
         return
     fi
 
