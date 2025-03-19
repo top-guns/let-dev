@@ -103,23 +103,34 @@
 
 
 _letdev_menu_handler() {
-    if [[ $LBUFFER =~ .*:[^[:space:]]*$ ]]; then
-        # --reverse --layout=reverse-list --no-sort --inline-info --tac
+    local left_of_cursor="${LBUFFER:0:$CURSOR}"
+    local right_of_cursor="${LBUFFER:$CURSOR}"
+
+    local pre_cursor_word="${left_of_cursor##* }"
+    local post_cursor_word="${right_of_cursor%% *}"
+    local initial_cursor_position=$((CURSOR - ${#pre_cursor_word}))
+
+    local current_word="${LBUFFER:$initial_cursor_position:${#post_cursor_word}}"
+
+    if [[ "$current_word" = ":"* ]]; then
+        local prefix="${current_word%%:*}"
+        local query="${current_word#*:}"
+
         letdev_storage_set ldm ""
+
         local selected=$($LETDEV_HOME/completion-output.sh | fzf \
             --no-sort \
             --cycle \
             --reverse \
             --exact \
             --inline-info \
-            --query="${LBUFFER#*:}" \
+            --query="$query" \
             --preview="$LETDEV_HOME/get-command-variable.sh {} COMMAND_HELP" \
             --bind "tab:reload( LETDEV_HOME='$LETDEV_HOME' $LETDEV_HOME/completion-output.sh )" \
         )
         if [[ -n $selected ]]; then
-            # LBUFFER="${LBUFFER%:*}$selected"
-            LBUFFER="$selected"
-            CURSOR=${#LBUFFER}
+            LBUFFER="${left_of_cursor:0:initial_cursor_position}$prefix:$selected ${right_of_cursor:${#post_cursor_word}}"
+            CURSOR=$((initial_cursor_position + ${#prefix} + 1 + ${#selected} + 1))
         fi
     else
         if whence -w fzf-tab-complete >/dev/null; then

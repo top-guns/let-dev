@@ -9,61 +9,35 @@
 
 _letdev_menu_handler() {
     if [[ -n "$READLINE_LINE" ]]; then
-        local words=($READLINE_LINE)
-        local cur_word_index=$(
-            IFS=" "
-            set -f
-            set -- $READLINE_LINE
-            echo $#
-        )
-        local cur=${words[cur_word_index - 1]}
-        local prev=${words[cur_word_index - 2]}
-        # If the previous symbol is space, then the new argument is started
-        local symbol_before_cursor=${READLINE_LINE:READLINE_POINT-1:1}
-        if [[ "$symbol_before_cursor" != " " ]]; then
-            if [[ "$cur" =~ ^: ]]; then
-                letdev_storage_set ldm ""
-                local cmd_name=${cur:1} # remove the first ":" symbol from $cur
-                if [[ $cur_word_index -eq 1 ]]; then
-                    # Command completion
-                    # $LETDEV_HOME/list-commands.sh | sed "s|:|$LETDEV_HOME/commands/|" | fzf --reverse --inline-info --tac --preview="$LETDEV_HOME/get-command-variable.sh {} COMMAND_HELP"
-                    local selected=$($LETDEV_HOME/completion-output.sh | fzf \
-                        --no-sort \
-                        --cycle \
-                        --reverse \
-                        --exact \
-                        --inline-info \
-                        --query="$cmd_name" \
-                        --preview="$LETDEV_HOME/get-command-variable.sh {} COMMAND_HELP" \
-                        --bind "tab:reload( LETDEV_HOME='$LETDEV_HOME' $LETDEV_HOME/completion-output.sh )" \
-                    )
-                    if [[ -n $selected ]]; then
-                        READLINE_LINE="$selected"
-                        READLINE_POINT=$((${#selected}))
-                    fi
-                    return 0
-                else
-                    # Arguments completion
-                    # TODO: Implement arguments completion
-                    local selected=$($LETDEV_HOME/completion-output.sh | fzf \
-                        --no-sort \
-                        --cycle \
-                        --reverse \
-                        --exact \
-                        --inline-info \
-                        --query=": $cur" \
-                        --preview="$LETDEV_HOME/get-command-variable.sh {} COMMAND_HELP" \
-                        --bind "tab:reload( LETDEV_HOME='$LETDEV_HOME' $LETDEV_HOME/completion-output.sh )" \
-                    )
-                    if [[ -n $selected ]]; then
-                        local cur_length=${#cur}
-                        READLINE_LINE=${READLINE_LINE:0:$((READLINE_POINT - cur_length))}$selected${READLINE_LINE:$READLINE_POINT}
-                        READLINE_POINT=$((READLINE_POINT - cur_length + ${#selected}))
-                    fi
-                    return 0
-                fi
+        local left_of_cursor="${READLINE_LINE:0:$READLINE_POINT}"
+        local right_of_cursor="${READLINE_LINE:$READLINE_POINT}"
 
+        local before_cursor="${left_of_cursor##* }"
+        local after_cursor="${right_of_cursor%% *}"
+
+        local current_word="$before_cursor$after_cursor"
+
+        if [[ "$current_word" =~ ^: ]]; then
+            local query="$current_word"
+
+            letdev_storage_set ldm ""
+
+            local selected=$($LETDEV_HOME/completion-output.sh | fzf \
+                --no-sort \
+                --cycle \
+                --reverse \
+                --exact \
+                --inline-info \
+                --query="$query" \
+                --preview="$LETDEV_HOME/get-command-variable.sh {} COMMAND_HELP" \
+                --bind "tab:reload( LETDEV_HOME='$LETDEV_HOME' $LETDEV_HOME/completion-output.sh )" \
+            )
+            if [[ -n $selected ]]; then
+                local current_word_start=$((READLINE_POINT - ${#before_cursor}))
+                READLINE_LINE="${READLINE_LINE:0:$current_word_start}$selected${READLINE_LINE:$((READLINE_POINT + ${#after_cursor}))}"
+                READLINE_POINT=$((current_word_start + ${#selected}))
             fi
+            return 0
         fi
     fi
 
