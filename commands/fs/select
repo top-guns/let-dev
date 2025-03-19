@@ -120,6 +120,15 @@ file_perm() {
     fi
 }
 
+file_ext() {
+    local file="$1"
+    if $is_macos; then
+        file -b "$file"
+    else
+        file -i "$file"
+    fi
+}
+
 
 _get_file_attr() {
     local file="$1"
@@ -233,7 +242,7 @@ _print_header() {
         [ "$header" != "" ] && header="$header\t"
         header="$header$value"
     done
-    echo "$header"
+    echo -e "$header"
 }
 
 
@@ -389,7 +398,7 @@ _do_command() {
                 file_attr_values="$file_attr_values$value"
             done
 
-            echo "$file_attr_values"
+            echo -e "$file_attr_values"
         done
     done
 }
