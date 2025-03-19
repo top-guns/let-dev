@@ -129,8 +129,8 @@ _letdev_menu_handler() {
             --bind "tab:reload( LETDEV_HOME='$LETDEV_HOME' $LETDEV_HOME/completion-output.sh )" \
         )
         if [[ -n $selected ]]; then
-            LBUFFER="${left_of_cursor:0:initial_cursor_position}$prefix:$selected ${right_of_cursor:${#post_cursor_word}}"
-            CURSOR=$((initial_cursor_position + ${#prefix} + 1 + ${#selected} + 1))
+            LBUFFER="${left_of_cursor:0:initial_cursor_position}$prefix:$selected${right_of_cursor:${#post_cursor_word}}"
+            CURSOR=$((initial_cursor_position + ${#prefix} + 1 + ${#selected}))
         fi
     else
         if whence -w fzf-tab-complete >/dev/null; then
