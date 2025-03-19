@@ -1,0 +1,398 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Find files by SQL query style"
+
+COMMAND_HELP="\
+Find files by SQL query style.
+
+Usage:
+    :fs:select <file_attrs> from <path_patterns> [where <file_attr_conditions>
+
+    file_attrs - list of file attributes to select, separated by comma or space, or '*' for all attributes 
+                 default is '*'
+    path_patterns - list of path patterns to search files by, separated by comma or space
+                    default is '.'
+    file_attr_conditions - list of file attribute conditions, separated by comma or space
+                           in the form of <file_attr>=<value>
+                           default is empty means all files
+
+
+File attributes:
+    type - file type (file, directory, symlink, etc.)
+    name - file name
+    path - file full path
+    parent_name - file parent folder name
+    parent_path - file parent folder full path
+    ext - file extension
+    size - file size in bytes
+    created - file creation time in seconds since epoch
+    modified - file modification time in seconds since epoch
+    accessed - file access time in seconds since epoch
+    uid - file owner user id
+    gid - file owner group id
+    perm - file permission bits
+
+Condition operators:
+    ~  - like
+    !~ - not like
+    =  - equal
+    != - not equal
+    <  - less than
+    <= - less than or equal
+    >  - greater than
+    >= - greater than or equal
+
+Example:
+    :files *.txt
+"
+
+
+SUPPORTED_CONDITION_OPERATORS=('=' '!=' '<' '<=' '>' '>=' '~' '!~')
+SUPPORTED_FILE_ATTRS=(type name path parent_name parent_path ext size created modified accessed uid gid perm)
+
+
+# Determine whether the platform is macOS or Linux
+is_macos=false
+if [[ "$(uname)" == "Darwin" ]]; then
+    is_macos=true
+fi
+
+file_size() {
+    local file="$1"
+    if $is_macos; then
+        stat -f%z "$file"
+    else
+        stat -c%s "$file"
+    fi
+}
+
+file_created() {
+    local file="$1"
+    if $is_macos; then
+        stat -f%B "$file"
+    else
+        stat -c%W "$file"
+    fi
+}
+
+file_modified() {
+    local file="$1"
+    if $is_macos; then
+        stat -f%Ym "$file"
+    else
+        stat -c%Y "$file"
+    fi
+}
+
+file_accessed() {
+    local file="$1"
+    if $is_macos; then
+        stat -f%Xa "$file"
+    else
+        stat -c%X "$file"
+    fi
+}
+
+file_uid() {
+    local file="$1"
+    if $is_macos; then
+        stat -f%u "$file"
+    else
+        stat -c%u "$file"
+    fi
+}
+
+file_gid() {
+    local file="$1"
+    if $is_macos; then
+        stat -f%g "$file"
+    else
+        stat -c%g "$file"
+    fi
+}
+
+file_perm() {
+    local file="$1"
+    if $is_macos; then
+        stat -f%Mp%Lp "$file"
+    else
+        stat -c%a "$file"
+    fi
+}
+
+
+_get_file_attr() {
+    local file="$1"
+    local file_attr="$2"
+
+    case "$file_attr" in
+        type)
+            # print file type (file, directory, symlink, etc.)
+            file_type "$file" 2>/dev/null
+            ;;
+        name)
+            basename "$file"
+            ;;
+        path)
+            realpath "$file"
+            ;;
+        relative)
+            realpath --relative-to="$PWD" "$file"
+            ;;
+        parent_name)
+            basename "$(dirname "$file")"
+            ;;
+        parent_path)
+            dirname "$file"
+            ;;
+        parent_relative)
+            realpath --relative-to="$(dirname "$file")" "$file"
+            ;;
+        ext)
+            file_ext "$file"
+            ;;
+        size)
+            file_size "$file"
+            ;;
+        created)
+            file_created "$file"
+            ;;
+        modified)
+            file_modified "$file"
+            ;;
+        accessed)
+            file_accessed "$file"
+            ;;
+        uid)
+            file_uid "$file"
+            ;;
+        gid)
+            file_gid "$file"
+            ;;
+        perm)
+            file_perm "$file"
+            ;;
+    esac
+}
+
+_check_pattern_type() {
+    local file_path="$1"
+
+    # Determine the type by using _get_file_attr
+    if [ -e "$file_path" ]; then
+        local type=$(_get_file_attr "$file_path" "type")
+        echo "$type"
+    else
+        echo "pattern"
+    fi
+}
+
+# Find files and folders by the specified file path pattern
+_find_files() {
+    local pattern="$1"
+
+    if [[ "$pattern" == "." ]] || [[ "$pattern" == ".." ]]; then
+        dir="$pattern"         # Use the pattern as the directory to search
+        base=""                # And the base name is empty
+    else
+        local pattern_type=`_check_pattern_type "$pattern"`
+
+        if [ "$pattern_type" == "file" ] || [ "$pattern_type" == "symlink" ]; then
+            dir=`dirname "$pattern"`
+            base=`basename "$pattern"`
+        elif [ "$pattern_type" == "directory" ]; then
+            dir="$pattern"
+            base=""
+        else
+            if [[ "$pattern" == */* ]]; then
+                dir=`echo "$pattern" | sed -E 's/(.*)\/([^\/]*)/\1/'`    # Get the directory from the pattern
+                base=`echo "$pattern" | sed -E 's/(.*)\/([^\/]*)/\2/'`   # And the rest is the base name
+            else
+                dir="."                # Use the current directory as the directory to search
+                base="$pattern"        # And the base name is the pattern itself
+            fi
+        fi
+    fi
+
+    # echo "dir: $dir"
+    # echo "base: $base"
+    # echo "find $dir -type f -name \"$base\""
+
+    if [ "$base" = "" ]; then
+        find "$dir"
+    else
+        find "$dir" -name "$base"
+    fi
+}
+
+_print_header() {
+    local header=""
+    for value in "${select[@]}"; do
+        # Capitalize the first letter using awk
+        # value=$(echo "$value" | awk '{print toupper(substr($0, 1, 1)) tolower(substr($0, 2))}')
+        [ "$header" != "" ] && header="$header\t"
+        header="$header$value"
+    done
+    echo "$header"
+}
+
+
+_do_command() {
+    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
+        echo "$COMMAND_HELP"
+        return
+    fi
+
+    local select=()
+    local from=()
+    local where=()
+
+    local current_section='select' # Can be 'select', 'from', 'where'
+    while [ $# -gt 0 ]; do
+        local arg="$1"
+        shift
+
+        # Remove the leading and trailing commas
+        arg=`echo "$arg" | sed -E 's/^,+//'`
+        arg=`echo "$arg" | sed -E 's/,+$//'`
+
+        # Skip empty arguments
+        if [ "$arg" = "" ]; then
+            continue
+        fi
+
+        case "$arg" in
+            --help|-help|help)
+                echo "$COMMAND_HELP"
+                return
+                ;;
+            from)
+                current_section='from'
+                ;;
+            where)
+                current_section='where'
+                ;;
+            *)
+                case "$current_section" in
+                    select)
+                        select+=("$arg")
+                        ;;
+                    from)
+                        from+=("$arg")
+                        ;;
+                    where)
+                        where+=("$arg")
+                        ;;
+                esac
+                ;;
+        esac
+    done
+
+    # If from is empty, use the current directory
+    [ -z "${from[*]}" ] && from=('.')
+    # If select is empty, use all supported file attributes
+    [ -z "${select[*]}" ] && select=('*')
+    # If it contains only '*', replace it with all supported file attributes
+    if [[ "${select[*]}" == '*' ]]; then
+        select=("${SUPPORTED_FILE_ATTRS[@]}")
+    fi
+
+    # Print the header
+    _print_header
+
+    # Fined files in the 'from' paths, and filter by 'where' conditions
+    for from_path in "${from[@]}"; do
+        for file in $(_find_files "$from_path"); do
+            local skip_file=false
+            for file_attr_condition in "${where[@]}"; do
+                # Parse the condition attribute, value and operator
+                # Condition is in the form of <file_attr><operator><value>
+                local condition_attr=`echo "$file_attr_condition" | sed -E 's/(.*)(=|!=|<|<=|>|>=|~|!~)(.*)/\1/'`
+                local condition_operator=`echo "$file_attr_condition" | sed -E 's/(.*)(=|!=|<|<=|>|>=|~|!~)(.*)/\2/'`
+                local condition_value=`echo "$file_attr_condition" | sed -E 's/(.*)(=|!=|<|<=|>|>=|~|!~)(.*)/\3/'`
+                
+                file_attr_condition_value="$(_get_file_attr "$file" "$condition_attr")"
+                # Check if the file attribute matches the condition value, if not - skip the file
+                if [[ "$condition_operator" == "=" ]]; then
+                    if [ "$condition_value" != "$file_attr_condition_value" ]; then
+                        skip_file=true
+                        break
+                    fi
+                elif [[ "$condition_operator" == "!=" ]]; then
+                    if [ "$condition_value" = "$file_attr_condition_value" ]; then
+                        skip_file=true
+                        break
+                    fi
+                elif [[ "$condition_operator" == "~" ]]; then
+                    # Implements the SQL 'like' operator
+                    # Convert the condition value to a regex pattern
+                    local regex_pattern=`echo "$condition_value" | sed -E 's/\./\\./g'`
+                    regex_pattern=`echo "$regex_pattern" | sed -E 's/\*/.*/g'`
+                    regex_pattern=`echo "$regex_pattern" | sed -E 's/\?/./g'`
+                    regex_pattern="^$regex_pattern$"
+
+                    if [[ ! "$file_attr_condition_value" =~ $regex_pattern ]]; then
+                        skip_file=true
+                        break
+                    fi
+                elif [[ "$condition_operator" == "!~" ]]; then
+                    # Implements the SQL 'not like' operator
+                    # Convert the condition value to a regex pattern
+                    local regex_pattern=`echo "$condition_value" | sed -E 's/\./\\./g'`
+                    regex_pattern=`echo "$regex_pattern" | sed -E 's/\*/.*/g'`
+                    regex_pattern=`echo "$regex_pattern" | sed -E 's/\?/./g'`
+                    regex_pattern="^$regex_pattern$"
+
+                    if [[ "$file_attr_condition_value" =~ $regex_pattern ]]; then
+                        skip_file=true
+                        break
+                    fi
+                elif [[ "$condition_operator" == "<" ]]; then
+                    if [ "$condition_value" -gt "$file_attr_condition_value" ]; then
+                        skip_file=true
+                        break
+                    fi
+                elif [[ "$condition_operator" == "<=" ]]; then
+                    if [ "$condition_value" -ge "$file_attr_condition_value" ]; then
+                        skip_file=true
+                        break
+                    fi
+                elif [[ "$condition_operator" == ">" ]]; then
+                    if [ "$condition_value" -ge "$file_attr_condition_value" ]; then
+                        skip_file=true
+                        break
+                    fi
+                elif [[ "$condition_operator" == ">=" ]]; then
+                    if [ "$condition_value" -le "$file_attr_condition_value" ]; then
+                        skip_file=true
+                        break
+                    fi
+                elif [[ "$condition_operator" == "<" ]]; then
+                    if [ "$condition_value" -gt "$file_attr_condition_value" ]; then
+                        skip_file=true
+                        break
+                    fi
+                else
+                    echo "Unsupported condition operator: $condition_operator"
+                    return 1
+                fi
+            done
+
+            [ "$skip_file" = true ] && continue
+
+            # Echo all file attributes, delimited by tab
+            local file_attr_values=""
+            for file_attr in "${select[@]}"; do
+                local value=$(_get_file_attr "$file" "$file_attr")
+
+                [ "$file_attr_values" != "" ] && file_attr_values="$file_attr_values\t"
+                file_attr_values="$file_attr_values$value"
+            done
+
+            echo "$file_attr_values"
+        done
+    done
+}
+
+
+_do_command "$@"
