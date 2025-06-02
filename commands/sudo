@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Run a command with sudo privileges"
+
+COMMAND_HELP="\
+Run a command with sudo privileges, allowing you to execute commands that require elevated permissions.
+All aliases and functions from your current shell session will be available in the sudo environment.
+
+Usage:
+    :sudo <command>
+
+Example:
+    :sudo ls -la /root
+    :sudo :edit ~/.bashrc
+"
+
+
+_do_command() {
+  # Show help on --help
+  if [[ "$#" -eq 0 || "$1" == "--help" || "$1" == "help" ]]; then
+    echo "$COMMAND_HELP"
+    return
+  fi
+
+  # local full_cmd=" sudo bash -c ' \
+  #   export LETDEV_HOME=\"$LETDEV_HOME\"; \
+  #   export LETDEV_PROFILE=\"$LETDEV_PROFILE\"; \
+  #   source $LETDEV_HOME/init-shell.sh bash false --no-update; \
+  #   source ~/.bashrc;
+  # '"
+
+  local cmd="$*"
+  local full_cmd="sudo bash -ic \"$cmd\""
+  eval "$full_cmd"
+}
+
+_do_command $@
