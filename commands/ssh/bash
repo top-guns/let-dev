@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+COMMAND_DESCRIPTION="Run command on the specified host via SSH"
+
+COMMAND_HELP="\
+This script runs command on the specified host via SSH.
+
+Usage: 
+    :ssh:bash <host> [command]
+
+    If command is not specified then bash shell will be launched.
+
+Example:
+    :ssh:bash user@host 'ls -la'
+"
+
+function _get_host_info() {
+    local host="$1"
+    local host_info=$(cat ~/.ssh/config | grep -A 1000 "Host $host" | grep -E "Host|HostName|User|Port" | sed -E "s/HostName/Host/g")
+    [ -z "$host_info" ] && host_info="Host: $host"
+    echo "$host_info"
+}
+
+function _do_command {
+     [[ "$1" == "--help" || "$1" == "help" ]] && echo "$COMMAND_HELP" && return
+
+    local host="$1"
+    if [ -z "$host" ]; then
+        echo "Error: host is required"
+        return 1
+    fi
+    shift
+    local command="$@"
+
+    if [ -z "$command" ]; then
+        command="bash"
+    fi
+
+    echo "Run command '$command' on host: $host"
+
+    ssh -t $host "bash -i -c '$command'"
+}
+
+_do_command $@
