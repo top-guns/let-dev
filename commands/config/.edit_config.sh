@@ -36,13 +36,11 @@ _edit_config() {
         esac
     done
 
-    echo "Editing file: $FILE_TO_OPEN"
-    echo "Command: $command"
-    echo "Can be created: $CAN_BE_CREATED"
-    echo "Sudo mode: $SUDO_MODE"
+    # echo "Editing file: $FILE_TO_OPEN"
+    # echo "Command: $command"
+    # echo "Can be created: $CAN_BE_CREATED"
+    # echo "Sudo mode: $SUDO_MODE"
 
-    local FILE_NAME=$(basename $FILE_TO_OPEN)
-    local CURRENT_COMMAND=$(basename $0)
 
     if [ "$command" = "--help" ] || [ "$command" = "help" ]; then
         echo "$COMMAND_HELP"
@@ -88,7 +86,6 @@ _edit_config() {
     fi
 
     if [ "$command" = "edit" ]; then
-        echo "EDTING FILE: '$FILE_TO_OPEN'"
         if [ "$SUDO_MODE" = "true" ]; then
             :sudo :edit "'$FILE_TO_OPEN'"
         elif [ "$SUDO_MODE" = "false" ]; then
