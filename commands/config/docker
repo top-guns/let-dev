@@ -20,7 +20,7 @@ _do_command() {
     fi
 
     source "$LETDEV_HOME/commands/config/.edit_config.sh"
-    _edit_config "$FILE_TO_OPEN" $@
+    _edit_config "$FILE_TO_OPEN" $@ --sudo
     return $?
 }
 

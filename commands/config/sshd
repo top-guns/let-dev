@@ -10,7 +10,7 @@ _do_command() {
     local FILE_TO_OPEN="/etc/ssh/sshd_config"
 
     source "$LETDEV_HOME/commands/config/.edit_config.sh"
-    _edit_config "$FILE_TO_OPEN" $@
+    _edit_config "$FILE_TO_OPEN" $@ --sudo
     return $?
 }
 
