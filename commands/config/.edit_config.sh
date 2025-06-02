@@ -36,10 +36,10 @@ _edit_config() {
         esac
     done
 
-    # echo "Editing file: $FILE_TO_OPEN"
-    # echo "Command: $command"
-    # echo "Can be created: $CAN_BE_CREATED"
-    # echo "Sudo mode: $SUDO_MODE"
+    echo "Editing file: $FILE_TO_OPEN"
+    echo "Command: $command"
+    echo "Can be created: $CAN_BE_CREATED"
+    echo "Sudo mode: $SUDO_MODE"
 
 
     if [ "$command" = "--help" ] || [ "$command" = "help" ]; then
