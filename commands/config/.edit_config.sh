@@ -85,7 +85,7 @@ _edit_config() {
     fi
 
     if [ "$command" = "edit" ]; then
-        echo "Opening file '$FILE_TO_OPEN' for editing..."
+        # echo "Opening file '$FILE_TO_OPEN' for editing..."
         if [ "$SUDO_MODE" = "true" ]; then
             :sudo :edit "$FILE_TO_OPEN"
         elif [ "$SUDO_MODE" = "false" ]; then

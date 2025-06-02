@@ -30,7 +30,7 @@ _do_command() {
   # '"
 
   local cmd="$*"
-  local full_cmd="sudo bash -ic \"$cmd\""
+  local full_cmd="sudo bash -ic \"eval $cmd\""
   eval "$full_cmd"
 }
 
