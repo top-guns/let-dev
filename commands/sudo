@@ -22,15 +22,15 @@ _do_command() {
     return
   fi
 
-  # local full_cmd=" sudo bash -c ' \
-  #   export LETDEV_HOME=\"$LETDEV_HOME\"; \
-  #   export LETDEV_PROFILE=\"$LETDEV_PROFILE\"; \
-  #   source $LETDEV_HOME/init-shell.sh bash false --no-update; \
-  #   source ~/.bashrc;
-  # '"
-
   local cmd="$*"
-  local full_cmd="sudo bash -ic \"eval $cmd\""
+
+  local full_cmd=" sudo bash -ic ' \
+    export LETDEV_HOME=$LETDEV_HOME; \
+    export LETDEV_PROFILE=$LETDEV_PROFILE; \
+    source $LETDEV_HOME/init-shell.sh bash false --no-update; \
+    eval \"$cmd\"
+  '"
+
   eval "$full_cmd"
 }
 
