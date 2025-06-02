@@ -1,0 +1,31 @@
+#!/bin/bash
+
+COMMAND_DESCRIPTION="Checks if domain is available"
+
+COMMAND_HELP="\
+Checks if domain name is free or already taken.
+
+Usage:
+    :net:domain:check <domain_name>
+
+Example:
+    :net:domain:check google.com # Check if domain google.com is free
+"
+
+
+_do_command() {
+   [[ "$1" == "--help" || "$1" == "help" ]] && echo "$COMMAND_HELP" && return
+
+    local domain="$1"
+    [ -z "$domain" ] && echo "Domain name is required" && return
+
+    # Check domain availability using whois
+    local whois_output=$(whois "$domain" 2>/dev/null)
+    if [[ "$whois_output" =~ "No match for" ]]; then
+        echo "available"
+    else
+        echo "taken"
+    fi
+}
+
+_do_command "$@"

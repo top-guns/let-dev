@@ -1,0 +1,35 @@
+#!/bin/bash
+
+COMMAND_DESCRIPTION="Prints domain information"
+
+COMMAND_HELP="\
+Prints domain information.
+
+Usage:
+    :net:domain:info <domain_name>
+
+Example:
+    :net:domain:info google.com
+"
+
+
+_do_command() {
+    [[ "$1" == "--help" || "$1" == "help" ]] && echo "$COMMAND_HELP" && return
+
+    local domain="$1"
+    [ -z "$domain" ] && echo "Domain name is required" && return
+
+    whois "$domain" 2>/dev/null | grep -E "Registrar:|Creation Date:|Expiration Date:|Name Server:|Domain Status:" | awk '
+        BEGIN {
+            ORS="\n"
+            main_ns_printed=0
+        }
+        /Registrar:/ && !seen_registrar++ {gsub(/^Registrar: /, "Registrar: "); print}
+        /Creation Date:/ && !seen_creation++ {gsub(/^Creation Date: /, "Created: "); print}
+        /Expiration Date:/ && !seen_expiration++ {gsub(/^Expiration Date: /, "Expiry Date: "); print}
+        /Domain Status:/ && !seen_status++ {gsub(/^Domain Status: /, "Status: "); print}
+        /Name Server:/ && !main_ns_printed++ {gsub(/^Name Server: /, "Name Server: "); print}
+        '
+}
+
+_do_command "$@"
