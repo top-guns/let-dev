@@ -36,10 +36,10 @@ _edit_config() {
         esac
     done
 
-    echo "Editing file: $FILE_TO_OPEN"
-    echo "Command: $command"
-    echo "Can be created: $CAN_BE_CREATED"
-    echo "Sudo mode: $SUDO_MODE"
+    # echo "Editing file: $FILE_TO_OPEN"
+    # echo "Command: $command"
+    # echo "Can be created: $CAN_BE_CREATED"
+    # echo "Sudo mode: $SUDO_MODE"
 
 
     if [ "$command" = "--help" ] || [ "$command" = "help" ]; then
@@ -55,7 +55,6 @@ _edit_config() {
     # Check if the file exists
     if [ ! -f "$FILE_TO_OPEN" ]; then
         if [ "$CAN_BE_CREATED" = "true" ]; then
-            echo "The file '$FILE_TO_OPEN' does not exist. Creating it..."
             [ "$SUDO_MODE" = "true" ] && :sudo touch "'$FILE_TO_OPEN'" || touch "$FILE_TO_OPEN"
         elif [ "$CAN_BE_CREATED" = "false" ]; then
             echo "File '$FILE_TO_OPEN' is not found"
