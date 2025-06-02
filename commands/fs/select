@@ -247,10 +247,7 @@ _print_header() {
 
 
 _do_command() {
-    if [ "$1" = "--help" ] || [ "$1" = "help" ]; then
-        echo "$COMMAND_HELP"
-        return
-    fi
+    [[ "$1" == "--help" || "$1" == "help" ]] && echo "$COMMAND_HELP" && return
 
     local select=()
     local from=()
