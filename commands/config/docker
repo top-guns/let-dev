@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+
+COMMAND_DESCRIPTION="Edit docker daemon configuration"
+COMMAND_HELP="\
+Open docker daemon configuration file in the preferred text editor
+"
+
+_do_command() {
+    local FILE_TO_OPEN=""
+
+    OS=$(uname)
+    if [[ "$OS" == "Linux" ]]; then
+        FILE_TO_OPEN="/etc/docker/daemon.json"
+    elif [[ "$OS" == "Darwin" ]]; then
+        FILE_TO_OPEN="$HOME/Library/Group Containers/group.com.docker/settings.json"
+    else
+        echo "Unsupported operating system: $OS"
+        return 1
+    fi
+
+    source "$LETDEV_HOME/commands/config/.edit_config.sh"
+    _edit_config "$FILE_TO_OPEN" $@
+    return $?
+}
+
+_do_command "$@"
