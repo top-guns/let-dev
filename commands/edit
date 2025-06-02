@@ -113,17 +113,17 @@ _do_command() {
     local editor_arg=""
     while [[ "$#" -gt 0 ]]; do
         case $1 in
-        --recreate) recreate=true ;;
-        --create-if-not-exist=*)
-            create_if_not_exist="${1#*=}"
-            # Replace yes, true, 1 with true
-            if [[ "$create_if_not_exist" =~ ^[yYtT1] ]]; then
-                create_if_not_exist="true"
-            else
-                create_if_not_exist="false"
-            fi
-            ;;
-        *) editor_arg=$1 ;;
+            --recreate) recreate=true ;;
+            --create-if-not-exist=*)
+                create_if_not_exist="${1#*=}"
+                # Replace yes, true, 1 with true
+                if [[ "$create_if_not_exist" =~ ^[yYtT1] ]]; then
+                    create_if_not_exist="true"
+                else
+                    create_if_not_exist="false"
+                fi
+                ;;
+            *) editor_arg=$1 ;;
         esac
         shift
     done
@@ -170,7 +170,7 @@ _do_command() {
         elif [ "$create_if_not_exist" = "true" ]; then
             touch $file
         else
-            if _confirm "File '$file' not found. Do you want to create a new file '$file'?"; then
+            if :confirm "File '$file' not found. Do you want to create a new file '$file'?"; then
                 touch $file
             else
                 return
@@ -188,4 +188,4 @@ _do_command() {
     fi
 }
 
-_do_command $@
+_do_command "$@"

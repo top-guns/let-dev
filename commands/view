@@ -76,4 +76,4 @@ _do_command() {
   $cmd $file
 }
 
-_do_command $@
+_do_command "$@"
