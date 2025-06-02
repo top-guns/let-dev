@@ -56,7 +56,7 @@ _edit_config() {
     if [ ! -f "$FILE_TO_OPEN" ]; then
         if [ "$CAN_BE_CREATED" = "true" ]; then
             echo "The file '$FILE_TO_OPEN' does not exist. Creating it..."
-            [ "$SUDO_MODE" = "true" ] && :sudo touch "'$FILE_TO_OPEN'" || touch "'$FILE_TO_OPEN'"
+            [ "$SUDO_MODE" = "true" ] && :sudo touch "'$FILE_TO_OPEN'" || touch "$FILE_TO_OPEN"
         elif [ "$CAN_BE_CREATED" = "false" ]; then
             echo "File '$FILE_TO_OPEN' is not found"
             return 1
@@ -64,7 +64,7 @@ _edit_config() {
             echo "The file '$FILE_TO_OPEN' does not exist. Do you want to create it? [y/N]"
             read -r answer
             if [ "$answer" = "y" ]; then
-                [ "$SUDO_MODE" = "true" ] && :sudo touch "'$FILE_TO_OPEN'" || touch "'$FILE_TO_OPEN'"
+                [ "$SUDO_MODE" = "true" ] && :sudo touch "$FILE_TO_OPEN" || touch "$FILE_TO_OPEN"
             else
                 return 1
             fi
@@ -72,15 +72,15 @@ _edit_config() {
     fi
 
     if [ "$command" = "cat" ]; then
-        [ "$SUDO_MODE" = "true" ] && :sudo cat "'$FILE_TO_OPEN'" || cat "'$FILE_TO_OPEN'"
+        [ "$SUDO_MODE" = "true" ] && :sudo cat "$FILE_TO_OPEN" || cat "$FILE_TO_OPEN"
         return
     fi
 
     if [ "$command" = "view" ]; then
         if [ "$SUDO_MODE" = "true" ]; then
-            :sudo :view "'$FILE_TO_OPEN'" "'$FILE_TO_OPEN'"
+            :sudo :view "$FILE_TO_OPEN" "$FILE_TO_OPEN"
         else
-            :view "'$FILE_TO_OPEN'" "'$FILE_TO_OPEN'"
+            :view "$FILE_TO_OPEN" "$FILE_TO_OPEN"
         fi
         return
     fi
@@ -88,9 +88,9 @@ _edit_config() {
     if [ "$command" = "edit" ]; then
         echo "Opening file '$FILE_TO_OPEN' for editing..."
         if [ "$SUDO_MODE" = "true" ]; then
-            :sudo :edit "'$FILE_TO_OPEN'"
+            :sudo :edit "$FILE_TO_OPEN"
         elif [ "$SUDO_MODE" = "false" ]; then
-            :edit "'$FILE_TO_OPEN'"
+            :edit "$FILE_TO_OPEN"
         fi
         return
     fi
