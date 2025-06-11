@@ -4,21 +4,16 @@ COMMAND_DESCRIPTION="Open the specified file in the preferred text editor"
 
 COMMAND_HELP="\
 Open the specified file in the preferred text editor.
+If the file does not exist, you will be prompted to create it.
+You can specify the editor to use as an argument or use the \$EDITOR environment variable.
+Returns 0 if the file was not modified, 1 if it was modified, and 2 if an error occurred.
+
 Usage:
     :edit <file>
 Example:
     :edit /path/to/file
 "
 
-_confirm() {
-    read -p "$1 (y/n) " -n 1 -r
-    echo # (optional) move to a new line
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        return 0
-    else
-        return 1
-    fi
-}
 
 _select_editor() {
     local prompt="$1"
@@ -74,7 +69,7 @@ _install() {
         # Check if brew is installed
         if ! command -v brew &>/dev/null; then
             echo "Homebrew is not installed. Please install Homebrew before running this script."
-            return
+            return 0
         fi
 
         # Check if micro is installed
@@ -87,7 +82,7 @@ _install() {
         fi
     else
         echo "Unsupported operating system"
-        return
+        return 0
     fi
 }
 
@@ -95,23 +90,23 @@ _do_command() {
     # Show help on --help
     if [[ "$#" -eq 0 || "$1" == "--help" || "$1" == "help" ]]; then
         echo "$COMMAND_HELP"
-        return
+        return 0
     fi
 
     if [[ "$1" == "--install" ]]; then
         _install
-        return
+        return 0
     fi
 
     # local cmd=""
-    local file="$1"
-    shift
-
+    echo "All edit args: $@"
+    
     # Parse options
+    local file=""
     local create_if_not_exist="" # Argument with value yes/no
     local recreate=false
     local editor_arg=""
-    while [[ "$#" -gt 0 ]]; do
+    for arg in "$@"; do
         case $1 in
             --recreate) recreate=true ;;
             --create-if-not-exist=*)
@@ -123,10 +118,13 @@ _do_command() {
                     create_if_not_exist="false"
                 fi
                 ;;
-            *) editor_arg=$1 ;;
+            *) 
+                [ -z "$file" ] && file="$1" || editor_arg="$1"
+                ;;
         esac
-        shift
     done
+
+    echo "Opening file: $file"
 
     local cmd=""
 
@@ -134,9 +132,9 @@ _do_command() {
     if [ -n "$editor_arg" ]; then
         if ! command -v "$editor_arg" &>/dev/null; then
             echo "Editor '$editor_arg' not found"
-            return 1
+        else
+            cmd="$editor_arg"
         fi
-        cmd="$editor_arg"
     fi
 
     # Editor from the environment variable
@@ -149,16 +147,16 @@ _do_command() {
             echo "If you don't have a preferred editor, we recommend using Micro. It has color syntax highlighting, mouse support and familiar keyboard shortcuts."
             if ! command -v micro &>/dev/null; then
                 echo "Micro is not installed. You can use ': :edit --install' command to install it."
+            else
+                cmd="$EDITOR"
             fi
-            return 1
         fi
-        cmd="$EDITOR"
     fi
 
     # Editor from the select
     [ -z "$cmd" ] && cmd=$(_select_editor "Select an editor to use:")
 
-    [ -z "$cmd" ] && return
+    [ -z "$cmd" ] && return 0
 
     [ "$recreate" = true ] && rm -f $file
 
@@ -166,25 +164,27 @@ _do_command() {
     if [[ ! -f "$file" ]]; then
         if [ "$create_if_not_exist" = "false" ]; then
             echo "File '$file' not found"
-            return 1
+            return 0
         elif [ "$create_if_not_exist" = "true" ]; then
             touch $file
         else
-            if :confirm "File '$file' not found. Do you want to create a new file '$file'?"; then
+            if :confirm "File '$file' not found. Do you want to create it?"; then
                 touch $file
             else
-                return
+                return 0
             fi
         fi
     fi
 
     local hash_before=$(sha256sum "$file")
+
     $cmd $file
+
     local hash_after=$(sha256sum "$file")
     if [[ "$hash_before" != "$hash_after" ]]; then
-        echo "The file was modified"
+        return 1 # The file was modified
     else
-        echo "The file was not modified"
+        return 0 # The file was not modified
     fi
 }
 

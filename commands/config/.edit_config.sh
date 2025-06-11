@@ -1,8 +1,31 @@
 #!/usr/bin/env bash
 # set -euo pipefail
 
-_edit_config() {
+_create_if_need() {
     local FILE_TO_OPEN="$1"
+    local CAN_BE_CREATED="$2"
+    local SUDO_MODE="$3"
+
+    if [ "$CAN_BE_CREATED" = "true" ]; then
+        [ "$SUDO_MODE" = "true" ] && :sudo touch "'$FILE_TO_OPEN'" || touch "$FILE_TO_OPEN"
+    elif [ "$CAN_BE_CREATED" = "false" ]; then
+        echo "File '$FILE_TO_OPEN' is not found"
+        return 1
+    else
+        echo "The file '$FILE_TO_OPEN' does not exist. Do you want to create it? [y/N]"
+        read -r answer
+        if [ "$answer" = "y" ]; then
+            [ "$SUDO_MODE" = "true" ] && :sudo touch "$FILE_TO_OPEN" || touch "$FILE_TO_OPEN"
+        else
+            return 1
+        fi
+    fi
+}
+
+_edit_config() {
+    echo "All args: $@"
+    local FILE_TO_OPEN="$1"
+    echo "File to open: $FILE_TO_OPEN"
     shift
 
     # Parse command and options
@@ -44,35 +67,17 @@ _edit_config() {
 
     if [ "$command" = "--help" ] || [ "$command" = "help" ]; then
         echo "$COMMAND_HELP"
-        return
+        return 0
     fi
-
+    
     if [ "$command" = "path" ]; then
         echo "$FILE_TO_OPEN"
-        return
-    fi
-
-    # Check if the file exists
-    if [ ! -f "$FILE_TO_OPEN" ]; then
-        if [ "$CAN_BE_CREATED" = "true" ]; then
-            [ "$SUDO_MODE" = "true" ] && :sudo touch "'$FILE_TO_OPEN'" || touch "$FILE_TO_OPEN"
-        elif [ "$CAN_BE_CREATED" = "false" ]; then
-            echo "File '$FILE_TO_OPEN' is not found"
-            return 1
-        else
-            echo "The file '$FILE_TO_OPEN' does not exist. Do you want to create it? [y/N]"
-            read -r answer
-            if [ "$answer" = "y" ]; then
-                [ "$SUDO_MODE" = "true" ] && :sudo touch "$FILE_TO_OPEN" || touch "$FILE_TO_OPEN"
-            else
-                return 1
-            fi
-        fi
+        return 0
     fi
 
     if [ "$command" = "cat" ]; then
-        [ "$SUDO_MODE" = "true" ] && :sudo cat "$FILE_TO_OPEN" || cat "$FILE_TO_OPEN"
-        return
+        [ "$SUDO_MODE" = "true" ] && sudo cat "$FILE_TO_OPEN" || cat "$FILE_TO_OPEN"
+        return 0
     fi
 
     if [ "$command" = "view" ]; then
@@ -81,19 +86,23 @@ _edit_config() {
         else
             :view "$FILE_TO_OPEN" "$FILE_TO_OPEN"
         fi
-        return
+        return 0
     fi
 
-    if [ "$command" = "edit" ]; then
-        # echo "Opening file '$FILE_TO_OPEN' for editing..."
-        if [ "$SUDO_MODE" = "true" ]; then
-            :sudo :edit "$FILE_TO_OPEN"
-        elif [ "$SUDO_MODE" = "false" ]; then
-            :edit "$FILE_TO_OPEN"
+    if [ "$command" = "edit" ]; then 
+        echo "Editing file !!!! '$FILE_TO_OPEN'..."
+        if [ ! -f "$FILE_TO_OPEN" ]; then
+            _create_if_need "$FILE_TO_OPEN" "$CAN_BE_CREATED" "$SUDO_MODE" || return 0
         fi
-        return
+
+        # echo "Opening file '$FILE_TO_OPEN' for editing..."
+        local edit_cmd=":edit '$FILE_TO_OPEN'"
+        [ "$SUDO_MODE" = "true" ] && edit_cmd=":sudo \"$edit_cmd\""
+        echo "edit_cmd '$edit_cmd'"
+        eval "$edit_cmd"
+        return $?
     fi
 
     echo "Unknown command '$command'"
-    return 1
+    return 0
 }

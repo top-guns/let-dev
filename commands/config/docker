@@ -20,8 +20,25 @@ _do_command() {
     fi
 
     source "$LETDEV_HOME/commands/config/.edit_config.sh"
-    _edit_config "$FILE_TO_OPEN" $@ --sudo
-    return $?
+
+    echo "Editing Docker daemon configuration file: $FILE_TO_OPEN"
+
+    _edit_config "$FILE_TO_OPEN" $@
+    local isModified=$?
+
+    # If config was modified, ask to restart docker service
+    if [[ $isModified -eq 0 ]]; then
+        echo "Docker daemon configuration was not modified."
+    else
+        if :confirm "Docker daemon configuration was modified. Do you want to restart the Docker service?"; then
+            if [[ "$OS" == "Linux" ]]; then
+                sudo systemctl restart docker
+            elif [[ "$OS" == "Darwin" ]]; then
+                osascript -e 'quit app "Docker"'
+                open -a Docker
+            fi
+        fi
+    fi
 }
 
 _do_command "$@"

@@ -14,8 +14,20 @@ _do_command() {
     # Show help on --help
     [[ "$1" == "--help" || "$1" == "help" ]] && echo "$COMMAND_HELP" && return
 
-    local message="$@"
-    [ -z "$message" ] && message="[y/n]: " || message="$message [y/n]: "
+    local message="$1"
+    [ -z "$message" ] && message="Confirmation required"
+
+    local default="$2"
+    # To lower case
+    default=$(echo "$default" | tr '[:upper:]' '[:lower:]')
+
+    if [[ "$default" == "y" ]] || [[ "$default" == "yes" ]]; then
+        default="y"
+        message="$message [Y/n]: "
+    else
+        default="n"
+        message="$message [y/N]: "
+    fi
 
     local result
     if [[ $SHELL == *"zsh"* ]]; then
@@ -26,7 +38,13 @@ _do_command() {
         read -p "$message" result
     fi
 
-    [ "$result" == "y" ]
+    if [ -z "$result" ]; then
+        [ "$default" = "y" ] && return 0 || return 1
+    fi
+
+    # To lower case
+    result=$(echo "$result" | tr '[:upper:]' '[:lower:]')
+    [ "$result" = "y" ] && return 0 || return 1
 }
 
 _do_command $@
