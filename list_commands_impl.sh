@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 # This function extracts definitions of functions and variables from a given file
 _extract_definitions() {
     # The name of the file
@@ -21,6 +22,21 @@ _extract_definitions() {
     # Print the definitions
     echo "$definitions"
 }
+
+# # Функция для получения команды по расширению
+# _get_command() {
+#     local ext="$1"
+#     case "$ext" in
+#         sh)   cmd="bash"        ;;  # shell scripts
+#         py)   cmd="python3"     ;;  # Python scripts
+#         rb)   cmd="ruby"        ;;  # Ruby scripts
+#         js)   cmd="node"        ;;  # JavaScript (Node.js)
+#         txt)  cmd="cat"         ;;  # plain text
+#         md)   cmd="cat"         ;;  # Markdown
+#         *)    cmd="bash"        ;;  # unknown extension
+#     esac
+#     printf '%s' "$cmd"
+# }
 
 _get_list() {
     local dir="$1"
@@ -76,15 +92,38 @@ _get_list() {
                     | awk -F/ -v OFS=":" -v dir="$dir" '{path=$0; gsub("/", ":", path); print path"=\"" dir "/" $0 "\""}' \
                     | sed 's|:-ls||' | sed 's|^|:|'
             elif [ "$format" = "alias" ]; then
-                # Print as 'alias :dir:subdir:command="/.../dir/subdir/command"'
-                # find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print | sed 's|^\./||' \
-                #     | awk -F/ -v OFS=":" -v dir="$dir" '{path=$0; gsub("/", ":", path); print "alias "path"=\"source " dir "/" $0 "\""}' \
-                #     | sed 's|^alias |alias :|' | sed 's|::|:|'
-
                 # files
+                # | awk -F/ -v OFS=":" -v dir="$dir" '{path=$0; gsub("/", ":", path); print path"=\"" dir "/" $0 "\""}' \
                 find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print | sed 's|^\./||' \
-                    | awk -F/ -v OFS=":" -v dir="$dir" '{path=$0; gsub("/", ":", path); print path"=\"" dir "/" $0 "\""}' \
+                    | awk -F/ -v OFS=":" -v dir="$dir" ' {path = $0; gsub("/", ":", path); sub(/\.[^:]+$/, "", path); print path "=\"" dir "/" $0 "\""}' \
                     | sed 's|^|:|' | sed 's|^::|:|' | sed 's|:-|:|' | sed 's|/|: /|' | sed 's|^|alias |'
+                
+                # # Поиск всех файлов и обработка их по расширению
+                # find . -type f -not -path '*/.*' -print | sed 's|^\./||' | while IFS= read -r file; do
+                # # find . -type f -not -path '*/.*' -print -o -type l -not -path '*/.*' -print | while IFS= read -r file; do
+                #     echo "$file"
+
+                #     local filename=$(echo "$file" | sed 's/^.*\///')
+                #     echo "filename: $filename"
+
+
+                #     # Получаем расширение файла
+                #     local ext=$(echo "$filename" | sed -n 's/.*\.\([^/.]*\)$/\1/p')
+                #     echo "ext: $ext"
+                    
+                #     # Получаем команду для выполнения
+                #     local cmd=$(_get_command "$ext")
+                #     echo "cmd: $cmd"
+                    
+                #     # Формируем путь для вывода
+                #     local cmd_full_name=$(echo "$file" | sed 's|/|:|g')
+                #     echo "cmd_full_name: $cmd_full_name"
+                    
+                #     # Выводим алиас
+                #     echo "alias :$cmd_full_name=\"$cmd $dir/$file\""
+                # done
+                
+
                 # folders
                 find . -type f -name '-ls' -print | sed 's|^\./||' \
                     | awk -F/ -v OFS=":" -v dir="$dir" '{path=$0; gsub("/", ":", path); print path"=\"" dir "/" $0 "\""}' \

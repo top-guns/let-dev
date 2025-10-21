@@ -1,5 +1,20 @@
 #!/bin/bash
 
+# Функция для получения команды по расширению
+_get_command_processor() {
+    local ext="$1"
+    case "$ext" in
+        sh)   cmd="bash"        ;;  # shell scripts
+        py)   cmd="python3"     ;;  # Python scripts
+        rb)   cmd="ruby"        ;;  # Ruby scripts
+        js)   cmd="node"        ;;  # JavaScript (Node.js)
+        txt)  cmd="cat"         ;;  # plain text
+        md)   cmd="cat"         ;;  # Markdown
+        *)    cmd="bash"        ;;  # unknown extension
+    esac
+    printf '%s' "$cmd"
+}
+
 text_shell_processor() {
     local separator="$1"
     shift
@@ -205,7 +220,14 @@ default_command() {
     # Resolve symbolic links
     # cmd=`readlink -f $cmd`
 
-    source "$cmd" "$@"
+    local ext=$(echo "$cmd" | sed -n 's/.*\.\([^/.]*\)$/\1/p')
+    local cmd_processor=$(_get_command_processor "$ext")
+
+    if [[ "$cmd_processor" == "bash" ]]; then
+        source "$cmd" "$@"
+    else
+        eval "$cmd_processor '$cmd'" "$@"
+    fi
 }
 
 default_command "$@"
