@@ -104,3 +104,51 @@ letdev_recreate_project_aliases() {
 
     export LETDEV_LAST_PROJECT_PATH="$PWD"
 }
+
+# Функция для получения команды по расширению
+letdev_get_command_processor() {
+    local cmd="$1"
+
+    local ext=$(echo "$cmd" | sed -n 's/.*\.\([^/.]*\)$/\1/p')
+    case "$ext" in
+        sh)   cmd="bash"        ;;  # shell scripts
+        py)   cmd="python3"     ;;  # Python scripts
+        rb)   cmd="ruby"        ;;  # Ruby scripts
+        js)   cmd="node"        ;;  # JavaScript (Node.js)
+        txt)  cmd="cat"         ;;  # plain text
+        md)   cmd="cat"         ;;  # Markdown
+        *)    cmd="bash"        ;;  # unknown extension
+    esac
+    printf '%s' "$cmd"
+}
+
+# Функция для исполнения скрипта нужным процессором
+letdev_execute_script() {
+    local cmd="$1"
+    shift
+
+    # Resolve symbolic links
+    # cmd=`readlink -f $cmd`
+
+    local cmd_processor=$(letdev_get_command_processor "$cmd")
+
+    if [[ "$cmd_processor" == "bash" ]]; then
+        source "$cmd" "$@"
+    else
+        eval "$cmd_processor '$cmd'" "$@"
+    fi
+}
+
+letdev_init_project() {
+    local init_folder="$(pwd)/.let-dev/$LETDEV_PROFILE/init"
+    [ -d "$init_folder" ] || return
+
+    echo "Init project.."
+
+    find "$init_folder" -maxdepth 1 -type f -name '*' | while IFS= read -r file; do
+        echo "Execute $file"
+        if [ -f "$file" ]; then
+            letdev_execute_script "$file"
+        fi
+    done
+}

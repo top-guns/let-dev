@@ -18,6 +18,7 @@ _do_command() {
 
     mkdir -p "$script_dir/commands"
     mkdir -p "$script_dir/path"
+    mkdir -p "$script_dir/init"
 
     # Create example script
     local script='

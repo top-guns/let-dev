@@ -13,6 +13,7 @@ _do_cd() {
     fi
 
     letdev_recreate_project_aliases
+    letdev_init_project
 }
 
 _do_cd "$@"
