@@ -143,10 +143,7 @@ letdev_init_project() {
     local init_folder="$(pwd)/.let-dev/$LETDEV_PROFILE/init"
     [ -d "$init_folder" ] || return
 
-    echo "Init project.."
-
     find "$init_folder" -maxdepth 1 -type f -name '*' | while IFS= read -r file; do
-        echo "Execute $file"
         if [ -f "$file" ]; then
             letdev_execute_script "$file"
         fi

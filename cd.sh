@@ -9,7 +9,8 @@ _do_cd() {
     if [ -n "$dir" ] && [ "$dir" != "$PWD" ]; then
         builtin cd "$dir"
     else
-        echo "let-dev context updated"
+        # echo "let-dev context updated"
+        true
     fi
 
     letdev_recreate_project_aliases
