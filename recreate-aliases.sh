@@ -140,12 +140,52 @@ letdev_execute_script() {
 }
 
 letdev_init_project() {
-    local init_folder="$(pwd)/.let-dev/$LETDEV_PROFILE/init"
+    local project_folder="$1"
+    [ -z "$project_folder" ] && project_folder="$(pwd)"
+
+    local init_folder="$project_folder/.let-dev/$LETDEV_PROFILE/init"
     [ -d "$init_folder" ] || return
 
     find "$init_folder" -maxdepth 1 -type f -name '*' | while IFS= read -r file; do
         if [ -f "$file" ]; then
             letdev_execute_script "$file"
         fi
+    done
+}
+
+letdev_init_project_recursive() {
+    # Get current directory and home directory
+    local project_folder="$(pwd)"
+    local home_dir="$HOME"
+    
+    # Check if current directory is inside home directory
+    if [[ "${project_folder#"$home_dir"}" == "$project_folder" ]]; then
+        letdev_init_project
+        return
+    fi
+
+    # Collect all parent directories in order from top to bottom
+    local directories=()
+
+    # Build array of directories from top to bottom (excluding root)
+    while [[ "$project_folder" != "/" && "$project_folder" != "$home_dir" ]]; do
+        directories=("$project_folder" "${directories[@]}")
+        project_folder="$(dirname "$project_folder")"
+    done
+
+    # Add home directory if we reached it
+    if [[ "$project_folder" == "$home_dir" ]]; then
+        directories=("$home_dir" "${directories[@]}")
+    fi
+
+    # Execute initialization scripts in reverse order (bottom to top)
+
+    # local i
+    # for i in "${!directories[@]}"; do
+    #     letdev_init_project "${cmds[$i]}"
+    # done
+
+    for project_folder in "${directories[@]}"; do
+        letdev_init_project "$project_folder"
     done
 }

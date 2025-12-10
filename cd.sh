@@ -14,7 +14,7 @@ _do_cd() {
     fi
 
     letdev_recreate_project_aliases
-    letdev_init_project
+    letdev_init_project_recursive
 }
 
 _do_cd "$@"
