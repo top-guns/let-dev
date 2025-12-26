@@ -154,8 +154,8 @@ _collect_commands_recursive() {
             # Iterate over the commands and add them to the command_list if it is not already present
             while IFS= read -r command; do
                 if ! echo "$command_list" | grep -q "$command"; then
-                    [ -n "$command_list" ] && command_list="$command_list\n"
-                    command_list="$command_list$command"
+                    [ -n "$command_list" ] && command_list="\n$command_list"
+                    command_list="$command$command_list"
                 fi
             done <<< "$commands"
         fi
