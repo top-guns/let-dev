@@ -15,13 +15,34 @@ _do_command() {
     [ -z "$profile" ] && profile=$LETDEV_PROFILE
 
     script_dir="./.let-dev/$profile"
+    first_init=false
+
+    # Check if this is the first initialization
+    if [ ! -d "$script_dir" ]; then
+        first_init=true
+    fi
 
     mkdir -p "$script_dir/commands"
     mkdir -p "$script_dir/path"
     mkdir -p "$script_dir/init"
+    mkdir -p "$script_dir/env"
 
-    # Create example script
-    local script='
+    # Exclude .let-dev from git if .git directory exists
+    if [ -d "./.git" ]; then
+        exclude_file="./.git/info/exclude"
+        # Create exclude file if it doesn't exist
+        [ ! -f "$exclude_file" ] && touch "$exclude_file"
+        
+        # Add .let-dev if not already in exclude
+        if ! grep -q "^\.let-dev$" "$exclude_file"; then
+            echo ".let-dev" >> "$exclude_file"
+            echo "Added .let-dev to git exclude"
+        fi
+    fi
+
+    # Create example script only on first initialization
+    if [ "$first_init" = true ]; then
+        local script='
 #!/bin/bash
 
 # This is an example command script
@@ -35,7 +56,8 @@ Usage:
 echo "Hello, world!"
 '
 
-    echo -en "$script" > "$script_dir/commands/example"
+        echo -en "$script" > "$script_dir/commands/example"
+    fi
 
     echo "let.dev initialized for profile $profile"
 }
