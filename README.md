@@ -5,8 +5,13 @@ command engine for bush/zsh
 
 ```bash
 (cd ~ && git clone git@github.com:top-guns/let-dev.git)
-~/let-dev/install.sh
-source ~/let-dev/create-aliases
+source ~/let-dev/install.sh
+```
+
+Optional: Install with specific profile and shell:
+
+```bash
+source ~/let-dev/install.sh --shell=zsh --profile=myprofile --no-update
 ```
 
 ## Using

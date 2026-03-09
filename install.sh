@@ -14,6 +14,52 @@ get_shell_config_file() {
     echo $rc_file
 }
 
+install_vscode_theme() {
+    local theme_file="$LETDEV_HOME/vscode-let-dev.zsh-theme"
+    local oh_my_zsh_dir="$HOME/.oh-my-zsh"
+    local themes_dir="$oh_my_zsh_dir/custom/themes"
+    local target_theme="$themes_dir/vscode-let-dev.zsh-theme"
+
+    # Check if oh-my-zsh is installed
+    if [ ! -d "$oh_my_zsh_dir" ]; then
+        echo "oh-my-zsh not found, skipping vscode-let-dev theme installation"
+        return
+    fi
+
+    echo "oh-my-zsh detected, installing vscode-let-dev theme..."
+
+    # Create themes directory if it doesn't exist
+    if [ ! -d "$themes_dir" ]; then
+        mkdir -p "$themes_dir"
+        echo "Created themes directory: $themes_dir"
+    fi
+
+    # Copy the theme file (overwrite if exists)
+    cp "$theme_file" "$target_theme"
+    echo "Theme installed to: $target_theme"
+
+    # Add theme configuration to .zshrc
+    local rc_file="$HOME/.zshrc"
+    
+    if [ ! -f "$rc_file" ]; then
+        echo ".zshrc not found, skipping theme configuration"
+        return
+    fi
+    
+    # Check if the theme configuration block already exists
+    if grep -q '# Set vscode-let-dev theme for VS Code' "$rc_file"; then
+        echo "VS Code theme configuration already exists in $rc_file"
+        return
+    fi
+    
+    echo "Adding VS Code theme configuration to $rc_file"
+    echo '' >> "$rc_file"
+    echo '# Set vscode-let-dev theme for VS Code' >> "$rc_file"
+    echo 'if [[ "$TERM_PROGRAM" == "vscode" ]]; then' >> "$rc_file"
+    echo '    ZSH_THEME="vscode-let-dev"' >> "$rc_file"
+    echo 'fi' >> "$rc_file"
+}
+
 shell_integration() {
     # Get the default shell name (bash, zsh, etc.)
     local shell_name=$1
@@ -107,24 +153,40 @@ else
 
     # Add fzf completion to the shell if it is not added and shell is bash
     if [ "$shell_name" == "bash" ]; then
-        echo "Add fzf completion to $HOME/.bashrc"
-        source $LETDEV_HOME/install-fzf-completion-in-bash $shell_name
+            echo "Add fzf completion to $HOME/.bashrc"
+            source $LETDEV_HOME/install-fzf-completion-in-bash $shell_name
     fi
     echo ""
 
-    echo "Install let-dev"
-
+    echo "Start let-dev shell integration"
     shell_integration $shell_name $auto_update
+    echo ""
+
+    if [ "$shell_name" == "zsh" ]; then
+        # Install vscode theme if using zsh and oh-my-zsh is installed
+        echo "Install vscode theme for oh-my-zsh"
+        install_vscode_theme
+        if [[ "$TERM_PROGRAM" == "vscode" ]]; then
+            export ZSH_THEME="vscode-let-dev"
+            source "$ZSH/custom/themes/vscode-let-dev.zsh-theme"
+        fi
+        echo ""
+    fi
 
     # Reload the shell to apply changes
     # reload_shell $shell_name
-    rc_file=$(get_shell_config_file $shell_name)
-    echo "reload $shell_name to apply changes ..."
-    source $rc_file
-    echo "successfully"
-
-    echo ""
+    # rc_file=$(get_shell_config_file $shell_name)
+    # echo "reload $shell_name to apply changes ..."
+    # source $rc_file
+    # echo "successfully"
+    # echo ""
 
     echo "Installation of let-dev has been completed successfully."
     echo "Use : prefix to run let-dev commands."
+    echo ""
+
+    # Source recreate-aliases to load let-dev commands
+    echo "Loading let-dev aliases..."
+    source "$LETDEV_HOME/recreate-aliases.sh"
+    echo "successfully loaded"
 fi

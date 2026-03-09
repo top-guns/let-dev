@@ -122,6 +122,11 @@ init_shell() {
         setopt NO_NOMATCH
         # Disable history expansion (like !)
         setopt NO_BANG_HIST
+
+        # Reload vscode-let-dev theme after let-dev initialization to get PROJECT_NAME
+        if [[ "$ZSH_THEME" == "vscode-let-dev" ]]; then
+            source "$ZSH/custom/themes/vscode-let-dev.zsh-theme"
+        fi
     fi
 
     builtin cd $cur_dir

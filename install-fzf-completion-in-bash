@@ -85,6 +85,12 @@ setup_fzf_completion_in_bash() {
     return
   fi
 
+  # Check if FZF completion is already installed
+  if [[ -n "$(grep 'fzf configuration block' ~/.bashrc)" ]]; then
+    echo "fzf completion is already configured in .bashrc"
+    return
+  fi
+
   # Specific to MacOS
   if [[ "$OSTYPE" == "darwin"* ]]; then
     # Check if Homebrew is installed
