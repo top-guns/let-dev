@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+
+COMMAND_DESCRIPTION="Make request to the Google DNS"
+
+COMMAND_HELP="\
+Make request to the Google DNS.
+"
+
+_do_command() {
+    [[ "$1" == "--help" || "$1" == "help" ]] && echo "$COMMAND_HELP" && return
+
+    # Проверить через системный резолвер
+    dig $1
+}
+
+_do_command "$@"
