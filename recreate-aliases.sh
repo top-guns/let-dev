@@ -144,7 +144,7 @@ letdev_init_project() {
     [ -z "$project_folder" ] && project_folder="$(pwd)"
 
     local init_folder="$project_folder/.let-dev/$LETDEV_PROFILE/init"
-    [ -d "$init_folder" ] || return
+    [ -d "$init_folder" ] || return 0
 
     find "$init_folder" -maxdepth 1 -type f -name '*' | while IFS= read -r file; do
         if [ -f "$file" ]; then
@@ -187,5 +187,69 @@ letdev_init_project_recursive() {
 
     for project_folder in "${directories[@]}"; do
         letdev_init_project "$project_folder"
+    done
+}
+
+letdev_apply_env_file() {
+    local PREFIX="LETDEV_OLD_"
+
+    local env_file="$1"
+    [ -z "$env_file" ] && return
+
+    while IFS== read -r key value || [[ -n "$key" ]]; do
+        # Skip empty lines and comments
+        if [[ -z "$key" ]] || [[ "$key" =~ ^[[:space:]]*# ]]; then
+            continue
+        fi
+        
+        # Trim spaces
+        key=$(echo "$key" | xargs)
+        value=$(echo "$value" | xargs)
+        
+        # Save old value
+        old_value=$(printenv "$key")
+        export "$PREFIX$key=$old_value"
+        
+        # Set new value
+        export "$key=$value"
+    done < "$env_file"
+}
+
+letdev_restore_old_env_values() {
+    local PREFIX="LETDEV_OLD_"
+
+    local env_file="$1"
+    [ -z "$env_file" ] && return
+
+    while IFS== read -r key value || [[ -n "$key" ]]; do
+        # Skip empty lines and comments
+        if [[ -z "$key" ]] || [[ "$key" =~ ^[[:space:]]*# ]]; then
+            continue
+        fi
+        
+        # Trim spaces
+        key=$(echo "$key" | xargs)
+        value=$(echo "$value" | xargs)
+        
+        # Save old value
+        old_value=$(printenv "$key")
+        export "$PREFIX$key=$old_value"
+        
+        # Set new value
+        export "$key=$value"
+    done < "$env_file"
+}
+
+letdev_init_project_env() {
+    local project_folder="$1"
+    [ -z "$project_folder" ] && project_folder="$(pwd)"
+
+    local env_folder="$project_folder/.let-dev/$LETDEV_PROFILE/env"
+    [ -d "$env_folder" ] || return
+
+    find "$env_folder" -maxdepth 1 -type f -name '*' | while IFS= read -r file; do
+        if [ -f "$file" ]; then
+            letdev_execute_script "$file"
+        fi
     done
 }
