@@ -55,6 +55,9 @@ letdev_recreate_all_aliases() {
     # local alias_commands=$($LETDEV_HOME/list-commands.sh --system --user --format=alias)
     local alias_commands=$(list_commands --system --user --project --format=alias)
     eval "$alias_commands"
+
+    local project_aliases=$(list_commands --project --format=alias)
+    export LETDEV_LAST_PROJECT_ALIASES=$(echo "$project_aliases" | sed 's/^alias //' | sed 's/=.*$//')
     export LETDEV_LAST_PROJECT_PATH="$project_dir"
 
     # Param value reader alias
@@ -81,16 +84,13 @@ letdev_recreate_all_aliases() {
 }
 
 letdev_remove_project_aliases() {
-    [ -z "$LETDEV_LAST_PROJECT_PATH" ] && return
+    [ -z "$LETDEV_LAST_PROJECT_ALIASES" ] && return
 
-    local cur_dir="$PWD"
-    builtin cd "$LETDEV_LAST_PROJECT_PATH"
+    for alias_name in $LETDEV_LAST_PROJECT_ALIASES; do
+        unalias "$alias_name" 2>/dev/null
+    done
 
-    local unalias_commands=$(list_commands --project --format=alias | sed 's/^alias //' | sed 's/=.*$//' | sed 's/^/unalias /')
-    eval "$unalias_commands" 2>/dev/null
-
-    builtin cd "$cur_dir"
-
+    export LETDEV_LAST_PROJECT_ALIASES=""
     export LETDEV_LAST_PROJECT_PATH=""
 }
     
@@ -102,6 +102,7 @@ letdev_recreate_project_aliases() {
     local alias_commands=$(list_commands --project --format=alias)
     eval "$alias_commands"
 
+    export LETDEV_LAST_PROJECT_ALIASES=$(echo "$alias_commands" | sed 's/^alias //' | sed 's/=.*$//')
     export LETDEV_LAST_PROJECT_PATH="$PWD"
 }
 
