@@ -3,8 +3,6 @@
 # 'cd' command implementation
 
 _do_cd() {
-    letdev_remove_project_aliases
-
     local dir="$1"
     if [ -n "$dir" ] && [ "$dir" != "$PWD" ]; then
         builtin cd "$dir"

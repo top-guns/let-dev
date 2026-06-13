@@ -86,8 +86,8 @@ letdev_remove_project_aliases() {
     local cur_dir="$PWD"
     builtin cd "$LETDEV_LAST_PROJECT_PATH"
 
-    local unalias_commands=$(list_commands --project --format=command | sed 's/^/unalias /')
-    eval "$unalias_commands"
+    local unalias_commands=$(list_commands --project --format=alias | sed 's/^alias //' | sed 's/=.*$//' | sed 's/^/unalias /')
+    eval "$unalias_commands" 2>/dev/null
 
     builtin cd "$cur_dir"
 
