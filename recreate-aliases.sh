@@ -86,9 +86,10 @@ letdev_recreate_all_aliases() {
 letdev_remove_project_aliases() {
     [ -z "$LETDEV_LAST_PROJECT_ALIASES" ] && return
 
-    for alias_name in $LETDEV_LAST_PROJECT_ALIASES; do
+    while IFS= read -r alias_name; do
+        [ -z "$alias_name" ] && continue
         unalias "$alias_name" 2>/dev/null
-    done
+    done <<< "$LETDEV_LAST_PROJECT_ALIASES"
 
     export LETDEV_LAST_PROJECT_ALIASES=""
     export LETDEV_LAST_PROJECT_PATH=""
